@@ -25,7 +25,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="#">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.courses') ? 'active' : '' }}" href="{{ route('admin.courses.index') }}">
             <i class="bi bi-book"></i> Курсы
         </a>
     </li>

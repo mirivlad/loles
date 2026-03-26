@@ -74,4 +74,9 @@ class Course extends Model
     {
         return $this->hasMany(CourseRequestItem::class);
     }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'course_assignments');
+    }
 }

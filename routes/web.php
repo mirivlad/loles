@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\OrganizationController;
 use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CourseCategoryController;
+use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -40,5 +41,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('organizations.groups', GroupController::class);
         Route::resource('users', UserController::class);
         Route::resource('course-categories', CourseCategoryController::class);
+        Route::resource('courses', CourseController::class);
     });
 });
