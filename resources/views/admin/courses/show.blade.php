@@ -71,7 +71,7 @@
                             <ul class="list-group list-group-flush">
                                 @foreach($course->tests as $test)
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <a href="{{ route('admin.tests.show', $test) }}" class="text-decoration-none">{{ $test->title }}</a>
+                                    <a href="{{ route('admin.courses.tests.show', [$course, $test]) }}" class="text-decoration-none">{{ $test->title }}</a>
                                     <span class="badge bg-secondary">{{ $test->type }}</span>
                                 </li>
                                 @endforeach
