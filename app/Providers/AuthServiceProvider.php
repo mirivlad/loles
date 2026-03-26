@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\CourseCategory;
 use App\Models\Group;
 use App\Models\Organization;
 use App\Models\User;
+use App\Policies\CourseCategoryPolicy;
 use App\Policies\GroupPolicy;
 use App\Policies\OrganizationPolicy;
 use App\Policies\UserPolicy;
@@ -18,6 +20,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
+        CourseCategory::class => CourseCategoryPolicy::class,
         Organization::class => OrganizationPolicy::class,
         Group::class => GroupPolicy::class,
         User::class => UserPolicy::class,

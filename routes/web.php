@@ -38,5 +38,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('organizations', OrganizationController::class);
         Route::resource('organizations.groups', GroupController::class);
         Route::resource('users', UserController::class);
+        Route::resource('course-categories', CourseCategoryController::class);
     });
 });

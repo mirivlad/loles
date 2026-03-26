@@ -38,4 +38,11 @@ class CourseCategory extends Model
     {
         return $this->hasMany(Course::class);
     }
+
+    public function scopeTree($query)
+    {
+        return $query->with(['children', 'children.children'])->withCount('courses')->orderBy('sort_order')->get()->filter(function($cat) {
+            return is_null($cat->parent_id);
+        });
+    }
 }
