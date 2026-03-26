@@ -8,30 +8,7 @@
         <!-- Sidebar -->
         <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
             <div class="position-sticky pt-3">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('dashboard') }}">
-                            <i class="bi bi-speedometer2"></i> Панель управления
-                        </a>
-                    </li>
-                    @can('viewAny', App\Models\Organization::class)
-                    <li class="nav-item">
-                        <a class="nav-link active" href="{{ route('admin.organizations.index') }}">
-                            <i class="bi bi-building"></i> Организации
-                        </a>
-                    </li>
-                    @endcan
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-people"></i> Пользователи
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-book"></i> Курсы
-                        </a>
-                    </li>
-                </ul>
+                @include('partials._sidebar')
             </div>
         </nav>
 

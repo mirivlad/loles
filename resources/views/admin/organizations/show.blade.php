@@ -7,18 +7,7 @@
     <div class="row">
         <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
             <div class="position-sticky pt-3">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('dashboard') }}">
-                            <i class="bi bi-speedometer2"></i> Панель управления
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.organizations.index') }}">
-                            <i class="bi bi-building"></i> Организации
-                        </a>
-                    </li>
-                </ul>
+                @include('partials._sidebar')
             </div>
         </nav>
 
@@ -148,7 +137,7 @@
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="mb-0"><i class="bi bi-people-fill"></i> Группы</h5>
                             @can('create', App\Models\Group::class)
-                            <a href="{{ route('admin.groups.create', $organization) }}" class="btn btn-sm btn-primary">
+                            <a href="{{ route('admin.organizations.groups.create', $organization) }}" class="btn btn-sm btn-primary">
                                 <i class="bi bi-plus-lg"></i>
                             </a>
                             @endcan
