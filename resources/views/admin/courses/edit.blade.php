@@ -71,9 +71,14 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Обложка</label>
+                                    @if($course->thumbnail)
+                                    <div class="mb-2">
+                                        <img src="{{ asset('storage/' . $course->thumbnail) }}" alt="Current thumbnail" class="img-thumbnail" style="max-width: 200px; max-height: 150px;">
+                                        <div class="form-text">Текущая обложка (400x300px)</div>
+                                    </div>
+                                    @endif
                                     <input type="file" name="thumbnail" class="form-control" accept="image/*">
-                                    @if($course->thumbnail)<small class="text-muted d-block">Текущая: {{ basename($course->thumbnail) }}</small>@endif
-                                    <small class="text-muted">400x300 - 3000x2000px, макс. 10MB, форматы: JPEG, PNG, WebP</small>
+                                    <small class="text-muted">Макс. 10MB, форматы: JPEG, PNG, WebP</small>
                                 </div>
                             </div>
                         </div>
