@@ -32,27 +32,64 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4">
+                <div class="col-12 mb-4">
                     <div class="card shadow-sm">
                         <div class="card-header d-flex justify-content-between">
-                            <h5 class="mb-0">Вопросы</h5>
+                            <h5 class="mb-0">Вопросы ({{ $test->questions->count() }})</h5>
                             <a href="{{ route('admin.tests.questions.create', $test) }}" class="btn btn-sm btn-primary"><i class="bi bi-plus"></i></a>
                         </div>
                         <div class="card-body">
                             @if($test->questions->count() > 0)
-                            <ul class="list-group list-group-flush">
-                                @foreach($test->questions as $question)
-                                <li class="list-group-item d-flex justify-content-between align-items-start">
-                                    <div class="ms-2 me-auto">
-                                        <a href="{{ route('admin.tests.questions.edit', [$test, $question]) }}" class="text-decoration-none">
-                                            <div class="fw-bold">{{ $question->type }}</div>
-                                            {{ Str::limit($question->question_text, 50) }}
-                                        </a>
-                                    </div>
-                                    <span class="badge bg-primary rounded-pill">{{ $question->answers->count() }}</span>
-                                </li>
-                                @endforeach
-                            </ul>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:50px">#</th>
+                                            <th>Вопрос</th>
+                                            <th style="width:100px">Тип</th>
+                                            <th style="width:80px">Баллы</th>
+                                            <th style="width:80px">Ответов</th>
+                                            <th style="width:100px">Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($test->questions as $question)
+                                        <tr>
+                                            <td><span class="badge bg-secondary">{{ $loop->iteration }}</span></td>
+                                            <td>
+                                                <a href="{{ route('admin.tests.questions.edit', [$test, $question]) }}" class="text-decoration-none">
+                                                    {{ Str::limit($question->question_text, 80) }}
+                                                </a>
+                                                @if($question->is_required)<span class="badge bg-warning ms-1"><i class="bi bi-exclamation-circle"></i></span>@endif
+                                            </td>
+                                            <td>
+                                                @if($question->type === 'single_choice')
+                                                    <span class="badge bg-info" title="Один ответ"><i class="bi bi-radio-button"></i></span>
+                                                @elseif($question->type === 'multiple_choice')
+                                                    <span class="badge bg-success" title="Несколько ответов"><i class="bi bi-check2-square"></i></span>
+                                                @elseif($question->type === 'input')
+                                                    <span class="badge bg-warning" title="Ввод текста"><i class="bi bi-textarea-resize"></i></span>
+                                                @elseif($question->type === 'matching')
+                                                    <span class="badge badge-purple" title="Соответствие"><i class="bi bi-arrow-left-right"></i></span>
+                                                @endif
+                                                {{ $question->type }}
+                                            </td>
+                                            <td>{{ $question->score }}</td>
+                                            <td>{{ $question->answers->count() }}@if($question->matchingPairs->count() > 0) + {{ $question->matchingPairs->count() }} пар@endif</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{{ route('admin.tests.questions.edit', [$test, $question]) }}" class="btn btn-outline-warning" title="Редактировать"><i class="bi bi-pencil"></i></a>
+                                                    <form action="{{ route('admin.tests.questions.destroy', [$test, $question]) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить?')">
+                                                        @csrf @method('DELETE')
+                                                        <button class="btn btn-outline-danger" title="Удалить"><i class="bi bi-trash"></i></button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                             @else
                             <p class="text-muted mb-0">Нет вопросов</p>
                             @endif

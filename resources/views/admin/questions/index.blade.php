@@ -19,11 +19,20 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <span class="badge bg-info">{{ $question->type }}</span>
-                                    <strong>#{{ $loop->iteration }}. {{ Str::limit($question->question_text, 100) }}</strong>
+                                    <span class="badge bg-secondary me-2">#{{ $loop->iteration }}</span>
+                                    @if($question->type === 'single_choice')
+                                        <span class="badge bg-info" title="Один ответ"><i class="bi bi-radio-button"></i></span>
+                                    @elseif($question->type === 'multiple_choice')
+                                        <span class="badge bg-success" title="Несколько ответов"><i class="bi bi-check2-square"></i></span>
+                                    @elseif($question->type === 'input')
+                                        <span class="badge bg-warning" title="Ввод текста"><i class="bi bi-textarea-resize"></i></span>
+                                    @elseif($question->type === 'matching')
+                                        <span class="badge badge-purple" title="Соответствие"><i class="bi bi-arrow-left-right"></i></span>
+                                    @endif
+                                    <strong>{{ Str::limit($question->question_text, 100) }}</strong>
                                     <div class="mt-2">
-                                        <small class="text-muted">{{ $question->answers->count() }} ответов</small>
-                                        @if($question->is_required)<span class="badge bg-warning ms-2">Обязательный</span>@endif
+                                        <small class="text-muted">{{ $question->answers->count() }} ответов@if($question->matchingPairs->count() > 0), {{ $question->matchingPairs->count() }} пар@endif</small>
+                                        @if($question->is_required)<span class="badge bg-warning ms-2"><i class="bi bi-exclamation-circle"></i> Обязательный</span>@endif
                                         <span class="badge bg-secondary ms-2">{{ $question->score }} балл(а)</span>
                                     </div>
                                 </div>

@@ -48,6 +48,11 @@
         .card-stat {
             border-left: 4px solid var(--primary-color);
         }
+        
+        .badge-purple {
+            background-color: #6f42c1;
+            color: white;
+        }
     </style>
     
     @stack('styles')
