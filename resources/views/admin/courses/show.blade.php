@@ -15,7 +15,7 @@
             <div class="row">
                 <div class="col-md-4 mb-4">
                     <div class="card shadow-sm">
-                        @if($course->thumbnail)<img src="{{ asset('storage/' . $course->thumbnail) }}" class="card-img-top" alt="{{ $course->title }}">
+                        @if($course->thumbnail)<img src="{{ asset('storage/' . str_replace('_thumb.', '.', $course->thumbnail)) }}" class="card-img-top" alt="{{ $course->title }}">
                         @else<div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height:200px;"><i class="bi bi-book text-white" style="font-size:4rem;"></i></div>@endif
                     </div>
                 </div>

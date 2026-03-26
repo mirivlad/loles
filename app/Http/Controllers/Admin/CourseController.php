@@ -9,12 +9,38 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class CourseController extends Controller
 {
     public function __construct()
     {
         $this->middleware('auth');
+    }
+
+    private function generateThumbnail($imagePath, $width = 400, $height = 300)
+    {
+        $manager = new ImageManager(new Driver());
+        $image = $manager->read($imagePath);
+        
+        // Пропорциональное уменьшение с crop по центру
+        $image->cover($width, $height, 'center');
+        
+        // Сохраняем как _thumb версию
+        $thumbPath = str_replace('.', '_thumb.', $imagePath);
+        $image->save(storage_path('app/public/' . $thumbPath));
+        
+        return str_replace('.', '_thumb.', $imagePath);
+    }
+
+    private function deleteThumbnails($path)
+    {
+        if (!$path) return;
+        
+        $thumbPath = str_replace('.', '_thumb.', $path);
+        Storage::disk('public')->delete($thumbPath);
+        Storage::disk('public')->delete($path);
     }
 
     public function index(Request $request)
@@ -81,7 +107,8 @@ class CourseController extends Controller
         $validated['has_certificate'] = $request->boolean('has_certificate');
         
         if ($request->hasFile('thumbnail')) {
-            $validated['thumbnail'] = $request->file('thumbnail')->store('courses/thumbnails', 'public');
+            $path = $request->file('thumbnail')->store('courses/thumbnails', 'public');
+            $validated['thumbnail'] = $this->generateThumbnail($path, 400, 300);
         }
         
         $course = Course::create($validated);
@@ -134,8 +161,9 @@ class CourseController extends Controller
         $validated['has_certificate'] = $request->boolean('has_certificate');
         
         if ($request->hasFile('thumbnail')) {
-            if ($course->thumbnail) Storage::disk('public')->delete($course->thumbnail);
-            $validated['thumbnail'] = $request->file('thumbnail')->store('courses/thumbnails', 'public');
+            if ($course->thumbnail) $this->deleteThumbnails($course->thumbnail);
+            $path = $request->file('thumbnail')->store('courses/thumbnails', 'public');
+            $validated['thumbnail'] = $this->generateThumbnail($path, 400, 300);
         }
         
         $course->update($validated);
@@ -147,7 +175,7 @@ class CourseController extends Controller
     {
         Gate::authorize('delete', $course);
         
-        if ($course->thumbnail) Storage::disk('public')->delete($course->thumbnail);
+        $this->deleteThumbnails($course->thumbnail);
         
         $course->delete();
         
