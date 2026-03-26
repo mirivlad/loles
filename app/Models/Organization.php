@@ -46,6 +46,12 @@ class Organization extends Model
         return $this->hasMany(CourseAssignment::class);
     }
 
+    public function courses()
+    {
+        // Получаем курсы через назначения
+        return $this->hasManyThrough(Course::class, CourseAssignment::class, 'organization_id');
+    }
+
     public function activeUsers(): HasMany
     {
         return $this->hasMany(User::class)->where('is_active', true);

@@ -18,7 +18,7 @@ class OrganizationController extends Controller
     {
         Gate::authorize('viewAny', Organization::class);
         
-        $organizations = Organization::withCount('users', 'groups', 'courses')
+        $organizations = Organization::withCount(['users', 'groups'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
         

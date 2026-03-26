@@ -74,7 +74,6 @@
                                     <th>Email</th>
                                     <th>Пользователей</th>
                                     <th>Групп</th>
-                                    <th>Курсов</th>
                                     <th>Статус</th>
                                     <th>Действия</th>
                                 </tr>
@@ -99,7 +98,6 @@
                                     <td>{{ $org->email ?? '—' }}</td>
                                     <td>{{ $org->users_count }}</td>
                                     <td>{{ $org->groups_count }}</td>
-                                    <td>{{ $org->courses_count ?? 0 }}</td>
                                     <td>
                                         @if($org->is_active)
                                             <span class="badge bg-success">Активна</span>
