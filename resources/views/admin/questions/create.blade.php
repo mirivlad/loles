@@ -7,9 +7,9 @@
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
             <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">Добавить вопрос</h1>
-                <a href="{{ route('admin.tests.questions.index', $test) }}" class="btn btn-secondary btn-sm">Назад</a>
+                <a href="{{ route('admin.courses.tests.show', [$test->course, $test]) }}" class="btn btn-secondary btn-sm">Назад</a>
             </div>
-            <form action="{{ route('admin.tests.questions.store', $test) }}" method="POST" id="questionForm">
+            <form action="{{ route('admin.courses.tests.questions.store', [$test->course, $test]) }}" method="POST" id="questionForm">
                 @csrf
                 <input type="hidden" name="type" id="questionType" value="single_choice">
                 <div class="row">
@@ -79,7 +79,7 @@
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Создать вопрос</button>
-                <a href="{{ route('admin.tests.questions.index', $test) }}" class="btn btn-secondary">Отмена</a>
+                <a href="{{ route('admin.courses.tests.show', [$test->course, $test]) }}" class="btn btn-secondary">Отмена</a>
             </form>
         </main>
     </div>

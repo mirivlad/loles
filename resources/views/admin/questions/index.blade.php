@@ -7,10 +7,10 @@
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
             <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">Вопросы: {{ $test->title }}</h1>
-                <a href="{{ route('admin.tests.questions.create', $test) }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Добавить вопрос</a>
+                <a href="{{ route('admin.courses.tests.show', [$test->course, $test]) }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Добавить вопрос</a>
             </div>
             @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
-            <div class="mb-3"><a href="{{ route('admin.tests.show', $test) }}" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> Назад к тесту</a></div>
+            <div class="mb-3"><a href="{{ route('admin.courses.tests.show', [$test->course, $test]) }}" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> Назад к тесту</a></div>
             
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -28,8 +28,8 @@
                                     </div>
                                 </div>
                                 <div class="btn-group btn-group-sm">
-                                    <a href="{{ route('admin.tests.questions.edit', [$test, $question]) }}" class="btn btn-outline-warning"><i class="bi bi-pencil"></i></a>
-                                    <form action="{{ route('admin.tests.questions.destroy', [$test, $question]) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить?')">@csrf @method('DELETE')<button class="btn btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                                    <a href="{{ route('admin.courses.tests.questions.edit', [$test->course, $test, $question]) }}" class="btn btn-outline-warning"><i class="bi bi-pencil"></i></a>
+                                    <form action="{{ route('admin.courses.tests.questions.destroy', [$test->course, $test, $question]) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить?')">@csrf @method('DELETE')<button class="btn btn-outline-danger"><i class="bi bi-trash"></i></button></form>
                                 </div>
                             </div>
                         </div>
