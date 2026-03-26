@@ -145,18 +145,35 @@
 
                 <div class="col-md-6 mb-4">
                     <div class="card shadow-sm">
-                        <div class="card-header">
+                        <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="mb-0"><i class="bi bi-people-fill"></i> Группы</h5>
+                            @can('create', App\Models\Group::class)
+                            <a href="{{ route('admin.groups.create', $organization) }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus-lg"></i>
+                            </a>
+                            @endcan
                         </div>
                         <div class="card-body">
                             @if($organization->groups->count() > 0)
                             <ul class="list-group list-group-flush">
                                 @foreach($organization->groups->take(5) as $group)
-                                <li class="list-group-item">
-                                    <strong>{{ $group->name }}</strong>
-                                    @if($group->description)
-                                    <br><small class="text-muted">{{ Str::limit($group->description, 50) }}</small>
-                                    @endif
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ $group->name }}</strong>
+                                        @if($group->description)
+                                        <br><small class="text-muted">{{ Str::limit($group->description, 50) }}</small>
+                                        @endif
+                                    </div>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="#" class="btn btn-outline-primary" title="Просмотр">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        @can('update', $group)
+                                        <a href="{{ route('admin.groups.edit', $group) }}" class="btn btn-outline-warning" title="Редактировать">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        @endcan
+                                    </div>
                                 </li>
                                 @endforeach
                             </ul>
