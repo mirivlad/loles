@@ -22,7 +22,8 @@ class CourseController extends Controller
     private function generateThumbnail($imagePath, $width = 400, $height = 300)
     {
         $manager = new ImageManager(new Driver());
-        $image = $manager->read($imagePath);
+        $fullPath = storage_path('app/public/' . $imagePath);
+        $image = $manager->read($fullPath);
         
         // Пропорциональное уменьшение с crop по центру
         $image->cover($width, $height, 'center');
@@ -31,7 +32,7 @@ class CourseController extends Controller
         $thumbPath = str_replace('.', '_thumb.', $imagePath);
         $image->save(storage_path('app/public/' . $thumbPath));
         
-        return str_replace('.', '_thumb.', $imagePath);
+        return $thumbPath;
     }
 
     private function deleteThumbnails($path)
