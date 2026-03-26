@@ -9,7 +9,7 @@
                 <h1 class="h2">{{ $test->title }}</h1>
                 <div>
                     <a href="{{ route('admin.tests.edit', $test) }}" class="btn btn-warning btn-sm me-2">Редактировать</a>
-                    <a href="{{ route('admin.courses.tests.index', $course) }}" class="btn btn-secondary btn-sm">Назад</a>
+                    <a href="{{ route('admin.courses.tests.index', $course) }}" class="btn btn-secondary btn-sm">Назад к тестам</a>
                 </div>
             </div>
             

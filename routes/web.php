@@ -44,6 +44,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class);
         Route::resource('course-categories', CourseCategoryController::class);
         Route::resource('courses', CourseController::class);
-        Route::resource('courses.tests', TestController::class)->shallow();
+        Route::resource('courses.tests', TestController::class);
     });
 });
