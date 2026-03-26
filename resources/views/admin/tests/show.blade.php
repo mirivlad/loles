@@ -36,7 +36,7 @@
                     <div class="card shadow-sm">
                         <div class="card-header d-flex justify-content-between">
                             <h5 class="mb-0">Вопросы</h5>
-                            <a href="#" class="btn btn-sm btn-primary"><i class="bi bi-plus"></i></a>
+                            <a href="{{ route('admin.tests.questions.create', $test) }}" class="btn btn-sm btn-primary"><i class="bi bi-plus"></i></a>
                         </div>
                         <div class="card-body">
                             @if($test->questions->count() > 0)

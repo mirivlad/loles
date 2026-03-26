@@ -23,6 +23,7 @@ class AuthServiceProvider extends ServiceProvider
         CourseCategory::class => CourseCategoryPolicy::class,
         Course::class => CoursePolicy::class,
         Test::class => TestPolicy::class,
+        Question::class => QuestionPolicy::class,
         Organization::class => OrganizationPolicy::class,
         Group::class => GroupPolicy::class,
         User::class => UserPolicy::class,

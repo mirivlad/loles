@@ -45,5 +45,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('course-categories', CourseCategoryController::class);
         Route::resource('courses', CourseController::class);
         Route::resource('courses.tests', TestController::class);
+        Route::resource('tests.questions', QuestionController::class);
     });
 });
