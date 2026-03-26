@@ -36,7 +36,7 @@ class CourseCategory extends Model
 
     public function courses(): HasMany
     {
-        return $this->hasMany(Course::class);
+        return $this->hasMany(Course::class, 'category_id');
     }
 
     public function scopeTree($query)
