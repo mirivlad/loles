@@ -44,8 +44,10 @@
                                 @foreach($test->questions as $question)
                                 <li class="list-group-item d-flex justify-content-between align-items-start">
                                     <div class="ms-2 me-auto">
-                                        <div class="fw-bold">{{ $question->type }}</div>
-                                        {{ Str::limit($question->question_text, 50) }}
+                                        <a href="{{ route('admin.tests.questions.edit', [$test, $question]) }}" class="text-decoration-none">
+                                            <div class="fw-bold">{{ $question->type }}</div>
+                                            {{ Str::limit($question->question_text, 50) }}
+                                        </a>
                                     </div>
                                     <span class="badge bg-primary rounded-pill">{{ $question->answers->count() }}</span>
                                 </li>
