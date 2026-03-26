@@ -158,7 +158,7 @@
                                             <i class="bi bi-eye"></i>
                                         </a>
                                         @can('update', $group)
-                                        <a href="{{ route('admin.groups.edit', $group) }}" class="btn btn-outline-warning" title="Редактировать">
+                                        <a href="{{ route('admin.organizations.groups.edit', [$organization, $group]) }}" class="btn btn-outline-warning" title="Редактировать">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         @endcan
