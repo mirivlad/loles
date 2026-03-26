@@ -91,13 +91,13 @@ class CourseController extends Controller
             'objectives' => 'nullable|string',
             'category_id' => 'nullable|exists:course_categories,id',
             'type' => 'required|in:standard,scorm,h5p',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240|dimensions:min_width=400,min_height=300,max_width=3000,max_height=2000',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240|dimensions:min_width=400,min_height=300',
             'duration_minutes' => 'nullable|integer',
             'passing_score' => 'nullable|integer|min:0|max:100',
             'has_certificate' => 'boolean',
             'is_active' => 'boolean',
         ], [
-            'thumbnail.dimensions' => 'Изображение должно быть от 400x300 до 3000x2000 пикселей. Ваш размер: :width x :height px',
+            'thumbnail.dimensions' => 'Изображение должно быть не менее 400x300 пикселей. Ваш размер: :width x :height px',
             'thumbnail.mimes' => 'Допустимые форматы: JPEG, PNG, WebP',
             'thumbnail.max' => 'Максимальный размер файла: 10MB',
         ]);
@@ -146,13 +146,13 @@ class CourseController extends Controller
             'objectives' => 'nullable|string',
             'category_id' => 'nullable|exists:course_categories,id',
             'type' => 'required|in:standard,scorm,h5p',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240|dimensions:min_width=400,min_height=300,max_width=3000,max_height=2000',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240|dimensions:min_width=400,min_height=300',
             'duration_minutes' => 'nullable|integer',
             'passing_score' => 'nullable|integer|min:0|max:100',
             'has_certificate' => 'boolean',
             'is_active' => 'boolean',
         ], [
-            'thumbnail.dimensions' => 'Изображение должно быть от 400x300 до 3000x2000 пикселей. Ваш размер: :width x :height px',
+            'thumbnail.dimensions' => 'Изображение должно быть не менее 400x300 пикселей. Ваш размер: :width x :height px',
             'thumbnail.mimes' => 'Допустимые форматы: JPEG, PNG, WebP',
             'thumbnail.max' => 'Максимальный размер файла: 10MB',
         ]);

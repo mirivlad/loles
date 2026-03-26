@@ -75,7 +75,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">Обложка</label>
                                     <input type="file" name="thumbnail" class="form-control" accept="image/*">
-                                    <small class="text-muted">Макс. 10MB, форматы: JPEG, PNG, WebP</small>
+                                    <small class="text-muted">Мин. 400x300px, макс. 10MB</small>
                                 </div>
                             </div>
                         </div>
