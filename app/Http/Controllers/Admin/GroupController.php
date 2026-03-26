@@ -48,6 +48,15 @@ class GroupController extends Controller
             ->with('success', 'Группа успешно создана.');
     }
 
+    public function show(Organization $organization, Group $group)
+    {
+        Gate::authorize('view', $group);
+        
+        $group->load('users');
+        
+        return view('admin.groups.show', compact('organization', 'group'));
+    }
+
     public function edit(Organization $organization, Group $group)
     {
         Gate::authorize('update', $group);

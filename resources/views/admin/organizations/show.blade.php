@@ -154,7 +154,7 @@
                                         @endif
                                     </div>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="#" class="btn btn-outline-primary" title="Просмотр">
+                                        <a href="{{ route('admin.organizations.groups.show', [$organization, $group]) }}" class="btn btn-outline-primary" title="Просмотр">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                         @can('update', $group)
