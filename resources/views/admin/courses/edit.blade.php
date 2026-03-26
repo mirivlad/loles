@@ -72,7 +72,8 @@
                                 <div class="mb-3">
                                     <label class="form-label">Обложка</label>
                                     <input type="file" name="thumbnail" class="form-control" accept="image/*">
-                                    @if($course->thumbnail)<small class="text-muted">Текущая: {{ basename($course->thumbnail) }}</small>@endif
+                                    @if($course->thumbnail)<small class="text-muted d-block">Текущая: {{ basename($course->thumbnail) }}</small>@endif
+                                    <small class="text-muted">Мин. 400x300px, макс. 2MB, форматы: JPEG, PNG, WebP</small>
                                 </div>
                             </div>
                         </div>
