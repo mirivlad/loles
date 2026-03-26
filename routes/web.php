@@ -35,6 +35,6 @@ Route::middleware('auth')->group(function () {
     // Администрирование
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('organizations', OrganizationController::class);
-        Route::resource('organizations.groups', GroupController::class)->shallow();
+        Route::resource('organizations.groups', GroupController::class);
     });
 });

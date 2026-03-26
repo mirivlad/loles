@@ -15,7 +15,7 @@
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">Редактировать группу</h1>
                 <a href="{{ route('admin.organizations.show', $organization) }}" class="btn btn-secondary btn-sm">
-                    <i class="bi bi-arrow-left"></i> Назад
+                    <i class="bi bi-arrow-left"></i> Назад к организации
                 </a>
             </div>
 
@@ -29,7 +29,7 @@
             </div>
             @endif
 
-            <form action="{{ route('admin.groups.update', $group) }}" method="POST">
+            <form action="{{ route('admin.organizations.groups.update', [$organization, $group]) }}" method="POST">
                 @csrf
                 @method('PUT')
                 <div class="row">
