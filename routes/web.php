@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CourseCategoryController;
 use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\TestController;
+use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,5 +44,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class);
         Route::resource('course-categories', CourseCategoryController::class);
         Route::resource('courses', CourseController::class);
+        Route::resource('courses.tests', TestController::class)->shallow();
     });
 });
