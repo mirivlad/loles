@@ -15,13 +15,13 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-people"></i> Пользователи
+                        <a class="nav-link" href="{{ route('admin.organizations.index') }}">
+                            <i class="bi bi-building"></i> Организации
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#">
-                            <i class="bi bi-building"></i> Организации
+                            <i class="bi bi-people"></i> Пользователи
                         </a>
                     </li>
                     <li class="nav-item">
