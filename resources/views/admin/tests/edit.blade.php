@@ -7,9 +7,9 @@
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
             <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">Редактировать: {{ $test->title }}</h1>
-                <a href="{{ route('admin.tests.show', $test) }}" class="btn btn-secondary btn-sm">Назад</a>
+                <a href="{{ route('admin.courses.tests.show', [$course, $test]) }}" class="btn btn-secondary btn-sm">Назад</a>
             </div>
-            <form action="{{ route('admin.tests.update', $test) }}" method="POST">
+            <form action="{{ route('admin.courses.tests.update', [$course, $test]) }}" method="POST">
                 @csrf @method('PUT')
                 <div class="row">
                     <div class="col-md-8">
@@ -68,7 +68,7 @@
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Сохранить</button>
-                <a href="{{ route('admin.tests.show', $test) }}" class="btn btn-secondary">Отмена</a>
+                <a href="{{ route('admin.courses.tests.show', [$course, $test]) }}" class="btn btn-secondary">Отмена</a>
             </form>
         </main>
     </div>

@@ -8,7 +8,7 @@
             <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">{{ $test->title }}</h1>
                 <div>
-                    <a href="{{ route('admin.tests.edit', $test) }}" class="btn btn-warning btn-sm me-2">Редактировать</a>
+                    <a href="{{ route('admin.courses.tests.edit', [$course, $test]) }}" class="btn btn-warning btn-sm me-2">Редактировать</a>
                     <a href="{{ route('admin.courses.tests.index', $course) }}" class="btn btn-secondary btn-sm">Назад к тестам</a>
                 </div>
             </div>
