@@ -31,9 +31,9 @@
                                 </div>
                                 <div class="card-footer bg-white">
                                     <div class="btn-group btn-group-sm w-100">
-                                        <a href="{{ route('admin.tests.show', $test) }}" class="btn btn-outline-primary"><i class="bi bi-eye"></i></a>
-                                        <a href="{{ route('admin.tests.edit', $test) }}" class="btn btn-outline-warning"><i class="bi bi-pencil"></i></a>
-                                        <form action="{{ route('admin.tests.destroy', $test) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить?')">@csrf @method('DELETE')<button class="btn btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                                        <a href="{{ route('admin.courses.tests.show', [$course, $test]) }}" class="btn btn-outline-primary"><i class="bi bi-eye"></i></a>
+                                        <a href="{{ route('admin.courses.tests.edit', [$course, $test]) }}" class="btn btn-outline-warning"><i class="bi bi-pencil"></i></a>
+                                        <form action="{{ route('admin.courses.tests.destroy', [$course, $test]) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить?')">@csrf @method('DELETE')<button class="btn btn-outline-danger"><i class="bi bi-trash"></i></button></form>
                                     </div>
                                 </div>
                             </div>

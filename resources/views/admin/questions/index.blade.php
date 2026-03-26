@@ -10,7 +10,7 @@
                 <a href="{{ route('admin.tests.questions.create', $test) }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Добавить вопрос</a>
             </div>
             @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
-            <div class="mb-3"><a href="{{ route('admin.tests.show', $test) }}" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> Назад к тесту</a></div>
+            <div class="mb-3"><a href="{{ route('admin.courses.tests.show', [$test->course, $test]) }}" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> Назад к тесту</a></div>
             
             <div class="card shadow-sm">
                 <div class="card-body">
