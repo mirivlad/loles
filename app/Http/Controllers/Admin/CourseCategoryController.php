@@ -56,25 +56,25 @@ class CourseCategoryController extends Controller
             ->with('success', 'Категория успешно создана.');
     }
 
-    public function show(CourseCategory $category)
+    public function show(CourseCategory $courseCategory)
     {
-        Gate::authorize('view', $category);
+        Gate::authorize('view', $courseCategory);
         
-        $category->load(['parent', 'children', 'courses']);
+        $courseCategory->load(['parent', 'children', 'courses']);
         
-        return view('admin.course-categories.show', compact('category'));
+        return view('admin.course-categories.show', compact('courseCategory'));
     }
 
-    public function edit(CourseCategory $category)
+    public function edit(CourseCategory $courseCategory)
     {
-        Gate::authorize('update', $category);
+        Gate::authorize('update', $courseCategory);
         
         $parentCategories = CourseCategory::whereNull('parent_id')
-            ->where('id', '!=', $category->id)
+            ->where('id', '!=', $courseCategory->id)
             ->orderBy('name')
             ->get();
         
-        return view('admin.course-categories.edit', compact('category', 'parentCategories'));
+        return view('admin.course-categories.edit', compact('courseCategory', 'parentCategories'));
     }
 
     public function update(Request $request, CourseCategory $category)
