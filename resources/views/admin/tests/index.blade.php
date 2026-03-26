@@ -7,7 +7,7 @@
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
             <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">Тесты: {{ $course->title }}</h1>
-                <a href="{{ route('admin.tests.create', $course) }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Добавить тест</a>
+                <a href="{{ route('admin.courses.tests.create', $course) }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Добавить тест</a>
             </div>
             @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
             

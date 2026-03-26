@@ -64,7 +64,7 @@
                     <div class="card shadow-sm">
                         <div class="card-header d-flex justify-content-between">
                             <h5 class="mb-0">Тесты</h5>
-                            <a href="{{ route('admin.tests.create', $course) }}" class="btn btn-sm btn-primary"><i class="bi bi-plus"></i></a>
+                            <a href="{{ route('admin.courses.tests.create', $course) }}" class="btn btn-sm btn-primary"><i class="bi bi-plus"></i></a>
                         </div>
                         <div class="card-body">
                             @if($course->tests->count() > 0)<ul class="list-group list-group-flush">@foreach($course->tests as $test)<li class="list-group-item d-flex justify-content-between">{{ $test->title }}<span class="badge bg-secondary">{{ $test->type }}</span></li>@endforeach</ul>
