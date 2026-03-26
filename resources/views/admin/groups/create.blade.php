@@ -29,7 +29,7 @@
             </div>
             @endif
 
-            <form action="{{ route('admin.groups.store', $organization) }}" method="POST">
+            <form action="{{ route('admin.organizations.groups.store', $organization) }}" method="POST">
                 @csrf
                 <div class="row">
                     <div class="col-md-8">

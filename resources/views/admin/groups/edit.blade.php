@@ -29,7 +29,7 @@
             </div>
             @endif
 
-            <form action="{{ route('admin.groups.update', $organization, $group) }}" method="POST">
+            <form action="{{ route('admin.groups.update', $group) }}" method="POST">
                 @csrf
                 @method('PUT')
                 <div class="row">
