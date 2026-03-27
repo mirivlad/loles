@@ -40,10 +40,12 @@
                                     <div id="answersContainer">
                                         @foreach($question->answers as $answer)
                                         <div class="input-group mb-2">
-                                            <input type="text" name="answers[{{ $loop->index }}][text]" class="form-control" placeholder="Текст ответа" value="{{ $answer->answer_text }}">
+                                            <input type="text" name="answers[{{ $loop->index }}][text]" class="form-control" placeholder="Текст ответа" value="{{ $answer->answer_text ?? '' }}">
                                             <input type="file" name="answers[{{ $loop->index }}][image]" class="form-control" accept="image/*">
                                             @if($answer->image)
-                                            <img src="{{ asset('storage/' . $answer->image) }}" alt="Ответ" style="height:40px;">
+                                            <div class="input-group-text">
+                                                <img src="{{ asset('storage/' . $answer->image) }}" alt="Ответ" style="height:40px;object-fit:contain;">
+                                            </div>
                                             @endif
                                             <input type="hidden" name="answers[{{ $loop->index }}][is_correct]" value="{{ $answer->is_correct ? '1' : '0' }}">
                                             <button type="button" class="btn {{ $answer->is_correct ? 'btn-success' : 'btn-outline-success' }}" onclick="toggleCorrect(this)">

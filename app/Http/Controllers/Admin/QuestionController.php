@@ -80,13 +80,16 @@ class QuestionController extends Controller
             // Ответы для multiple_choice
             if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
                 foreach ($validated['answers'] as $answer) {
-                    if (!empty($answer['text']) || !empty($answer['image'])) {
+                    $hasText = !empty($answer['text']);
+                    $hasImage = !empty($answer['image']);
+                    
+                    if ($hasText || $hasImage) {
                         $imagePath = null;
-                        if (!empty($answer['image'])) {
+                        if ($hasImage) {
                             $imagePath = $answer['image']->store('questions/answers', 'public');
                         }
                         $question->answers()->create([
-                            'answer_text' => $answer['text'],
+                            'answer_text' => $hasText ? $answer['text'] : null,
                             'image' => $imagePath,
                             'is_correct' => $answer['is_correct'] ?? false,
                             'sort_order' => $answer['sort_order'] ?? 0,
@@ -187,13 +190,16 @@ class QuestionController extends Controller
             if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
                 $question->answers()->delete();
                 foreach ($validated['answers'] as $answer) {
-                    if (!empty($answer['text']) || !empty($answer['image'])) {
+                    $hasText = !empty($answer['text']);
+                    $hasImage = !empty($answer['image']);
+                    
+                    if ($hasText || $hasImage) {
                         $imagePath = null;
-                        if (!empty($answer['image'])) {
+                        if ($hasImage) {
                             $imagePath = $answer['image']->store('questions/answers', 'public');
                         }
                         $question->answers()->create([
-                            'answer_text' => $answer['text'],
+                            'answer_text' => $hasText ? $answer['text'] : null,
                             'image' => $imagePath,
                             'is_correct' => $answer['is_correct'] ?? false,
                             'sort_order' => $answer['sort_order'] ?? 0,
