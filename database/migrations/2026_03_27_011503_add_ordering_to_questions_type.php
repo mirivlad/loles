@@ -9,8 +9,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Добавляем ordering и убираем input
-        DB::statement("ALTER TABLE questions MODIFY COLUMN type ENUM('single_choice', 'multiple_choice', 'matching', 'ordering') NOT NULL");
+        // Добавляем ordering и убираем input, single_choice
+        DB::statement("ALTER TABLE questions MODIFY COLUMN type ENUM('multiple_choice', 'matching', 'ordering') NOT NULL");
         
         // Создаём таблицу для ordering элементов
         Schema::create('question_ordering_items', function (Blueprint $table) {

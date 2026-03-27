@@ -63,12 +63,13 @@
                                                 @if($question->is_required)<span class="badge bg-warning ms-1"><i class="bi bi-exclamation-circle"></i></span>@endif
                                             </td>
                                             <td>
-                                                @if($question->type === 'single_choice')
-                                                    <span class="badge bg-info" title="Один ответ"><i class="bi bi-circle"></i></span>
-                                                @elseif($question->type === 'multiple_choice')
-                                                    <span class="badge bg-success" title="Несколько ответов"><i class="bi bi-check2-square"></i></span>
-                                                @elseif($question->type === 'input')
-                                                    <span class="badge bg-warning" title="Ввод текста"><i class="bi bi-textarea-resize"></i></span>
+                                                @if($question->type === 'multiple_choice')
+                                                    @php $correctCount = $question->answers->where('is_correct', true)->count(); @endphp
+                                                    @if($correctCount === 1)
+                                                        <span class="badge bg-info" title="Один правильный ответ"><i class="bi bi-circle"></i></span>
+                                                    @else
+                                                        <span class="badge bg-success" title="Несколько правильных ответов"><i class="bi bi-check2-square"></i></span>
+                                                    @endif
                                                 @elseif($question->type === 'matching')
                                                     <span class="badge badge-purple" title="Соответствие"><i class="bi bi-arrow-left-right"></i></span>
                                                 @elseif($question->type === 'ordering')
