@@ -94,34 +94,36 @@
 <!-- TinyMCE -->
 <script src="https://cdn.tiny.mce.com/1/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
-// Инициализация TinyMCE
-tinymce.init({
-    selector: '#questionText, #questionExplanation',
-    height: 300,
-    plugins: 'image link table lists code',
-    toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | image link | code',
-    image_title: true,
-    automatic_uploads: true,
-    file_picker_types: 'image',
-    file_picker_callback: function(cb, value, meta) {
-        const input = document.createElement('input');
-        input.setAttribute('type', 'file');
-        input.setAttribute('accept', 'image/*');
-        input.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.addEventListener('load', function() {
-                const id = 'blobid' + (new Date()).getTime();
-                const blobCache = tinymce.activeEditor.editorUpload.blobCache;
-                const base64 = reader.result.split(',')[1];
-                const blobInfo = blobCache.create(id, file, base64);
-                blobCache.add(blobInfo);
-                cb(blobInfo.blobUri(), { title: file.name });
+// Инициализация TinyMCE после загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+    tinymce.init({
+        selector: '#questionText, #questionExplanation',
+        height: 300,
+        plugins: 'image link table lists code',
+        toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | image link | code',
+        image_title: true,
+        automatic_uploads: true,
+        file_picker_types: 'image',
+        file_picker_callback: function(cb, value, meta) {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.addEventListener('load', function() {
+                    const id = 'blobid' + (new Date()).getTime();
+                    const blobCache = tinymce.activeEditor.editorUpload.blobCache;
+                    const base64 = reader.result.split(',')[1];
+                    const blobInfo = blobCache.create(id, file, base64);
+                    blobCache.add(blobInfo);
+                    cb(blobInfo.blobUri(), { title: file.name });
+                });
+                reader.readAsDataURL(file);
             });
-            reader.readAsDataURL(file);
-        });
-        input.click();
-    }
+            input.click();
+        }
+    });
 });
 
 function updateQuestionType() {

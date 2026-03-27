@@ -53,6 +53,20 @@ class QuestionController extends Controller
             'ordering_items' => 'nullable|array',
         ]);
         
+        // Проверка что есть хотя бы текст или картинка в ответах
+        if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
+            $hasValidAnswer = false;
+            foreach ($validated['answers'] as $answer) {
+                if (!empty($answer['text']) || !empty($answer['image'])) {
+                    $hasValidAnswer = true;
+                    break;
+                }
+            }
+            if (!$hasValidAnswer) {
+                return back()->withErrors(['answers' => 'Добавьте хотя бы один ответ (текст или картинку)'])->withInput();
+            }
+        }
+        
         DB::transaction(function () use ($test, $validated) {
             $question = $test->questions()->create([
                 'type' => $validated['type'],
@@ -66,7 +80,7 @@ class QuestionController extends Controller
             // Ответы для multiple_choice
             if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
                 foreach ($validated['answers'] as $answer) {
-                    if (!empty($answer['text'])) {
+                    if (!empty($answer['text']) || !empty($answer['image'])) {
                         $imagePath = null;
                         if (!empty($answer['image'])) {
                             $imagePath = $answer['image']->store('questions/answers', 'public');
@@ -145,6 +159,20 @@ class QuestionController extends Controller
             'ordering_items' => 'nullable|array',
         ]);
         
+        // Проверка что есть хотя бы текст или картинка в ответах
+        if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
+            $hasValidAnswer = false;
+            foreach ($validated['answers'] as $answer) {
+                if (!empty($answer['text']) || !empty($answer['image'])) {
+                    $hasValidAnswer = true;
+                    break;
+                }
+            }
+            if (!$hasValidAnswer) {
+                return back()->withErrors(['answers' => 'Добавьте хотя бы один ответ (текст или картинку)'])->withInput();
+            }
+        }
+        
         DB::transaction(function () use ($question, $validated) {
             $question->update([
                 'type' => $validated['type'],
@@ -159,7 +187,7 @@ class QuestionController extends Controller
             if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
                 $question->answers()->delete();
                 foreach ($validated['answers'] as $answer) {
-                    if (!empty($answer['text'])) {
+                    if (!empty($answer['text']) || !empty($answer['image'])) {
                         $imagePath = null;
                         if (!empty($answer['image'])) {
                             $imagePath = $answer['image']->store('questions/answers', 'public');
