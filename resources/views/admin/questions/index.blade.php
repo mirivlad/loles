@@ -35,10 +35,10 @@
                                     <strong>
                                         <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#questionPreviewModal" 
                                            data-question-type="{{ $question->type }}"
-                                           data-question-text="{{ htmlspecialchars($question->question_text) }}"
-                                           data-answers="{{ htmlspecialchars($question->answers->toJson()) }}"
-                                           data-matching-pairs="{{ htmlspecialchars($question->matchingPairs->toJson()) }}"
-                                           data-ordering-items="{{ htmlspecialchars($question->orderingItems->toJson()) }}">
+                                           data-question-text="{{ base64_encode($question->question_text) }}"
+                                           data-answers="{{ base64_encode($question->answers->toJson()) }}"
+                                           data-matching-pairs="{{ base64_encode($question->matchingPairs->toJson()) }}"
+                                           data-ordering-items="{{ base64_encode($question->orderingItems->toJson()) }}">
                                             {{ Str::limit(strip_tags($question->question_text), 100) }}
                                         </a>
                                     </strong>
@@ -89,10 +89,10 @@ document.addEventListener('DOMContentLoaded', function() {
     previewModal.addEventListener('show.bs.modal', function(event) {
         const button = event.relatedTarget;
         const questionType = button.getAttribute('data-question-type');
-        const questionText = button.getAttribute('data-question-text');
-        const answers = JSON.parse(button.getAttribute('data-answers'));
-        const matchingPairs = JSON.parse(button.getAttribute('data-matching-pairs') || '[]');
-        const orderingItems = JSON.parse(button.getAttribute('data-ordering-items') || '[]');
+        const questionText = atob(button.getAttribute('data-question-text'));
+        const answers = JSON.parse(atob(button.getAttribute('data-answers')));
+        const matchingPairs = JSON.parse(atob(button.getAttribute('data-matching-pairs') || 'bnVsbA=='));
+        const orderingItems = JSON.parse(atob(button.getAttribute('data-ordering-items') || 'bnVsbA=='));
         
         // Отображаем текст вопроса
         document.getElementById('modalQuestionText').innerHTML = questionText;
@@ -123,19 +123,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 answersContainer.appendChild(div);
             });
         } else if (questionType === 'matching') {
-            let html = '<table class="table"><thead><tr><th>Левая часть</th><th>Правая часть</th></tr></thead><tbody>';
-            matchingPairs.forEach((pair, index) => {
-                html += `<tr><td>${pair.left_text}</td><td>${pair.right_text}</td></tr>`;
-            });
-            html += '</tbody></table>';
-            answersContainer.innerHTML = html;
+            if (matchingPairs && matchingPairs.length > 0) {
+                let html = '<table class="table"><thead><tr><th>Левая часть</th><th>Правая часть</th></tr></thead><tbody>';
+                matchingPairs.forEach((pair, index) => {
+                    html += `<tr><td>${pair.left_text}</td><td>${pair.right_text}</td></tr>`;
+                });
+                html += '</tbody></table>';
+                answersContainer.innerHTML = html;
+            } else {
+                answersContainer.innerHTML = '<p class="text-muted">Нет пар для соответствия</p>';
+            }
         } else if (questionType === 'ordering') {
-            let html = '<ol class="list-group">';
-            orderingItems.sort((a, b) => a.correct_order - b.correct_order).forEach((item, index) => {
-                html += `<li class="list-group-item">${index + 1}. ${item.item_text}</li>`;
-            });
-            html += '</ol>';
-            answersContainer.innerHTML = html;
+            if (orderingItems && orderingItems.length > 0) {
+                let html = '<ol class="list-group">';
+                orderingItems.sort((a, b) => a.correct_order - b.correct_order).forEach((item, index) => {
+                    html += `<li class="list-group-item">${index + 1}. ${item.item_text}</li>`;
+                });
+                html += '</ol>';
+                answersContainer.innerHTML = html;
+            } else {
+                answersContainer.innerHTML = '<p class="text-muted">Нет элементов для сортировки</p>';
+            }
         }
     });
 });
