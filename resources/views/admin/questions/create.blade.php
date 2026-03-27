@@ -98,6 +98,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     tinymce.init({
         selector: '#questionText, #questionExplanation',
+        license_key: 'gpl',
         language: 'ru',
         height: 300,
         plugins: 'image link table lists code',
