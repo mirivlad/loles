@@ -39,6 +39,24 @@ class QuestionController extends Controller
     {
         Gate::authorize('create', Question::class);
 
+        \Log::info('=== QUESTION STORE DEBUG ===');
+        \Log::info('Request type: ' . $request->input('type'));
+        \Log::info('Request answers: ' . json_encode($request->input('answers', [])));
+        
+        // Проверяем каждый ответ
+        $hasAnyFile = false;
+        foreach ($request->input('answers', []) as $index => $answer) {
+            \Log::info("Answer $index: text=" . ($answer['text'] ?? 'NULL') . ", is_correct=" . ($answer['is_correct'] ?? 'NOT SET'));
+            $hasFile = $request->hasFile("answers.$index.image");
+            \Log::info("Answer $index has file: " . ($hasFile ? 'YES' : 'NO'));
+            if ($hasFile) {
+                $hasAnyFile = true;
+                $file = $request->file("answers.$index.image");
+                \Log::info("File info: " . $file->getClientOriginalName() . ", " . $file->getSize() . " bytes");
+            }
+        }
+        \Log::info('Has any files: ' . ($hasAnyFile ? 'YES' : 'NO'));
+
         $validated = $request->validate([
             'type' => 'required|in:multiple_choice,matching,ordering',
             'question_text' => 'required|string',
@@ -52,27 +70,33 @@ class QuestionController extends Controller
             'ordering_items' => 'nullable|array',
         ]);
         
-        // Валидация картинок отдельно
-        if ($request->has('answers')) {
-            foreach ($request->input('answers', []) as $index => $answer) {
-                if ($request->hasFile("answers.$index.image")) {
-                    $request->validate([
-                        "answers.$index.image" => 'image|max:2048',
-                    ]);
-                }
+        // Валидация картинок вручную
+        foreach ($request->input('answers', []) as $index => $answer) {
+            if ($request->hasFile("answers.$index.image")) {
+                $request->validate([
+                    "answers.$index.image" => 'image|max:2048',
+                ], [
+                    "answers.$index.image.image" => "Ответ #$index: файл должен быть изображением",
+                    "answers.$index.image.max" => "Ответ #$index: файл не должен превышать 2MB",
+                ]);
             }
         }
         
         // Проверка что есть хотя бы текст или картинка в ответах
         if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
             $hasValidAnswer = false;
-            foreach ($validated['answers'] as $answer) {
-                if (!empty($answer['text']) || !empty($answer['image'])) {
+            foreach ($request->input('answers', []) as $index => $answer) {
+                $hasText = !empty($answer['text']);
+                $hasImage = $request->hasFile("answers.$index.image");
+                \Log::info("Checking answer $index: hasText=" . ($hasText ? 'YES' : 'NO') . ", hasImage=" . ($hasImage ? 'YES' : 'NO'));
+                if ($hasText || $hasImage) {
                     $hasValidAnswer = true;
                     break;
                 }
             }
+            \Log::info('Has valid answer: ' . ($hasValidAnswer ? 'YES' : 'NO'));
             if (!$hasValidAnswer) {
+                \Log::info('No valid answers - redirecting back');
                 return back()->withErrors(['answers' => 'Добавьте хотя бы один ответ (текст или картинку)'])->withInput();
             }
         }
@@ -94,11 +118,14 @@ class QuestionController extends Controller
                     $hasImage = $request->hasFile("answers.$index.image");
                     $isCorrect = isset($answer['is_correct']) && $answer['is_correct'] === '1';
                     
+                    \Log::info("Saving answer $index: hasText=" . ($hasText ? 'YES' : 'NO') . ", hasImage=" . ($hasImage ? 'YES' : 'NO') . ", isCorrect=" . ($isCorrect ? 'YES' : 'NO'));
+                    
                     // Сохраняем если есть текст или картинка
                     if ($hasText || $hasImage) {
                         $imagePath = null;
                         if ($hasImage) {
                             $imagePath = $request->file("answers.$index.image")->store('questions/answers', 'public');
+                            \Log::info("Saved image to: $imagePath");
                         }
                         $question->answers()->create([
                             'answer_text' => $hasText ? $answer['text'] : null,
@@ -106,6 +133,7 @@ class QuestionController extends Controller
                             'is_correct' => $isCorrect ? 1 : 0,
                             'sort_order' => $answer['sort_order'] ?? $index,
                         ]);
+                        \Log::info("Created answer: text=" . ($hasText ? $answer['text'] : 'NULL') . ", image=" . ($imagePath ?? 'NULL') . ", is_correct=" . ($isCorrect ? '1' : '0'));
                     }
                 }
             }
@@ -136,6 +164,8 @@ class QuestionController extends Controller
                     }
                 }
             }
+            
+            \Log::info('=== END QUESTION STORE DEBUG ===');
         });
         
         return redirect()->route('admin.tests.questions.index', $test)
@@ -169,22 +199,16 @@ class QuestionController extends Controller
             'is_required' => 'boolean',
             'answers' => 'nullable|array',
             'answers.*.text' => 'nullable|string',
-            'answers.*.image' => 'nullable|image|max:2048',
             'matching_pairs' => 'nullable|array',
             'ordering_items' => 'nullable|array',
         ]);
         
-        // Проверка что есть хотя бы текст или картинка в ответах
-        if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
-            $hasValidAnswer = false;
-            foreach ($validated['answers'] as $answer) {
-                if (!empty($answer['text']) || !empty($answer['image'])) {
-                    $hasValidAnswer = true;
-                    break;
-                }
-            }
-            if (!$hasValidAnswer) {
-                return back()->withErrors(['answers' => 'Добавьте хотя бы один ответ (текст или картинку)'])->withInput();
+        // Валидация картинок вручную
+        foreach ($request->input('answers', []) as $index => $answer) {
+            if ($request->hasFile("answers.$index.image")) {
+                $request->validate([
+                    "answers.$index.image" => 'image|max:2048',
+                ]);
             }
         }
         
@@ -197,9 +221,9 @@ class QuestionController extends Controller
                 'sort_order' => $validated['sort_order'] ?? $question->sort_order,
                 'is_required' => $validated['is_required'] ?? true,
             ]);
-
+            
             // Ответы
-            if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
+            if ($validated['type'] === 'multiple_choice') {
                 $question->answers()->delete();
                 foreach ($request->input('answers', []) as $index => $answer) {
                     $hasText = !empty($answer['text']);
