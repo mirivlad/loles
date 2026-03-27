@@ -48,13 +48,20 @@ class QuestionController extends Controller
             'is_required' => 'boolean',
             'answers' => 'nullable|array',
             'answers.*.text' => 'nullable|string',
-            'answers.*.image' => 'nullable|image|max:2048',
             'matching_pairs' => 'nullable|array',
             'ordering_items' => 'nullable|array',
         ]);
         
-        // Получаем картинки из request напрямую (не через validate)
-        $answersImages = $request->input('answers', []);
+        // Валидация картинок отдельно
+        if ($request->has('answers')) {
+            foreach ($request->input('answers', []) as $index => $answer) {
+                if ($request->hasFile("answers.$index.image")) {
+                    $request->validate([
+                        "answers.$index.image" => 'image|max:2048',
+                    ]);
+                }
+            }
+        }
         
         // Проверка что есть хотя бы текст или картинка в ответах
         if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
@@ -82,10 +89,12 @@ class QuestionController extends Controller
 
             // Ответы для multiple_choice
             if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
-                foreach ($validated['answers'] as $index => $answer) {
+                foreach ($request->input('answers', []) as $index => $answer) {
                     $hasText = !empty($answer['text']);
                     $hasImage = $request->hasFile("answers.$index.image");
-
+                    $isCorrect = isset($answer['is_correct']) && $answer['is_correct'] === '1';
+                    
+                    // Сохраняем если есть текст или картинка
                     if ($hasText || $hasImage) {
                         $imagePath = null;
                         if ($hasImage) {
@@ -94,8 +103,8 @@ class QuestionController extends Controller
                         $question->answers()->create([
                             'answer_text' => $hasText ? $answer['text'] : null,
                             'image' => $imagePath,
-                            'is_correct' => $answer['is_correct'] ?? false,
-                            'sort_order' => $answer['sort_order'] ?? 0,
+                            'is_correct' => $isCorrect ? 1 : 0,
+                            'sort_order' => $answer['sort_order'] ?? $index,
                         ]);
                     }
                 }
@@ -192,10 +201,11 @@ class QuestionController extends Controller
             // Ответы
             if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
                 $question->answers()->delete();
-                foreach ($validated['answers'] as $index => $answer) {
+                foreach ($request->input('answers', []) as $index => $answer) {
                     $hasText = !empty($answer['text']);
                     $hasImage = $request->hasFile("answers.$index.image");
-
+                    $isCorrect = isset($answer['is_correct']) && $answer['is_correct'] === '1';
+                    
                     if ($hasText || $hasImage) {
                         $imagePath = null;
                         if ($hasImage) {
@@ -204,8 +214,8 @@ class QuestionController extends Controller
                         $question->answers()->create([
                             'answer_text' => $hasText ? $answer['text'] : null,
                             'image' => $imagePath,
-                            'is_correct' => $answer['is_correct'] ?? false,
-                            'sort_order' => $answer['sort_order'] ?? 0,
+                            'is_correct' => $isCorrect ? 1 : 0,
+                            'sort_order' => $answer['sort_order'] ?? $index,
                         ]);
                     }
                 }
