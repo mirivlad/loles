@@ -32,7 +32,16 @@
                                     @elseif($question->type === 'ordering')
                                         <span class="badge bg-dark" title="Правильный порядок"><i class="bi bi-sort-numeric-down"></i></span>
                                     @endif
-                                    <strong>{{ strip_tags($question->question_text) }}</strong>
+                                    <strong>
+                                        <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#questionPreviewModal" 
+                                           data-question-type="{{ $question->type }}"
+                                           data-question-text="{{ htmlspecialchars($question->question_text) }}"
+                                           data-answers="{{ htmlspecialchars($question->answers->toJson()) }}"
+                                           data-matching-pairs="{{ htmlspecialchars($question->matchingPairs->toJson()) }}"
+                                           data-ordering-items="{{ htmlspecialchars($question->orderingItems->toJson()) }}">
+                                            {{ Str::limit(strip_tags($question->question_text), 100) }}
+                                        </a>
+                                    </strong>
                                     <div class="mt-2">
                                         <small class="text-muted">{{ $question->answers->count() }} ответов@if($question->matchingPairs->count() > 0), {{ $question->matchingPairs->count() }} пар@endif</small>
                                         @if($question->is_required)<span class="badge bg-warning ms-2"><i class="bi bi-exclamation-circle"></i> Обязательный</span>@endif
@@ -54,4 +63,81 @@
         </main>
     </div>
 </div>
+
+<!-- Modal предпросмотра вопроса -->
+<div class="modal fade" id="questionPreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Предпросмотр вопроса</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalQuestionText" class="mb-4"></div>
+                <div id="modalAnswersContainer"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const previewModal = document.getElementById('questionPreviewModal');
+    previewModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const questionType = button.getAttribute('data-question-type');
+        const questionText = button.getAttribute('data-question-text');
+        const answers = JSON.parse(button.getAttribute('data-answers'));
+        const matchingPairs = JSON.parse(button.getAttribute('data-matching-pairs') || '[]');
+        const orderingItems = JSON.parse(button.getAttribute('data-ordering-items') || '[]');
+        
+        // Отображаем текст вопроса
+        document.getElementById('modalQuestionText').innerHTML = questionText;
+        
+        const answersContainer = document.getElementById('modalAnswersContainer');
+        answersContainer.innerHTML = '';
+        
+        // Отображаем ответы в зависимости от типа
+        if (questionType === 'multiple_choice') {
+            const correctCount = answers.filter(a => a.is_correct).length;
+            const inputType = correctCount === 1 ? 'radio' : 'checkbox';
+            const inputName = correctCount === 1 ? 'preview_answer' : 'preview_answers[]';
+            
+            answers.forEach((answer, index) => {
+                const div = document.createElement('div');
+                div.className = 'mb-3';
+                let html = `<div class="form-check">
+                    <input class="form-check-input" type="${inputType}" name="${inputName}" id="answer_${index}" disabled>
+                    <label class="form-check-label" for="answer_${index}">`;
+                if (answer.image) {
+                    html += `<img src="/storage/${answer.image}" alt="Ответ" style="max-width:200px;max-height:150px;display:block;margin:10px 0;">`;
+                }
+                if (answer.answer_text) {
+                    html += answer.answer_text;
+                }
+                html += `</label></div>`;
+                div.innerHTML = html;
+                answersContainer.appendChild(div);
+            });
+        } else if (questionType === 'matching') {
+            let html = '<table class="table"><thead><tr><th>Левая часть</th><th>Правая часть</th></tr></thead><tbody>';
+            matchingPairs.forEach((pair, index) => {
+                html += `<tr><td>${pair.left_text}</td><td>${pair.right_text}</td></tr>`;
+            });
+            html += '</tbody></table>';
+            answersContainer.innerHTML = html;
+        } else if (questionType === 'ordering') {
+            let html = '<ol class="list-group">';
+            orderingItems.sort((a, b) => a.correct_order - b.correct_order).forEach((item, index) => {
+                html += `<li class="list-group-item">${index + 1}. ${item.item_text}</li>`;
+            });
+            html += '</ol>';
+            answersContainer.innerHTML = html;
+        }
+    });
+});
+</script>
 @endsection
