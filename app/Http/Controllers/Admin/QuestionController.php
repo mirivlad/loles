@@ -70,7 +70,7 @@ class QuestionController extends Controller
             }
         }
         
-        DB::transaction(function () use ($test, $validated) {
+        DB::transaction(function () use ($test, $validated, $request) {
             $question = $test->questions()->create([
                 'type' => $validated['type'],
                 'question_text' => $validated['question_text'],
@@ -79,13 +79,13 @@ class QuestionController extends Controller
                 'sort_order' => $validated['sort_order'] ?? $test->questions()->count(),
                 'is_required' => $validated['is_required'] ?? true,
             ]);
-            
+
             // Ответы для multiple_choice
             if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
                 foreach ($validated['answers'] as $index => $answer) {
                     $hasText = !empty($answer['text']);
                     $hasImage = $request->hasFile("answers.$index.image");
-                    
+
                     if ($hasText || $hasImage) {
                         $imagePath = null;
                         if ($hasImage) {
@@ -179,7 +179,7 @@ class QuestionController extends Controller
             }
         }
         
-        DB::transaction(function () use ($question, $validated) {
+        DB::transaction(function () use ($question, $validated, $request) {
             $question->update([
                 'type' => $validated['type'],
                 'question_text' => $validated['question_text'],
@@ -188,14 +188,14 @@ class QuestionController extends Controller
                 'sort_order' => $validated['sort_order'] ?? $question->sort_order,
                 'is_required' => $validated['is_required'] ?? true,
             ]);
-            
+
             // Ответы
             if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
                 $question->answers()->delete();
                 foreach ($validated['answers'] as $index => $answer) {
                     $hasText = !empty($answer['text']);
                     $hasImage = $request->hasFile("answers.$index.image");
-                    
+
                     if ($hasText || $hasImage) {
                         $imagePath = null;
                         if ($hasImage) {
