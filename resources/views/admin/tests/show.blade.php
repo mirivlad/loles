@@ -64,13 +64,15 @@
                                             </td>
                                             <td>
                                                 @if($question->type === 'single_choice')
-                                                    <span class="badge bg-info" title="Один ответ"><i class="bi bi-radio-button"></i></span>
+                                                    <span class="badge bg-info" title="Один ответ"><i class="bi bi-circle"></i></span>
                                                 @elseif($question->type === 'multiple_choice')
                                                     <span class="badge bg-success" title="Несколько ответов"><i class="bi bi-check2-square"></i></span>
                                                 @elseif($question->type === 'input')
                                                     <span class="badge bg-warning" title="Ввод текста"><i class="bi bi-textarea-resize"></i></span>
                                                 @elseif($question->type === 'matching')
                                                     <span class="badge badge-purple" title="Соответствие"><i class="bi bi-arrow-left-right"></i></span>
+                                                @elseif($question->type === 'ordering')
+                                                    <span class="badge bg-dark" title="Правильный порядок"><i class="bi bi-sort-numeric-down"></i></span>
                                                 @endif
                                                 {{ $question->type }}
                                             </td>

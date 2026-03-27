@@ -40,6 +40,11 @@ class Question extends Model
         return $this->hasMany(QuestionMatchingPair::class);
     }
 
+    public function orderingItems(): HasMany
+    {
+        return $this->hasMany(QuestionOrderingItem::class);
+    }
+
     public function responses(): HasMany
     {
         return $this->hasMany(TestResponse::class);
