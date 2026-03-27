@@ -35,10 +35,10 @@
                                     <strong>
                                         <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#questionPreviewModal" 
                                            data-question-type="{{ $question->type }}"
-                                           data-question-text="{{ base64_encode($question->question_text) }}"
-                                           data-answers="{{ base64_encode($question->answers->toJson()) }}"
-                                           data-matching-pairs="{{ base64_encode($question->matchingPairs->toJson()) }}"
-                                           data-ordering-items="{{ base64_encode($question->orderingItems->toJson()) }}">
+                                           data-question-text="{{ urlencode($question->question_text) }}"
+                                           data-answers="{{ urlencode($question->answers->toJson()) }}"
+                                           data-matching-pairs="{{ urlencode($question->matchingPairs->toJson()) }}"
+                                           data-ordering-items="{{ urlencode($question->orderingItems->toJson()) }}">
                                             {{ Str::limit(strip_tags($question->question_text), 100) }}
                                         </a>
                                     </strong>
@@ -65,12 +65,12 @@
 </div>
 
 <!-- Modal предпросмотра вопроса -->
-<div class="modal fade" id="questionPreviewModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+<div class="modal fade" id="questionPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Предпросмотр вопроса</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div id="modalQuestionText" class="mb-4"></div>
@@ -89,10 +89,12 @@ document.addEventListener('DOMContentLoaded', function() {
     previewModal.addEventListener('show.bs.modal', function(event) {
         const button = event.relatedTarget;
         const questionType = button.getAttribute('data-question-type');
-        const questionText = atob(button.getAttribute('data-question-text'));
-        const answers = JSON.parse(atob(button.getAttribute('data-answers')));
-        const matchingPairs = JSON.parse(atob(button.getAttribute('data-matching-pairs') || 'bnVsbA=='));
-        const orderingItems = JSON.parse(atob(button.getAttribute('data-ordering-items') || 'bnVsbA=='));
+        const questionText = decodeURIComponent(button.getAttribute('data-question-text'));
+        const answers = JSON.parse(decodeURIComponent(button.getAttribute('data-answers')));
+        const matchingPairsAttr = button.getAttribute('data-matching-pairs');
+        const orderingItemsAttr = button.getAttribute('data-ordering-items');
+        const matchingPairs = matchingPairsAttr ? JSON.parse(decodeURIComponent(matchingPairsAttr)) : [];
+        const orderingItems = orderingItemsAttr ? JSON.parse(decodeURIComponent(orderingItemsAttr)) : [];
         
         // Отображаем текст вопроса
         document.getElementById('modalQuestionText').innerHTML = questionText;
