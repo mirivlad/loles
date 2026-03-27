@@ -38,7 +38,7 @@ class QuestionController extends Controller
     public function store(Request $request, Test $test)
     {
         Gate::authorize('create', Question::class);
-        
+
         $validated = $request->validate([
             'type' => 'required|in:multiple_choice,matching,ordering',
             'question_text' => 'required|string',
@@ -52,6 +52,9 @@ class QuestionController extends Controller
             'matching_pairs' => 'nullable|array',
             'ordering_items' => 'nullable|array',
         ]);
+        
+        // Получаем картинки из request напрямую (не через validate)
+        $answersImages = $request->input('answers', []);
         
         // Проверка что есть хотя бы текст или картинка в ответах
         if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
@@ -79,14 +82,14 @@ class QuestionController extends Controller
             
             // Ответы для multiple_choice
             if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
-                foreach ($validated['answers'] as $answer) {
+                foreach ($validated['answers'] as $index => $answer) {
                     $hasText = !empty($answer['text']);
-                    $hasImage = !empty($answer['image']);
+                    $hasImage = $request->hasFile("answers.$index.image");
                     
                     if ($hasText || $hasImage) {
                         $imagePath = null;
                         if ($hasImage) {
-                            $imagePath = $answer['image']->store('questions/answers', 'public');
+                            $imagePath = $request->file("answers.$index.image")->store('questions/answers', 'public');
                         }
                         $question->answers()->create([
                             'answer_text' => $hasText ? $answer['text'] : null,
@@ -189,14 +192,14 @@ class QuestionController extends Controller
             // Ответы
             if ($validated['type'] === 'multiple_choice' && !empty($validated['answers'])) {
                 $question->answers()->delete();
-                foreach ($validated['answers'] as $answer) {
+                foreach ($validated['answers'] as $index => $answer) {
                     $hasText = !empty($answer['text']);
-                    $hasImage = !empty($answer['image']);
+                    $hasImage = $request->hasFile("answers.$index.image");
                     
                     if ($hasText || $hasImage) {
                         $imagePath = null;
                         if ($hasImage) {
-                            $imagePath = $answer['image']->store('questions/answers', 'public');
+                            $imagePath = $request->file("answers.$index.image")->store('questions/answers', 'public');
                         }
                         $question->answers()->create([
                             'answer_text' => $hasText ? $answer['text'] : null,

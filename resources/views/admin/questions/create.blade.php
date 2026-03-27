@@ -150,14 +150,17 @@ function removeAnswer(btn) { btn.parentElement.remove(); }
 function toggleCorrect(btn) {
     const inputGroup = btn.parentElement;
     const hidden = inputGroup.querySelector('input[type="hidden"][name*="is_correct"]');
+    const icon = btn.querySelector('i');
     if (hidden.value === '0') { 
         hidden.value = '1'; 
-        btn.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+        icon.classList.remove('bi-circle');
+        icon.classList.add('bi-check-circle-fill');
         btn.classList.remove('btn-outline-success');
         btn.classList.add('btn-success');
     } else { 
         hidden.value = '0'; 
-        btn.innerHTML = '<i class="bi bi-circle"></i>';
+        icon.classList.remove('bi-check-circle-fill');
+        icon.classList.add('bi-circle');
         btn.classList.remove('btn-success');
         btn.classList.add('btn-outline-success');
     }
