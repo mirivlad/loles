@@ -100,6 +100,8 @@ document.addEventListener('DOMContentLoaded', function() {
         selector: '#questionText, #questionExplanation',
         license_key: 'gpl',
         language: 'ru',
+        skin: 'oxide',
+        content_css: 'default',
         height: 300,
         plugins: 'image link table lists code',
         toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | image link | code',
@@ -146,9 +148,19 @@ function addAnswer() {
 }
 function removeAnswer(btn) { btn.parentElement.remove(); }
 function toggleCorrect(btn) {
-    const hidden = btn.previousElementSibling.previousElementSibling;
-    if (hidden.value === '0') { hidden.value = '1'; btn.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>'; }
-    else { hidden.value = '0'; btn.innerHTML = '<i class="bi bi-circle"></i>'; }
+    const inputGroup = btn.parentElement;
+    const hidden = inputGroup.querySelector('input[type="hidden"][name*="is_correct"]');
+    if (hidden.value === '0') { 
+        hidden.value = '1'; 
+        btn.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+        btn.classList.remove('btn-outline-success');
+        btn.classList.add('btn-success');
+    } else { 
+        hidden.value = '0'; 
+        btn.innerHTML = '<i class="bi bi-circle"></i>';
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-success');
+    }
 }
 
 function addMatchingPair() {
