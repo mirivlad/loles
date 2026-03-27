@@ -92,17 +92,18 @@
     </div>
 </div>
 <!-- TinyMCE -->
-<script src="https://cdn.tiny.mce.com/1/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+<script src="{{ asset('tinymce/js/tinymce/tinymce.min.js') }}"></script>
 <script>
 // Инициализация TinyMCE после загрузки DOM
 document.addEventListener('DOMContentLoaded', function() {
     tinymce.init({
         selector: '#questionText, #questionExplanation',
+        language: 'ru',
         height: 300,
         plugins: 'image link table lists code',
         toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | image link | code',
         image_title: true,
-        automatic_uploads: true,
+        automatic_uploads: false,
         file_picker_types: 'image',
         file_picker_callback: function(cb, value, meta) {
             const input = document.createElement('input');
