@@ -65,9 +65,9 @@
 </div>
 
 <!-- Modal предпросмотра вопроса -->
-<div class="modal fade" id="questionPreviewModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
+<div class="modal fade" id="questionPreviewModal" tabindex="-1" aria-hidden="true" style="z-index: 9999;">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="z-index: 10000;">
+        <div class="modal-content" style="z-index: 10001;">
             <div class="modal-header">
                 <h5 class="modal-title">Предпросмотр вопроса</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -101,6 +101,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const answersContainer = document.getElementById('modalAnswersContainer');
         answersContainer.innerHTML = '';
+        answersContainer.style.position = 'relative';
+        answersContainer.style.zIndex = '1';
         
         // Отображаем ответы в зависимости от типа
         if (questionType === 'multiple_choice') {
