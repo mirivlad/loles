@@ -237,11 +237,22 @@ class QuestionController extends Controller
                     $hasImage = $request->hasFile("answers.$index.image");
                     $isCorrect = isset($answer['is_correct']) && $answer['is_correct'] === '1';
                     
-                    if ($hasText || $hasImage) {
-                        $imagePath = null;
-                        if ($hasImage) {
-                            $imagePath = $request->file("answers.$index.image")->store('questions/answers', 'public');
+                    // Получаем существующую картинку если новая не загружена
+                    $existingImagePath = $answer['existing_image'] ?? null;
+                    $imagePath = null;
+                    
+                    if ($hasImage) {
+                        // Удаляем старую если есть
+                        if ($existingImagePath) {
+                            \Storage::disk('public')->delete($existingImagePath);
                         }
+                        $imagePath = $request->file("answers.$index.image")->store('questions/answers', 'public');
+                    } else {
+                        // Оставляем существующую
+                        $imagePath = $existingImagePath;
+                    }
+                    
+                    if ($hasText || $imagePath) {
                         $question->answers()->create([
                             'answer_text' => $hasText ? $answer['text'] : null,
                             'image' => $imagePath,

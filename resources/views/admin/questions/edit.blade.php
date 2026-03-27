@@ -41,6 +41,7 @@
                                         @foreach($question->answers as $answer)
                                         <div class="input-group mb-2">
                                             <input type="text" name="answers[{{ $loop->index }}][text]" class="form-control" placeholder="Текст ответа" value="{{ $answer->answer_text ?? '' }}">
+                                            <input type="hidden" name="answers[{{ $loop->index }}][existing_image]" value="{{ $answer->image }}">
                                             <input type="file" name="answers[{{ $loop->index }}][image]" class="form-control" accept="image/*">
                                             @if($answer->image)
                                             <div class="input-group-text">
