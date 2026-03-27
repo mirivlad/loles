@@ -124,9 +124,16 @@ class QuestionController extends Controller
                     if ($hasText || $hasImage) {
                         $imagePath = null;
                         if ($hasImage) {
-                            $imagePath = $request->file("answers.$index.image")->store('questions/answers', 'public');
-                            \Log::info("Saved image to: $imagePath");
+                            $file = $request->file("answers.$index.image");
+                            \Log::info("File object: " . ($file ? 'EXISTS' : 'NULL'));
+                            if ($file) {
+                                $imagePath = $file->store('questions/answers', 'public');
+                                \Log::info("Saved image to: $imagePath");
+                            } else {
+                                \Log::info("ERROR: file() returned null for answers.$index.image");
+                            }
                         }
+                        \Log::info("Creating answer with image=" . ($imagePath ?? 'NULL'));
                         $question->answers()->create([
                             'answer_text' => $hasText ? $answer['text'] : null,
                             'image' => $imagePath,

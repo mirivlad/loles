@@ -13,6 +13,7 @@ class Answer extends Model
     protected $fillable = [
         'question_id',
         'answer_text',
+        'image',
         'is_correct',
         'sort_order',
     ];
