@@ -32,7 +32,7 @@
                                     @elseif($question->type === 'ordering')
                                         <span class="badge bg-dark" title="Правильный порядок"><i class="bi bi-sort-numeric-down"></i></span>
                                     @endif
-                                    <strong>{{ Str::limit($question->question_text, 100) }}</strong>
+                                    <strong>{{ strip_tags($question->question_text) }}</strong>
                                     <div class="mt-2">
                                         <small class="text-muted">{{ $question->answers->count() }} ответов@if($question->matchingPairs->count() > 0), {{ $question->matchingPairs->count() }} пар@endif</small>
                                         @if($question->is_required)<span class="badge bg-warning ms-2"><i class="bi bi-exclamation-circle"></i> Обязательный</span>@endif

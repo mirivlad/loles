@@ -58,7 +58,7 @@
                                             <td><span class="badge bg-secondary">{{ $loop->iteration }}</span></td>
                                             <td>
                                                 <a href="{{ route('admin.tests.questions.edit', [$test, $question]) }}" class="text-decoration-none">
-                                                    {{ Str::limit($question->question_text, 80) }}
+                                                    {{ Str::limit(strip_tags($question->question_text), 80) }}
                                                 </a>
                                                 @if($question->is_required)<span class="badge bg-warning ms-1"><i class="bi bi-exclamation-circle"></i></span>@endif
                                             </td>

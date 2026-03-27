@@ -9,7 +9,7 @@
                 <h1 class="h2">Редактировать вопрос</h1>
                 <a href="{{ route('admin.tests.questions.index', $test) }}" class="btn btn-secondary btn-sm">Назад</a>
             </div>
-            <form action="{{ route('admin.tests.questions.update', [$test, $question]) }}" method="POST" id="questionForm">
+            <form action="{{ route('admin.tests.questions.update', [$test, $question]) }}" method="POST" id="questionForm" enctype="multipart/form-data">
                 @csrf @method('PUT')
                 <input type="hidden" name="type" id="questionType" value="{{ $question->type }}">
                 <div class="row">
@@ -19,30 +19,36 @@
                                 <div class="mb-3">
                                     <label class="form-label">Тип вопроса *</label>
                                     <select name="type_select" id="typeSelect" class="form-select" onchange="updateQuestionType()">
-                                        <option value="single_choice" {{ $question->type == 'single_choice' ? 'selected' : '' }}>Один правильный ответ</option>
-                                        <option value="multiple_choice" {{ $question->type == 'multiple_choice' ? 'selected' : '' }}>Несколько правильных ответов</option>
-                                        <option value="input" {{ $question->type == 'input' ? 'selected' : '' }}>Ввод текста</option>
-                                        <option value="matching" {{ $question->type == 'matching' ? 'selected' : '' }}>Соответствие</option>
+                                        <option value="multiple_choice" {{ $question->type === 'multiple_choice' ? 'selected' : '' }}>Множественный выбор</option>
+                                        <option value="matching" {{ $question->type === 'matching' ? 'selected' : '' }}>Соответствие</option>
+                                        <option value="ordering" {{ $question->type === 'ordering' ? 'selected' : '' }}>Правильный порядок</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Текст вопроса *</label>
-                                    <textarea name="question_text" class="form-control" rows="3" required>{{ old('question_text', $question->question_text) }}</textarea>
+                                    <textarea name="question_text" id="questionText" class="form-control" rows="5">{{ old('question_text', $question->question_text) }}</textarea>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Пояснение</label>
-                                    <textarea name="explanation" class="form-control" rows="2">{{ old('explanation', $question->explanation) }}</textarea>
+                                    <textarea name="explanation" id="questionExplanation" class="form-control" rows="3">{{ old('explanation', $question->explanation) }}</textarea>
                                     <small class="text-muted">Отображается после ответа</small>
                                 </div>
                                 
+                                <!-- Ответы для multiple_choice -->
                                 <div id="answersSection" class="mb-3">
                                     <label class="form-label">Ответы</label>
                                     <div id="answersContainer">
                                         @foreach($question->answers as $answer)
                                         <div class="input-group mb-2">
-                                            <input type="text" name="answers[{{ $loop->index }}][text]" class="form-control" value="{{ $answer->answer_text }}">
+                                            <input type="text" name="answers[{{ $loop->index }}][text]" class="form-control" placeholder="Текст ответа" value="{{ $answer->answer_text }}">
+                                            <input type="file" name="answers[{{ $loop->index }}][image]" class="form-control" accept="image/*">
+                                            @if($answer->image)
+                                            <img src="{{ asset('storage/' . $answer->image) }}" alt="Ответ" style="height:40px;">
+                                            @endif
                                             <input type="hidden" name="answers[{{ $loop->index }}][is_correct]" value="{{ $answer->is_correct ? '1' : '0' }}">
-                                            <button type="button" class="btn btn-outline-success" onclick="toggleCorrect(this)"><i class="bi {{ $answer->is_correct ? 'bi-check-circle-fill text-success' : 'bi-circle' }}"></i></button>
+                                            <button type="button" class="btn {{ $answer->is_correct ? 'btn-success' : 'btn-outline-success' }}" onclick="toggleCorrect(this)">
+                                                <i class="bi {{ $answer->is_correct ? 'bi-check-circle-fill' : 'bi-circle' }}"></i>
+                                            </button>
                                             <button type="button" class="btn btn-outline-danger" onclick="removeAnswer(this)"><i class="bi bi-trash"></i></button>
                                         </div>
                                         @endforeach
@@ -50,7 +56,8 @@
                                     <button type="button" class="btn btn-sm btn-secondary" onclick="addAnswer()">+ Добавить ответ</button>
                                 </div>
                                 
-                                <div id="matchingSection" class="mb-3" style="display:none;">
+                                <!-- Пары для matching -->
+                                <div id="matchingSection" class="mb-3" style="display:{{ $question->type === 'matching' ? 'block' : 'none' }};">
                                     <label class="form-label">Пары для соответствия</label>
                                     <div id="matchingContainer">
                                         @foreach($question->matchingPairs as $pair)
@@ -63,6 +70,21 @@
                                         @endforeach
                                     </div>
                                     <button type="button" class="btn btn-sm btn-secondary" onclick="addMatchingPair()">+ Добавить пару</button>
+                                </div>
+                                
+                                <!-- Элементы для ordering -->
+                                <div id="orderingSection" class="mb-3" style="display:{{ $question->type === 'ordering' ? 'block' : 'none' }};">
+                                    <label class="form-label">Элементы для сортировки</label>
+                                    <div id="orderingContainer">
+                                        @foreach($question->orderingItems as $item)
+                                        <div class="input-group mb-2">
+                                            <input type="text" name="ordering_items[{{ $loop->index }}][item_text]" class="form-control" value="{{ $item->item_text }}">
+                                            <input type="number" name="ordering_items[{{ $loop->index }}][correct_order]" class="form-control" value="{{ $item->correct_order }}" style="width:80px">
+                                            <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()"><i class="bi bi-trash"></i></button>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-secondary" onclick="addOrderingItem()">+ Добавить элемент</button>
                                 </div>
                             </div>
                         </div>
@@ -93,35 +115,93 @@
         </main>
     </div>
 </div>
+<!-- TinyMCE -->
+<script src="{{ asset('tinymce/js/tinymce/tinymce.min.js') }}"></script>
 <script>
+// Инициализация TinyMCE после загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+    tinymce.init({
+        selector: '#questionText, #questionExplanation',
+        license_key: 'gpl',
+        language: 'ru',
+        skin: 'oxide',
+        content_css: 'default',
+        height: 300,
+        plugins: 'image link table lists code',
+        toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | image link | code',
+        image_title: true,
+        automatic_uploads: false,
+        file_picker_types: 'image',
+        file_picker_callback: function(cb, value, meta) {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.addEventListener('load', function() {
+                    const id = 'blobid' + (new Date()).getTime();
+                    const blobCache = tinymce.activeEditor.editorUpload.blobCache;
+                    const base64 = reader.result.split(',')[1];
+                    const blobInfo = blobCache.create(id, file, base64);
+                    blobCache.add(blobInfo);
+                    cb(blobInfo.blobUri(), { title: file.name });
+                });
+                reader.readAsDataURL(file);
+            });
+            input.click();
+        }
+    });
+});
+
 function updateQuestionType() {
     const type = document.getElementById('typeSelect').value;
     document.getElementById('questionType').value = type;
-    const answersSection = document.getElementById('answersSection');
-    const matchingSection = document.getElementById('matchingSection');
-    answersSection.style.display = (type === 'single_choice' || type === 'multiple_choice') ? 'block' : 'none';
-    matchingSection.style.display = (type === 'matching') ? 'block' : 'none';
+    document.getElementById('answersSection').style.display = (type === 'multiple_choice') ? 'block' : 'none';
+    document.getElementById('matchingSection').style.display = (type === 'matching') ? 'block' : 'none';
+    document.getElementById('orderingSection').style.display = (type === 'ordering') ? 'block' : 'none';
 }
+
 function addAnswer() {
     const container = document.getElementById('answersContainer');
     const index = container.children.length;
     const div = document.createElement('div');
     div.className = 'input-group mb-2';
-    div.innerHTML = `<input type="text" name="answers[${index}][text]" class="form-control" placeholder="Текст ответа"><input type="hidden" name="answers[${index}][is_correct]" value="0"><button type="button" class="btn btn-outline-success" onclick="toggleCorrect(this)"><i class="bi bi-circle"></i></button><button type="button" class="btn btn-outline-danger" onclick="removeAnswer(this)"><i class="bi bi-trash"></i></button>`;
+    div.innerHTML = `<input type="text" name="answers[${index}][text]" class="form-control" placeholder="Текст ответа"><input type="file" name="answers[${index}][image]" class="form-control" accept="image/*"><input type="hidden" name="answers[${index}][is_correct]" value="0"><button type="button" class="btn btn-outline-success" onclick="toggleCorrect(this)"><i class="bi bi-circle"></i></button><button type="button" class="btn btn-outline-danger" onclick="removeAnswer(this)"><i class="bi bi-trash"></i></button>`;
     container.appendChild(div);
 }
 function removeAnswer(btn) { btn.parentElement.remove(); }
 function toggleCorrect(btn) {
-    const hidden = btn.previousElementSibling;
-    if (hidden.value === '0') { hidden.value = '1'; btn.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>'; }
-    else { hidden.value = '0'; btn.innerHTML = '<i class="bi bi-circle"></i>'; }
+    const inputGroup = btn.parentElement;
+    const hidden = inputGroup.querySelector('input[type="hidden"][name*="is_correct"]');
+    if (hidden.value === '0') { 
+        hidden.value = '1'; 
+        btn.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+        btn.classList.remove('btn-outline-success');
+        btn.classList.add('btn-success');
+    } else { 
+        hidden.value = '0'; 
+        btn.innerHTML = '<i class="bi bi-circle"></i>';
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-success');
+    }
 }
+
 function addMatchingPair() {
     const container = document.getElementById('matchingContainer');
     const index = container.children.length;
     const div = document.createElement('div');
     div.className = 'input-group mb-2';
     div.innerHTML = `<input type="text" name="matching_pairs[${index}][left_text]" class="form-control" placeholder="Левая часть"><input type="text" name="matching_pairs[${index}][right_text]" class="form-control" placeholder="Правая часть"><input type="number" name="matching_pairs[${index}][match_score]" class="form-control" value="1" style="width:80px"><button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()"><i class="bi bi-trash"></i></button>`;
+    container.appendChild(div);
+}
+
+function addOrderingItem() {
+    const container = document.getElementById('orderingContainer');
+    const index = container.children.length;
+    const div = document.createElement('div');
+    div.className = 'input-group mb-2';
+    div.innerHTML = `<input type="text" name="ordering_items[${index}][item_text]" class="form-control" placeholder="Элемент"><input type="number" name="ordering_items[${index}][correct_order]" class="form-control" value="${index + 1}" style="width:80px"><button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()"><i class="bi bi-trash"></i></button>`;
     container.appendChild(div);
 }
 </script>
