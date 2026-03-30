@@ -77,6 +77,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(json => {
                     // Фильтруем уже выбранные
                     const filtered = json.filter(item => !selectedTags.has(String(item.id)));
+                    // Добавляем опции в TomSelect
+                    filtered.forEach(item => {
+                        this.addOption(item);
+                    });
                     callback(filtered);
                 }).catch(() => {
                     callback();
