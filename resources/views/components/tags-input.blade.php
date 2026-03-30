@@ -90,10 +90,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 return '<div>' + escape(data.text) + '</div>';
             }
         },
-        onChange: function(value) {
-            if (value && this.options[value]) {
-                addTag(value, this.options[value]);
-                this.clear();
+        onItemAdd: function(value, $item) {
+            const data = this.options[value];
+            if (data) {
+                addTag(value, data);
             }
         }
     });
@@ -113,6 +113,11 @@ document.addEventListener('DOMContentLoaded', function() {
             <span class="remove-tag" onclick="removeTag(${id}, this)">&times;</span>
         `;
         tagsContainer.appendChild(tag);
+        
+        // Очищаем поле ввода
+        setTimeout(() => {
+            select.clear();
+        }, 100);
     }
     
     // Удаление тега

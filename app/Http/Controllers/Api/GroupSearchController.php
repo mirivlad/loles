@@ -13,6 +13,11 @@ class GroupSearchController extends Controller
         $query = $request->get('q', '');
         $userId = $request->get('user_id', null);
         
+        // Если запрос пустой - возвращаем пустой массив
+        if (empty(trim($query))) {
+            return response()->json([]);
+        }
+        
         $groupsQuery = Group::query()->with('organization');
         
         // Если указан user_id - фильтруем по доступным группам
