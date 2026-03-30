@@ -45,12 +45,12 @@
                                 <h5>Настройки</h5>
                                 <div class="mb-3">
                                     <label class="form-label">Организация</label>
-                                    <select name="organization_id" class="form-select">
-                                        <option value="">Без организации</option>
-                                        @foreach($organizations as $id => $name)
-                                        <option value="{{ $id }}" {{ old('organization_id', $user->organization_id) == $id ? 'selected' : '' }}>{{ $name }}</option>
-                                        @endforeach
-                                    </select>
+                                    <x-searchable-select
+                                        name="organization_id"
+                                        url="{{ route('api.organizations.search') }}"
+                                        placeholder="Начните вводить название организации..."
+                                        :value="old('organization_id', $user->organization_id)"
+                                    />
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Роль *</label>

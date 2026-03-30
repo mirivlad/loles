@@ -50,11 +50,10 @@ class UserController extends Controller
     public function create()
     {
         Gate::authorize('create', User::class);
-        
-        $organizations = Organization::pluck('name', 'id');
+
         $roles = Role::pluck('name', 'name');
-        
-        return view('admin.users.create', compact('organizations', 'roles'));
+
+        return view('admin.users.create', compact('roles'));
     }
 
     public function store(Request $request)
@@ -100,7 +99,6 @@ class UserController extends Controller
         Gate::authorize('update', $user);
 
         $user->load('groups');
-        $organizations = Organization::pluck('name', 'id');
         $roles = Role::pluck('name', 'name');
         $userGroups = $user->groups->pluck('id')->toArray();
 
@@ -113,7 +111,7 @@ class UserController extends Controller
             $allGroups = Group::whereNull('organization_id')->get();
         }
 
-        return view('admin.users.edit', compact('user', 'organizations', 'roles', 'userGroups', 'allGroups'));
+        return view('admin.users.edit', compact('user', 'roles', 'userGroups', 'allGroups'));
     }
 
     public function update(Request $request, User $user)
