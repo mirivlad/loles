@@ -27,9 +27,9 @@
                                     <th>Тип:</th>
                                     <td>
                                         @if($assignment->type === 'individual')
-                                            <span class="badge bg-info"><i class="bi bi-person"></i> Индивидуально</span>
+                                            <span class="badge bg-success"><i class="bi bi-person"></i> Индивидуально</span>
                                         @elseif($assignment->type === 'group')
-                                            <span class="badge bg-success"><i class="bi bi-people"></i> Группе</span>
+                                            <span class="badge bg-info"><i class="bi bi-people"></i> Группе</span>
                                         @else
                                             <span class="badge bg-primary"><i class="bi bi-building"></i> Организации</span>
                                         @endif
