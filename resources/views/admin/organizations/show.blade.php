@@ -107,15 +107,18 @@
             <div class="row">
                 <div class="col-md-6 mb-4">
                     <div class="card shadow-sm">
-                        <div class="card-header">
+                        <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="mb-0"><i class="bi bi-people"></i> Пользователи</h5>
+                            <a href="{{ route('admin.users.index', ['organization_id' => $organization->id]) }}" class="btn btn-sm btn-primary">
+                                Все пользователи <i class="bi bi-arrow-right"></i>
+                            </a>
                         </div>
                         <div class="card-body">
                             @if($organization->users->count() > 0)
                             <ul class="list-group list-group-flush">
                                 @foreach($organization->users->take(5) as $user)
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    {{ $user->name }}
+                                    <a href="{{ route('admin.users.show', $user) }}" class="text-decoration-none">{{ $user->name }}</a>
                                     <small class="text-muted">{{ $user->email }}</small>
                                 </li>
                                 @endforeach

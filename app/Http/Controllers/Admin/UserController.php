@@ -114,12 +114,20 @@ class UserController extends Controller
     public function edit(User $user)
     {
         Gate::authorize('update', $user);
-        
+
         $organizations = Organization::pluck('name', 'id');
         $roles = Role::pluck('name', 'name');
         $userGroups = $user->groups->pluck('id')->toArray();
-        $allGroups = $user->organization ? $user->organization->groups : collect();
         
+        // Показываем все доступные группы: общие + группы организации пользователя
+        if ($user->organization_id) {
+            $allGroups = Group::whereNull('organization_id')
+                ->orWhere('organization_id', $user->organization_id)
+                ->get();
+        } else {
+            $allGroups = Group::whereNull('organization_id')->get();
+        }
+
         return view('admin.users.edit', compact('user', 'organizations', 'roles', 'userGroups', 'allGroups'));
     }
 

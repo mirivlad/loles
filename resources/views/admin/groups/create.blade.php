@@ -20,20 +20,20 @@
                                 <div class="mb-3">
                                     <label class="form-label">Тип группы *</label>
                                     <select name="group_type" id="groupType" class="form-select @error('group_type') is-invalid @enderror" required onchange="toggleOrganizationField()">
-                                        <option value="">Выберите тип</option>
-                                        <option value="organization" {{ old('group_type') == 'organization' ? 'selected' : '' }}>Группа организации</option>
-                                        <option value="general" {{ old('group_type') == 'general' ? 'selected' : '' }}>Общая группа</option>
+                                        <option value="organization" {{ old('group_type', request('organization_id') ? 'organization' : '') == 'organization' ? 'selected' : '' }}>Группа организации</option>
+                                        <option value="general" {{ old('group_type', request('organization_id') ? '' : 'general') == 'general' ? 'selected' : '' }}>Общая группа</option>
                                     </select>
                                     <small class="text-muted">Группа организации — только пользователи этой организации. Общая — любые пользователи.</small>
                                     @error('group_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                                 
-                                <div class="mb-3" id="organizationField" style="display:none;">
+                                <div class="mb-3" id="organizationField" style="display:{{ request('organization_id') || old('group_type') == 'organization' ? 'block' : 'none' }};">
                                     <label class="form-label">Организация *</label>
                                     <x-searchable-select
                                         name="organization_id"
                                         url="{{ route('api.organizations.search') }}"
                                         placeholder="Начните вводить название организации..."
+                                        :value="request('organization_id') ?: old('organization_id')"
                                         :required="true"
                                     />
                                     @error('organization_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
