@@ -35,24 +35,20 @@
                         </div>
                         <div class="card-body">
                             @if($user->groups->count() > 0)
-                            <div class="mb-3">
-                                <x-tags-input
-                                    name="groups"
-                                    url="{{ route('api.groups.search') }}"
-                                    placeholder="Начните вводить название группы..."
-                                    :value="$user->groups->pluck('id')->toArray()"
-                                    :user_id="$user->id"
-                                />
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach($user->groups as $group)
+                                <span class="badge bg-primary px-3 py-2" style="font-size: 0.9rem;">
+                                    {{ $group->name }}
+                                    @if($group->organization)
+                                    <small class="text-white-50 ms-1">({{ $group->organization->name }})</small>
+                                    @else
+                                    <small class="text-white-50 ms-1">(Общая)</small>
+                                    @endif
+                                </span>
+                                @endforeach
                             </div>
                             @else
-                            <div class="mb-3">
-                                <x-tags-input
-                                    name="groups"
-                                    url="{{ route('api.groups.search') }}"
-                                    placeholder="Начните вводить название группы..."
-                                    :user_id="$user->id"
-                                />
-                            </div>
+                            <p class="text-muted mb-0">Не состоит в группах</p>
                             @endif
                         </div>
                     </div>
