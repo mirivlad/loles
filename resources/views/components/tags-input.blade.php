@@ -125,8 +125,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Добавление тега
     function addTag(id, data) {
         console.log('[TagsInput] addTag called with id:', id, 'data:', data);
-        if (!data || selectedTags.has(String(id))) {
-            console.log('[TagsInput] Skipping tag (no data or already selected)');
+        if (!data) {
+            console.log('[TagsInput] Skipping tag (no data)');
+            return;
+        }
+        if (selectedTags.has(String(id))) {
+            console.log('[TagsInput] Tag already selected, skipping');
             return;
         }
 
@@ -195,7 +199,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 items.forEach(item => {
                     console.log('[TagsInput] Adding existing option:', item);
                     select.addOption(item);
-                    addTag(item.id, item);
+                    // Добавляем в selectedTags и создаём бейдж напрямую
+                    selectedTags.add(String(item.id));
+                    updateHiddenInput();
+                    
+                    const tag = document.createElement('div');
+                    tag.className = 'tag-badge';
+                    tag.dataset.id = item.id;
+                    tag.innerHTML = `<span>${escapeHtml(item.text)}</span><span class="remove-tag" onclick="removeTag(${item.id}, this)">&times;</span>`;
+                    tagsContainer.appendChild(tag);
+                    console.log('[TagsInput] Tag appended:', tag);
                 });
             })
             .catch(err => {
