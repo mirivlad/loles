@@ -22,6 +22,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         CourseCategory::class => CourseCategoryPolicy::class,
         Course::class => CoursePolicy::class,
+        CourseAssignment::class => CourseAssignmentPolicy::class,
         Test::class => TestPolicy::class,
         Question::class => QuestionPolicy::class,
         Organization::class => OrganizationPolicy::class,
