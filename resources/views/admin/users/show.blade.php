@@ -30,12 +30,28 @@
                 </div>
                 <div class="col-md-6 mb-4">
                     <div class="card shadow-sm">
-                        <div class="card-header bg-success text-white"><h5 class="mb-0">Группы</h5></div>
+                        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Группы</h5>
+                            @can('update', App\Models\Group::class)
+                            <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addGroupModal"><i class="bi bi-plus-lg"></i></button>
+                            @endcan
+                        </div>
                         <div class="card-body">
                             @if($user->groups->count() > 0)
-                            <ul class="list-group">
+                            <ul class="list-group list-group-flush">
                                 @foreach($user->groups as $group)
-                                <li class="list-group-item">{{ $group->name }} <small class="text-muted">({{ $group->organization?->name }})</small></li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="{{ route('admin.groups.show', $group) }}" class="text-decoration-none">{{ $group->name }}</a>
+                                        <small class="text-muted d-block">{{ $group->organization?->name ?? 'Общая группа' }}</small>
+                                    </div>
+                                    @can('update', $group)
+                                    <form action="{{ route('admin.groups.users.remove', [$group, $user]) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить пользователя из группы?')">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button>
+                                    </form>
+                                    @endcan
+                                </li>
                                 @endforeach
                             </ul>
                             @else
@@ -46,6 +62,36 @@
                 </div>
             </div>
         </main>
+    </div>
+</div>
+
+<!-- Modal добавления в группу -->
+<div class="modal fade" id="addGroupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('admin.groups.users.add', $user) }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">Добавить в группу</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Выберите группу</label>
+                        <select name="group_id" class="form-select" required>
+                            <option value="">Выберите группу</option>
+                            @foreach($availableGroups as $group)
+                            <option value="{{ $group->id }}">{{ $group->name }} @if($group->organization_id)({{ $group->organization?->name }})@else(Общая)@endif</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Добавить</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection

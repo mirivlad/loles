@@ -50,5 +50,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('tests.questions', QuestionController::class);
         Route::resource('course-assignments', CourseAssignmentController::class);
         Route::resource('groups', GroupUserController::class);
+        Route::post('/users/{user}/groups/add', [GroupUserController::class, 'addUser'])->name('groups.users.add');
+        Route::delete('/groups/{group}/users/{user}/remove', [GroupUserController::class, 'removeUser'])->name('groups.users.remove');
     });
 });

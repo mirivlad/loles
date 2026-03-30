@@ -89,10 +89,26 @@ class UserController extends Controller
     public function show(User $user)
     {
         Gate::authorize('view', $user);
-        
+
         $user->load(['organization', 'roles', 'groups']);
         
-        return view('admin.users.show', compact('user'));
+        // Получаем доступные группы для пользователя
+        if ($user->organization_id) {
+            $availableGroups = Group::whereNull('organization_id')
+                ->orWhere('organization_id', $user->organization_id)
+                ->whereDoesntHave('users', function($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                })
+                ->get();
+        } else {
+            $availableGroups = Group::whereNull('organization_id')
+                ->whereDoesntHave('users', function($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                })
+                ->get();
+        }
+
+        return view('admin.users.show', compact('user', 'availableGroups'));
     }
 
     public function edit(User $user)

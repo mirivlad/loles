@@ -144,4 +144,37 @@ class GroupUserController extends Controller
         return redirect()->route('admin.groups.index')
             ->with('success', 'Группа успешно удалена.');
     }
+    
+    /**
+     * Добавить пользователя в группу
+     */
+    public function addUser(User $user, Request $request)
+    {
+        $validated = $request->validate([
+            'group_id' => 'required|exists:groups,id',
+        ]);
+        
+        $group = Group::findOrFail($validated['group_id']);
+        
+        // Проверка доступа
+        if ($group->organization_id && $user->organization_id !== $group->organization_id) {
+            return back()->with('error', 'Нельзя добавить пользователя в группу другой организации.');
+        }
+        
+        $group->users()->attach($user->id);
+        
+        return back()->with('success', 'Пользователь добавлен в группу.');
+    }
+    
+    /**
+     * Удалить пользователя из группы
+     */
+    public function removeUser(Group $group, User $user)
+    {
+        Gate::authorize('update', $group);
+        
+        $group->users()->detach($user->id);
+        
+        return back()->with('success', 'Пользователь удалён из группы.');
+    }
 }
