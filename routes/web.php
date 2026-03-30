@@ -55,6 +55,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('/groups/{group}/users/{user}/remove', [GroupUserController::class, 'removeUser'])->name('groups.users.remove');
     });
     
-    // API для поиска
-    Route::get('/api/organizations/search', OrganizationSearchController::class)->name('api.organizations.search');
+    // API для поиска (требуется аутентификация)
+    Route::middleware('auth')->group(function() {
+        Route::get('/api/organizations/search', OrganizationSearchController::class)->name('api.organizations.search');
+    });
 });
