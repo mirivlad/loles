@@ -65,7 +65,7 @@
                                     <label class="form-label">Группы</label>
                                     <x-searchable-select
                                         name="groups[]"
-                                        url="{{ route('admin.groups.search') }}"
+                                        url="{{ route('api.groups.search') }}"
                                         placeholder="Начните вводить название группы..."
                                         :value="$userGroups"
                                         :multiple="true"
