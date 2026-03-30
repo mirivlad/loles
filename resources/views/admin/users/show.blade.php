@@ -38,60 +38,30 @@
                         </div>
                         <div class="card-body">
                             @if($user->groups->count() > 0)
-                            <ul class="list-group list-group-flush">
-                                @foreach($user->groups as $group)
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <a href="{{ route('admin.groups.show', $group) }}" class="text-decoration-none">{{ $group->name }}</a>
-                                        <small class="text-muted d-block">{{ $group->organization?->name ?? 'Общая группа' }}</small>
-                                    </div>
-                                    @can('update', $group)
-                                    <form action="{{ route('admin.groups.users.remove', [$group, $user]) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить пользователя из группы?')">
-                                        @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button>
-                                    </form>
-                                    @endcan
-                                </li>
-                                @endforeach
-                            </ul>
+                            <div class="mb-3">
+                                <x-searchable-select
+                                    name="groups[]"
+                                    url="{{ route('api.groups.search') }}"
+                                    placeholder="Начните вводить название группы..."
+                                    :value="$user->groups->pluck('id')->toArray()"
+                                    :multiple="true"
+                                />
+                            </div>
                             @else
-                            <p class="text-muted mb-0">Не состоит в группах</p>
+                            <div class="mb-3">
+                                <x-searchable-select
+                                    name="groups[]"
+                                    url="{{ route('api.groups.search') }}"
+                                    placeholder="Начните вводить название группы..."
+                                    :multiple="true"
+                                />
+                            </div>
                             @endif
                         </div>
                     </div>
                 </div>
             </div>
         </main>
-    </div>
-</div>
-
-<!-- Modal добавления в группу -->
-<div class="modal fade" id="addGroupModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form action="{{ route('admin.groups.users.add', $user) }}" method="POST">
-                @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title">Добавить в группу</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Выберите группу</label>
-                        <select name="group_id" class="form-select" required>
-                            <option value="">Выберите группу</option>
-                            @foreach($availableGroups as $group)
-                            <option value="{{ $group->id }}">{{ $group->name }} @if($group->organization_id)({{ $group->organization?->name }})@else(Общая)@endif</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <button type="submit" class="btn btn-primary">Добавить</button>
-                </div>
-            </form>
-        </div>
     </div>
 </div>
 @endsection

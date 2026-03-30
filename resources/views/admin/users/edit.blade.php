@@ -63,12 +63,14 @@
                                 @if($allGroups->count() > 0)
                                 <div class="mb-3">
                                     <label class="form-label">Группы</label>
-                                    @foreach($allGroups as $group)
-                                    <div class="form-check">
-                                        <input type="checkbox" name="groups[]" value="{{ $group->id }}" class="form-check-input" {{ in_array($group->id, $userGroups) ? 'checked' : '' }}>
-                                        <label class="form-check-label">{{ $group->name }}</label>
-                                    </div>
-                                    @endforeach
+                                    <x-searchable-select
+                                        name="groups[]"
+                                        url="{{ route('admin.groups.search') }}"
+                                        placeholder="Начните вводить название группы..."
+                                        :value="$userGroups"
+                                        :multiple="true"
+                                    />
+                                    <small class="text-muted">Выберите группы</small>
                                 </div>
                                 @endif
                                 <div class="form-check mb-3">

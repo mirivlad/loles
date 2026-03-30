@@ -1,7 +1,7 @@
-@props(['name', 'url', 'placeholder' => 'Начните вводить...', 'value' => null, 'required' => false])
+@props(['name', 'url', 'placeholder' => 'Начните вводить...', 'value' => null, 'required' => false, 'multiple' => false])
 
-<input type="hidden" name="{{ $name }}" id="{{ $name }}" value="{{ $value }}" {{ $required ? 'required' : '' }}>
-<select id="{{ $name }}-select" class="form-select @error($name) is-invalid @enderror" {{ $required ? 'required' : '' }}></select>
+<input type="hidden" name="{{ $name }}" id="{{ $name }}" value="{{ is_array($value) ? implode(',', $value) : $value }}" {{ $required ? 'required' : '' }}>
+<select id="{{ $name }}-select" class="form-select @error($name) is-invalid @enderror" {{ $required ? 'required' : '' }} {{ $multiple ? 'multiple' : '' }}></select>
 
 @push('scripts')
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
         placeholder: '{{ $placeholder }}',
         preload: false,
         maxOptions: null,
+        {{ $multiple ? 'persist: false, hideSelected: true,' : '' }}
         load: function(query, callback) {
             if (query.length < 2) return callback();
             
@@ -35,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
         onChange: function(value) {
-            document.getElementById('{{ $name }}').value = value;
+            document.getElementById('{{ $name }}').value = {{ $multiple ? 'Array.isArray(value) ? value.join(",") : value' : 'value' }};
         }
     });
     
@@ -43,11 +44,14 @@ document.addEventListener('DOMContentLoaded', function() {
     fetch('{{ $url }}?q=')
         .then(response => response.json())
         .then(items => {
-            const item = items.find(i => i.id == '{{ $value }}');
-            if (item) {
-                select.addOption(item);
-                select.setValue('{{ $value }}');
-            }
+            const values = {{ is_array($value) ? json_encode($value) : "['" . $value . "']" }};
+            values.forEach(val => {
+                const item = items.find(i => i.id == val);
+                if (item) {
+                    select.addOption(item);
+                }
+            });
+            select.setValue(values);
         });
     @endif
 });

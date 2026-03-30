@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\CourseAssignmentController;
 use App\Http\Controllers\Admin\GroupUserController;
 use App\Http\Controllers\Api\OrganizationSearchController;
+use App\Http\Controllers\Api\GroupSearchController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -58,5 +59,6 @@ Route::middleware('auth')->group(function () {
     // API для поиска (требуется аутентификация)
     Route::middleware('auth')->group(function() {
         Route::get('/api/organizations/search', OrganizationSearchController::class)->name('api.organizations.search');
+        Route::get('/api/groups/search', GroupSearchController::class)->name('api.groups.search');
     });
 });
