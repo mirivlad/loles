@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (query.length < 2) return callback();
             
             let url = '{{ $url }}?q=' + encodeURIComponent(query);
-            @if($user_id)
+            @if(isset($user_id) && $user_id)
             url += '&user_id={{ $user_id }}';
             @endif
             
