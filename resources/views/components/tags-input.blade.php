@@ -1,4 +1,4 @@
-@props(['name', 'url', 'placeholder' => 'Начните вводить...', 'value' => []])
+@props(['name', 'url', 'placeholder' => 'Начните вводить...', 'value' => [], 'user_id' => null])
 
 <div class="tags-input-container">
     <input type="text" class="form-control" id="{{ $name }}-input" placeholder="{{ $placeholder }}" autocomplete="off">
@@ -69,7 +69,12 @@ document.addEventListener('DOMContentLoaded', function() {
         load: function(query, callback) {
             if (query.length < 2) return callback();
             
-            fetch('{{ $url }}?q=' + encodeURIComponent(query))
+            let url = '{{ $url }}?q=' + encodeURIComponent(query);
+            @if($user_id)
+            url += '&user_id={{ $user_id }}';
+            @endif
+            
+            fetch(url)
                 .then(response => response.json())
                 .then(json => {
                     // Фильтруем уже выбранные

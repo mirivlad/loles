@@ -66,8 +66,9 @@
                                     <x-tags-input
                                         name="groups"
                                         url="{{ route('api.groups.search') }}"
-                                        placeholder="Начните вводить название группы..."
+                                        placeholder="Начните введите название группы..."
                                         :value="$userGroups"
+                                        :user_id="$user->id"
                                     />
                                     <small class="text-muted">Выберите группы</small>
                                 </div>
