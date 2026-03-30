@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const input = document.getElementById('{{ $name }}-input');
     const tagsContainer = document.getElementById('{{ $name }}-tags');
     const hiddenInput = document.getElementById('{{ $name }}');
-    let selectedTags = new Set({{ json_encode(array_map('strval', is_array($value) ? $value : [])) }});
+    let selectedTags = new Set({!! json_encode(array_map('strval', is_array($value) ? $value : [])) !!});
     
     // Инициализация TomSelect
     const select = new TomSelect(input, {
