@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const div = document.createElement('div');
                 div.className = 'mb-3';
                 let html = `<div class="form-check">
-                    <input class="form-check-input" type="${inputType}" name="${inputName}" id="answer_${index}" disabled>
+                    <input class="form-check-input" type="${inputType}" name="${inputName}" id="answer_${index}">
                     <label class="form-check-label" for="answer_${index}">`;
                 if (answer.image) {
                     html += `<img src="/storage/${answer.image}" alt="Ответ" style="max-width:200px;max-height:150px;display:block;margin:10px 0;">`;
