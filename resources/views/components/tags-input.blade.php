@@ -148,10 +148,14 @@ document.addEventListener('DOMContentLoaded', function() {
     @if(count($value) > 0)
     const existingIds = {!! json_encode(array_map('strval', is_array($value) ? $value : [])) !!};
     if (existingIds.length > 0) {
-        // Загружаем все группы и фильтруем нужные
-        fetch('{{ $url }}?q=')
+        // Загружаем все доступные группы (с user_id для фильтрации)
+        let url = '{{ $url }}?q=';
+        @if(isset($user_id) && $user_id)url += '&user_id={{ $user_id }}';@endif
+        
+        fetch(url)
             .then(response => response.json())
             .then(allItems => {
+                // Фильтруем только нужные группы
                 const items = allItems.filter(item => existingIds.includes(String(item.id)));
                 items.forEach(item => {
                     select.addOption(item);
