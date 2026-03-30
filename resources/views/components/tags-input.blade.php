@@ -1,4 +1,4 @@
-@props(['name', 'url', 'placeholder' => 'Начните вводить...', 'value' => [], 'user_id' => null])
+@props(['name', 'url', 'placeholder' => 'Начните вводить...', 'value' => [], 'user_id' => null, 'badge_color' => 'primary'])
 
 <div class="tags-input-container">
     <input type="text" class="form-control" id="{{ $name }}-input" placeholder="{{ $placeholder }}" autocomplete="off">
@@ -27,25 +27,32 @@
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 .tag-badge {
-    background: #0d6efd;
-    color: white;
     padding: 0.35rem 0.65rem;
     border-radius: 0.25rem;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     font-size: 0.875rem;
+    color: white;
 }
 .tag-badge .remove-tag {
     cursor: pointer;
     font-size: 1.1rem;
     line-height: 1;
     opacity: 0.7;
+    color: white;
 }
 .tag-badge .remove-tag:hover {
     opacity: 1;
     color: #ffc107;
 }
+.tag-badge.bg-primary { background: #0d6efd; }
+.tag-badge.bg-success { background: #198754; }
+.tag-badge.bg-info { background: #0dcaf0; }
+.tag-badge.bg-warning { background: #ffc107; color: #000; }
+.tag-badge.bg-danger { background: #dc3545; }
+.tag-badge.bg-secondary { background: #6c757d; }
+.tag-badge.bg-dark { background: #212529; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
@@ -138,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateHiddenInput();
 
         const tag = document.createElement('div');
-        tag.className = 'tag-badge';
+        tag.className = 'tag-badge bg-{{ $badge_color }}';
         tag.dataset.id = id;
         tag.innerHTML = `
             <span>${escapeHtml(data.text)}</span>
@@ -204,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateHiddenInput();
                     
                     const tag = document.createElement('div');
-                    tag.className = 'tag-badge';
+                    tag.className = 'tag-badge bg-{{ $badge_color }}';
                     tag.dataset.id = item.id;
                     tag.innerHTML = `<span>${escapeHtml(item.text)}</span><span class="remove-tag" onclick="removeTag(${item.id}, this)">&times;</span>`;
                     tagsContainer.appendChild(tag);
