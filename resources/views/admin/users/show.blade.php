@@ -30,30 +30,27 @@
                 </div>
                 <div class="col-md-6 mb-4">
                     <div class="card shadow-sm">
-                        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <div class="card-header bg-success text-white">
                             <h5 class="mb-0">Группы</h5>
-                            @can('update', App\Models\Group::class)
-                            <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addGroupModal"><i class="bi bi-plus-lg"></i></button>
-                            @endcan
                         </div>
                         <div class="card-body">
                             @if($user->groups->count() > 0)
                             <div class="mb-3">
-                                <x-searchable-select
-                                    name="groups[]"
+                                <x-tags-input
+                                    name="groups"
                                     url="{{ route('api.groups.search') }}"
                                     placeholder="Начните вводить название группы..."
                                     :value="$user->groups->pluck('id')->toArray()"
-                                    :multiple="true"
+                                    :user_id="$user->id"
                                 />
                             </div>
                             @else
                             <div class="mb-3">
-                                <x-searchable-select
-                                    name="groups[]"
+                                <x-tags-input
+                                    name="groups"
                                     url="{{ route('api.groups.search') }}"
                                     placeholder="Начните вводить название группы..."
-                                    :multiple="true"
+                                    :user_id="$user->id"
                                 />
                             </div>
                             @endif
