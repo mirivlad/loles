@@ -18,14 +18,14 @@
                             <div class="card-header bg-primary text-white"><h5 class="mb-0">Основная информация</h5></div>
                             <div class="card-body">
                                 <div class="mb-3">
-                                    <label class="form-label">Курс *</label>
-                                    <select name="course_id" class="form-select @error('course_id') is-invalid @enderror" required>
-                                        <option value="">Выберите курс</option>
-                                        @foreach($courses as $id => $title)
-                                        <option value="{{ $id }}" {{ old('course_id') == $id ? 'selected' : '' }}>{{ $title }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('course_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <label class="form-label">Курсы *</label>
+                                    <x-tags-input
+                                        name="course_ids"
+                                        url="{{ route('api.courses.search') }}"
+                                        placeholder="Начните вводить название курса..."
+                                        badge_color="dark"
+                                    />
+                                    <small class="text-muted">Чёрные бейджи — выбранные курсы</small>
                                 </div>
                                 
                                 <div class="mb-3">

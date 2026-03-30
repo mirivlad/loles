@@ -43,12 +43,7 @@ class CourseAssignmentController extends Controller
     {
         Gate::authorize('create', CourseAssignment::class);
         
-        $courses = Course::pluck('title', 'id');
-        $users = User::pluck('name', 'id');
-        $groups = Group::pluck('name', 'id');
-        $organizations = Organization::pluck('name', 'id');
-        
-        return view('admin.course-assignments.create', compact('courses', 'users', 'groups', 'organizations'));
+        return view('admin.course-assignments.create');
     }
 
     public function store(Request $request)
@@ -56,7 +51,7 @@ class CourseAssignmentController extends Controller
         Gate::authorize('create', CourseAssignment::class);
         
         $validated = $request->validate([
-            'course_id' => 'required|exists:courses,id',
+            'course_ids' => 'nullable|string',
             'type' => 'nullable|in:individual,group,organization',
             'user_ids' => 'nullable|string',
             'group_ids' => 'nullable|string',
@@ -81,60 +76,69 @@ class CourseAssignmentController extends Controller
             }
         }
         
-        // Создаём назначения для каждого выбранного элемента
+        // Получаем списки ID
+        $courseIds = !empty($validated['course_ids']) ? array_map('intval', array_filter(explode(',', $validated['course_ids']))) : [];
+        $userIds = !empty($validated['user_ids']) ? array_map('intval', array_filter(explode(',', $validated['user_ids']))) : [];
+        $groupIds = !empty($validated['group_ids']) ? array_map('intval', array_filter(explode(',', $validated['group_ids']))) : [];
+        $organizationIds = !empty($validated['organization_ids']) ? array_map('intval', array_filter(explode(',', $validated['organization_ids']))) : [];
+        
+        // Создаём назначения для каждой комбинации
         $created = 0;
         
         // Назначения пользователям
-        if (!empty($validated['user_ids'])) {
-            $userIds = array_map('intval', array_filter(explode(',', $validated['user_ids'])));
+        if (!empty($userIds)) {
             foreach ($userIds as $userId) {
-                CourseAssignment::create([
-                    'course_id' => $validated['course_id'],
-                    'user_id' => $userId,
-                    'type' => 'individual',
-                    'start_date' => $validated['start_date'],
-                    'end_date' => $validated['end_date'] ?? null,
-                    'note' => $validated['note'] ?? null,
-                    'created_by' => $validated['created_by'],
-                    'is_active' => $validated['is_active'],
-                ]);
-                $created++;
+                foreach ($courseIds as $courseId) {
+                    CourseAssignment::create([
+                        'course_id' => $courseId,
+                        'user_id' => $userId,
+                        'type' => 'individual',
+                        'start_date' => $validated['start_date'],
+                        'end_date' => $validated['end_date'] ?? null,
+                        'note' => $validated['note'] ?? null,
+                        'created_by' => $validated['created_by'],
+                        'is_active' => $validated['is_active'],
+                    ]);
+                    $created++;
+                }
             }
         }
         
         // Назначения группам
-        if (!empty($validated['group_ids'])) {
-            $groupIds = array_map('intval', array_filter(explode(',', $validated['group_ids'])));
+        if (!empty($groupIds)) {
             foreach ($groupIds as $groupId) {
-                CourseAssignment::create([
-                    'course_id' => $validated['course_id'],
-                    'group_id' => $groupId,
-                    'type' => 'group',
-                    'start_date' => $validated['start_date'],
-                    'end_date' => $validated['end_date'] ?? null,
-                    'note' => $validated['note'] ?? null,
-                    'created_by' => $validated['created_by'],
-                    'is_active' => $validated['is_active'],
-                ]);
-                $created++;
+                foreach ($courseIds as $courseId) {
+                    CourseAssignment::create([
+                        'course_id' => $courseId,
+                        'group_id' => $groupId,
+                        'type' => 'group',
+                        'start_date' => $validated['start_date'],
+                        'end_date' => $validated['end_date'] ?? null,
+                        'note' => $validated['note'] ?? null,
+                        'created_by' => $validated['created_by'],
+                        'is_active' => $validated['is_active'],
+                    ]);
+                    $created++;
+                }
             }
         }
         
         // Назначения организациям
-        if (!empty($validated['organization_ids'])) {
-            $organizationIds = array_map('intval', array_filter(explode(',', $validated['organization_ids'])));
+        if (!empty($organizationIds)) {
             foreach ($organizationIds as $organizationId) {
-                CourseAssignment::create([
-                    'course_id' => $validated['course_id'],
-                    'organization_id' => $organizationId,
-                    'type' => 'organization',
-                    'start_date' => $validated['start_date'],
-                    'end_date' => $validated['end_date'] ?? null,
-                    'note' => $validated['note'] ?? null,
-                    'created_by' => $validated['created_by'],
-                    'is_active' => $validated['is_active'],
-                ]);
-                $created++;
+                foreach ($courseIds as $courseId) {
+                    CourseAssignment::create([
+                        'course_id' => $courseId,
+                        'organization_id' => $organizationId,
+                        'type' => 'organization',
+                        'start_date' => $validated['start_date'],
+                        'end_date' => $validated['end_date'] ?? null,
+                        'note' => $validated['note'] ?? null,
+                        'created_by' => $validated['created_by'],
+                        'is_active' => $validated['is_active'],
+                    ]);
+                    $created++;
+                }
             }
         }
         

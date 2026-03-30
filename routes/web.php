@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\GroupUserController;
 use App\Http\Controllers\Api\OrganizationSearchController;
 use App\Http\Controllers\Api\GroupSearchController;
 use App\Http\Controllers\Api\UserSearchController;
+use App\Http\Controllers\Api\CourseSearchController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -62,5 +63,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/api/organizations/search', OrganizationSearchController::class)->name('api.organizations.search');
         Route::get('/api/groups/search', GroupSearchController::class)->name('api.groups.search');
         Route::get('/api/users/search', UserSearchController::class)->name('api.users.search');
+        Route::get('/api/courses/search', CourseSearchController::class)->name('api.courses.search');
     });
 });
