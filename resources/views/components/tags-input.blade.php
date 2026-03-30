@@ -143,20 +143,22 @@ document.addEventListener('DOMContentLoaded', function() {
         div.textContent = text;
         return div.innerHTML;
     }
-    
+
     // Загрузка существующих тегов
     @if(count($value) > 0)
-    fetch('{{ $url }}?q=')
-        .then(response => response.json())
-        .then(items => {
-            selectedTags.forEach(id => {
-                const item = items.find(i => String(i.id) === id);
-                if (item) {
+    const existingIds = {!! json_encode(array_map('strval', is_array($value) ? $value : [])) !!};
+    if (existingIds.length > 0) {
+        // Загружаем все группы и фильтруем нужные
+        fetch('{{ $url }}?q=')
+            .then(response => response.json())
+            .then(allItems => {
+                const items = allItems.filter(item => existingIds.includes(String(item.id)));
+                items.forEach(item => {
                     select.addOption(item);
-                    addTag(id, item);
-                }
+                    addTag(item.id, item);
+                });
             });
-        });
+    }
     @endif
 });
 </script>

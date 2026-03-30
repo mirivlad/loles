@@ -99,10 +99,11 @@ class UserController extends Controller
     {
         Gate::authorize('update', $user);
 
+        $user->load('groups');
         $organizations = Organization::pluck('name', 'id');
         $roles = Role::pluck('name', 'name');
         $userGroups = $user->groups->pluck('id')->toArray();
-        
+
         // Показываем все доступные группы: общие + группы организации пользователя
         if ($user->organization_id) {
             $allGroups = Group::whereNull('organization_id')
@@ -148,11 +149,12 @@ class UserController extends Controller
         $user->syncRoles([$validated['role']]);
 
         // Обновление групп (строка "1,2,3" → массив)
-        if (!empty($validated['groups'])) {
+        if (!empty(trim($validated['groups'] ?? ''))) {
             $groupIds = array_map('intval', array_filter(explode(',', $validated['groups'])));
             $user->groups()->sync($groupIds);
         } else {
-            $user->groups()->detach();
+            // Если поле пустое - не трогаем группы (или можно сделать sync([]) для очистки)
+            // $user->groups()->detach();
         }
 
         return redirect()->route('admin.users.show', $user)
