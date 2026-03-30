@@ -5,6 +5,26 @@
 
 @push('scripts')
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+<style>
+.tom-select .item {
+    background: #0d6efd !important;
+    color: white !important;
+    border-radius: 0.25rem !important;
+    padding: 0.25rem 0.5rem !important;
+    margin: 0.125rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+.tom-select .item .remove {
+    color: white !important;
+    margin-left: 0.5rem !important;
+    font-size: 1.2rem !important;
+    line-height: 1 !important;
+}
+.tom-select .item .remove:hover {
+    color: #ffc107 !important;
+}
+</style>
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -15,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
         placeholder: '{{ $placeholder }}',
         preload: false,
         maxOptions: null,
-        {{ $multiple ? 'persist: false, hideSelected: true,' : '' }}
+        {{ $multiple ? 'persist: false, hideSelected: true, create: false,' : '' }}
         load: function(query, callback) {
             if (query.length < 2) return callback();
             
@@ -32,7 +52,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 return '<div>' + escape(data.text) + '</div>';
             },
             item: function(data, escape) {
-                return '<div>' + escape(data.text) + '</div>';
+                return '<div class="item">' + 
+                       escape(data.text) + 
+                       '<a href="javascript:void(0)" class="remove">&times;</a>' +
+                       '</div>';
             }
         },
         onChange: function(value) {
