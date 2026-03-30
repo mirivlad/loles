@@ -14,7 +14,7 @@
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
                     <form action="{{ route('admin.course-assignments.index') }}" method="GET" class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <select name="course_id" class="form-select">
                                 <option value="">Все курсы</option>
                                 @foreach($courses as $id => $title)
@@ -22,12 +22,12 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <select name="type" class="form-select">
                                 <option value="">Все типы</option>
-                                <option value="individual" {{ request('type') == 'individual' ? 'selected' : '' }}>Индивидуальное</option>
-                                <option value="group" {{ request('type') == 'group' ? 'selected' : '' }}>Группе</option>
-                                <option value="organization" {{ request('type') == 'organization' ? 'selected' : '' }}>Организации</option>
+                                <option value="individual">Индивидуальное</option>
+                                <option value="group">Группе</option>
+                                <option value="organization">Организации</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -57,9 +57,9 @@
                                     <td><strong>{{ $assignment->course->title }}</strong></td>
                                     <td>
                                         @if($assignment->type === 'individual')
-                                            <span class="badge bg-info"><i class="bi bi-person"></i> Индивидуально</span>
+                                            <span class="badge bg-success"><i class="bi bi-person"></i> Индивидуально</span>
                                         @elseif($assignment->type === 'group')
-                                            <span class="badge bg-success"><i class="bi bi-people"></i> Группе</span>
+                                            <span class="badge bg-info"><i class="bi bi-people"></i> Группе</span>
                                         @else
                                             <span class="badge bg-primary"><i class="bi bi-building"></i> Организации</span>
                                         @endif

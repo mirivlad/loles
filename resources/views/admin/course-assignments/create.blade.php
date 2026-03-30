@@ -13,8 +13,9 @@
             <form action="{{ route('admin.course-assignments.store') }}" method="POST">
                 @csrf
                 <div class="row">
-                    <div class="col-md-8">
-                        <div class="card shadow-sm mb-3">
+                    <div class="col-md-8 mb-4">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-primary text-white"><h5 class="mb-0">Основная информация</h5></div>
                             <div class="card-body">
                                 <div class="mb-3">
                                     <label class="form-label">Курс *</label>
@@ -28,44 +29,36 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label class="form-label">Тип назначения *</label>
-                                    <select name="type" id="assignmentType" class="form-select @error('type') is-invalid @enderror" required onchange="updateAssignmentFields()">
-                                        <option value="">Выберите тип</option>
-                                        <option value="individual" {{ old('type') == 'individual' ? 'selected' : '' }}>Индивидуальному пользователю</option>
-                                        <option value="group" {{ old('type') == 'group' ? 'selected' : '' }}>Группе</option>
-                                        <option value="organization" {{ old('type') == 'organization' ? 'selected' : '' }}>Организации</option>
-                                    </select>
-                                    @error('type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <label class="form-label">Пользователи</label>
+                                    <x-tags-input
+                                        name="user_ids"
+                                        url="{{ route('api.users.search') }}"
+                                        placeholder="Начните вводить имя пользователя..."
+                                        badge_color="success"
+                                    />
+                                    <small class="text-muted">Зелёные бейджи — индивидуальные назначения</small>
                                 </div>
                                 
-                                <div class="mb-3" id="userField" style="display:none;">
-                                    <label class="form-label">Пользователь *</label>
-                                    <select name="user_id" class="form-select">
-                                        <option value="">Выберите пользователя</option>
-                                        @foreach($users as $id => $name)
-                                        <option value="{{ $id }}" {{ old('user_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
-                                        @endforeach
-                                    </select>
+                                <div class="mb-3">
+                                    <label class="form-label">Группы</label>
+                                    <x-tags-input
+                                        name="group_ids"
+                                        url="{{ route('api.groups.search') }}"
+                                        placeholder="Начните вводить название группы..."
+                                        badge_color="info"
+                                    />
+                                    <small class="text-muted">Голубые бейджи — назначения группам</small>
                                 </div>
                                 
-                                <div class="mb-3" id="groupField" style="display:none;">
-                                    <label class="form-label">Группа *</label>
-                                    <select name="group_id" class="form-select">
-                                        <option value="">Выберите группу</option>
-                                        @foreach($groups as $id => $name)
-                                        <option value="{{ $id }}" {{ old('group_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                
-                                <div class="mb-3" id="organizationField" style="display:none;">
-                                    <label class="form-label">Организация *</label>
-                                    <select name="organization_id" class="form-select">
-                                        <option value="">Выберите организацию</option>
-                                        @foreach($organizations as $id => $name)
-                                        <option value="{{ $id }}" {{ old('organization_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
-                                        @endforeach
-                                    </select>
+                                <div class="mb-3">
+                                    <label class="form-label">Организации</label>
+                                    <x-tags-input
+                                        name="organization_ids"
+                                        url="{{ route('api.organizations.search') }}"
+                                        placeholder="Начните вводить название организации..."
+                                        badge_color="primary"
+                                    />
+                                    <small class="text-muted">Синие бейджи — назначения организациям</small>
                                 </div>
                                 
                                 <div class="mb-3">
@@ -76,10 +69,10 @@
                         </div>
                     </div>
                     
-                    <div class="col-md-4">
-                        <div class="card shadow-sm mb-3">
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-success text-white"><h5 class="mb-0">Период доступа</h5></div>
                             <div class="card-body">
-                                <h5>Период доступа</h5>
                                 <div class="mb-3">
                                     <label class="form-label">Дата начала *</label>
                                     <input type="date" name="start_date" class="form-control @error('start_date') is-invalid @enderror" value="{{ old('start_date', date('Y-m-d')) }}" required>
@@ -106,18 +99,4 @@
         </main>
     </div>
 </div>
-
-<script>
-function updateAssignmentFields() {
-    const type = document.getElementById('assignmentType').value;
-    document.getElementById('userField').style.display = (type === 'individual') ? 'block' : 'none';
-    document.getElementById('groupField').style.display = (type === 'group') ? 'block' : 'none';
-    document.getElementById('organizationField').style.display = (type === 'organization') ? 'block' : 'none';
-}
-
-// Инициализация при загрузке
-document.addEventListener('DOMContentLoaded', function() {
-    updateAssignmentFields();
-});
-</script>
 @endsection
