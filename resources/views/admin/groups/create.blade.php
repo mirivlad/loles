@@ -30,13 +30,13 @@
                                 
                                 <div class="mb-3" id="organizationField" style="display:none;">
                                     <label class="form-label">Организация *</label>
-                                    <select name="organization_id" class="form-select @error('organization_id') is-invalid @enderror">
-                                        <option value="">Выберите организацию</option>
-                                        @foreach($organizations as $id => $name)
-                                        <option value="{{ $id }}" {{ old('organization_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('organization_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <x-searchable-select
+                                        name="organization_id"
+                                        url="{{ route('api.organizations.search') }}"
+                                        placeholder="Начните вводить название организации..."
+                                        :required="true"
+                                    />
+                                    @error('organization_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                                 </div>
                                 
                                 <div class="mb-3">
@@ -90,3 +90,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
+
+@push('scripts')
+@endpush

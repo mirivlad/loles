@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\TestController;
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\CourseAssignmentController;
 use App\Http\Controllers\Admin\GroupUserController;
+use App\Http\Controllers\Api\OrganizationSearchController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -53,4 +54,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{user}/groups/add', [GroupUserController::class, 'addUser'])->name('groups.users.add');
         Route::delete('/groups/{group}/users/{user}/remove', [GroupUserController::class, 'removeUser'])->name('groups.users.remove');
     });
+    
+    // API для поиска
+    Route::get('/api/organizations/search', OrganizationSearchController::class)->name('api.organizations.search');
 });

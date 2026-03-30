@@ -47,9 +47,7 @@ class GroupUserController extends Controller
     {
         Gate::authorize('create', Group::class);
         
-        $organizations = Organization::pluck('name', 'id');
-        
-        return view('admin.groups.create', compact('organizations'));
+        return view('admin.groups.create');
     }
 
     public function store(Request $request)
