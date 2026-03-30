@@ -25,7 +25,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.courses') ? 'active' : '' }}" href="{{ route('admin.courses.index') }}">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.courses.') && !Str::startsWith($currentRoute, 'admin.courses.tests') ? 'active' : '' }}" href="{{ route('admin.courses.index') }}">
             <i class="bi bi-book"></i> Курсы
         </a>
     </li>
@@ -52,7 +52,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.organizations.groups') ? 'active' : '' }}" href="{{ route('admin.organizations.index') }}">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.groups') ? 'active' : '' }}" href="{{ route('admin.groups.index') }}">
             <i class="bi bi-people-fill"></i> Группы
         </a>
     </li>

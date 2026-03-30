@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\TestController;
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\CourseAssignmentController;
+use App\Http\Controllers\Admin\GroupUserController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,5 +49,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('courses.tests', TestController::class);
         Route::resource('tests.questions', QuestionController::class);
         Route::resource('course-assignments', CourseAssignmentController::class);
+        Route::resource('groups', GroupUserController::class)->except(['create', 'store']);
     });
 });
