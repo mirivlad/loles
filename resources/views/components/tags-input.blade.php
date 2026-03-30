@@ -91,20 +91,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
         onChange: function(value) {
-            if (value) {
-                addTag(value, select.options[value]);
-                select.clear();
+            if (value && this.options[value]) {
+                addTag(value, this.options[value]);
+                this.clear();
             }
         }
     });
-    
+
     // Добавление тега
     function addTag(id, data) {
-        if (selectedTags.has(String(id))) return;
-        
+        if (!data || selectedTags.has(String(id))) return;
+
         selectedTags.add(String(id));
         updateHiddenInput();
-        
+
         const tag = document.createElement('div');
         tag.className = 'tag-badge';
         tag.dataset.id = id;

@@ -22,8 +22,8 @@ class GroupSearchController extends Controller
                 if ($user->organization_id) {
                     // Пользователь в организации - показываем общие + группы организации
                     $groupsQuery->where(function($q) use ($user) {
-                        $q->whereNull('organization_id')
-                          ->orWhere('organization_id', $user->organization_id);
+                        $q->whereNull('organization_id');
+                        $q->orWhere('organization_id', $user->organization_id);
                     });
                 } else {
                     // Пользователь без организации - только общие группы
