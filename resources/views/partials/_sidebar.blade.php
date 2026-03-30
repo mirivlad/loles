@@ -20,6 +20,11 @@
         </a>
     </li>
     <li class="nav-item">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.groups') ? 'active' : '' }}" href="{{ route('admin.groups.index') }}">
+            <i class="bi bi-people-fill"></i> Группы
+        </a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.course-categories') ? 'active' : '' }}" href="{{ route('admin.course-categories.index') }}">
             <i class="bi bi-folder"></i> Категории курсов
         </a>

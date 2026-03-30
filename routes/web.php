@@ -49,6 +49,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('courses.tests', TestController::class);
         Route::resource('tests.questions', QuestionController::class);
         Route::resource('course-assignments', CourseAssignmentController::class);
-        Route::resource('groups', GroupUserController::class)->except(['create', 'store']);
+        Route::resource('groups', GroupUserController::class);
     });
 });

@@ -7,6 +7,9 @@
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
             <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">Группы пользователей</h1>
+                @can('create', App\Models\Group::class)
+                <a href="{{ route('admin.groups.create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Создать группу</a>
+                @endcan
             </div>
             @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
             @if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
@@ -14,15 +17,24 @@
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
                     <form action="{{ route('admin.groups.index') }}" method="GET" class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <select name="organization_id" class="form-select">
-                                <option value="">Все организации</option>
+                                <option value="">Все группы</option>
+                                <option value="general" {{ request('organization_id') === 'general' ? 'selected' : '' }}>Общие группы</option>
                                 @foreach($organizations as $id => $name)
                                 <option value="{{ $id }}" {{ request('organization_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
+                            <select name="user_id" class="form-select">
+                                <option value="">Все пользователи</option>
+                                @foreach(\App\Models\User::pluck('name', 'id') as $id => $name)
+                                <option value="{{ $id }}" {{ request('user_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i></button>
                         </div>
                     </form>

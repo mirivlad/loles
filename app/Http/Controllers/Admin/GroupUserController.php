@@ -24,13 +24,60 @@ class GroupUserController extends Controller
         $query = Group::with(['organization', 'users']);
         
         if ($request->filled('organization_id')) {
-            $query->where('organization_id', $request->organization_id);
+            if ($request->organization_id === 'general') {
+                $query->whereNull('organization_id');
+            } else {
+                $query->where('organization_id', $request->organization_id);
+            }
+        }
+        
+        if ($request->filled('user_id')) {
+            $query->whereHas('users', function($q) use ($request) {
+                $q->where('users.id', $request->user_id);
+            });
         }
         
         $groups = $query->orderBy('name')->paginate(20);
         $organizations = Organization::pluck('name', 'id');
         
         return view('admin.groups.index', compact('groups', 'organizations'));
+    }
+
+    public function create()
+    {
+        Gate::authorize('create', Group::class);
+        
+        $organizations = Organization::pluck('name', 'id');
+        
+        return view('admin.groups.create', compact('organizations'));
+    }
+
+    public function store(Request $request)
+    {
+        Gate::authorize('create', Group::class);
+        
+        $validated = $request->validate([
+            'group_type' => 'required|in:organization,general',
+            'organization_id' => 'nullable|exists:organizations,id',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'is_active' => 'boolean',
+        ]);
+        
+        // Для группы организации organization_id обязательна
+        if ($validated['group_type'] === 'organization' && empty($validated['organization_id'])) {
+            return back()->withErrors(['organization_id' => 'Выберите организацию для группы'])->withInput();
+        }
+        
+        Group::create([
+            'organization_id' => $validated['group_type'] === 'organization' ? $validated['organization_id'] : null,
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'is_active' => $validated['is_active'] ?? true,
+        ]);
+        
+        return redirect()->route('admin.groups.index')
+            ->with('success', 'Группа успешно создана.');
     }
 
     public function show(Group $group)
@@ -48,7 +95,15 @@ class GroupUserController extends Controller
         Gate::authorize('update', $group);
         
         $group->load(['organization', 'users']);
-        $users = User::where('organization_id', $group->organization_id)->get();
+        
+        // Получаем доступных пользователей для этой группы
+        if ($group->organization_id) {
+            // Группа организации — только пользователи этой организации
+            $users = User::where('organization_id', $group->organization_id)->get();
+        } else {
+            // Общая группа — все пользователи
+            $users = User::all();
+        }
         
         return view('admin.groups.edit', compact('group', 'users'));
     }
