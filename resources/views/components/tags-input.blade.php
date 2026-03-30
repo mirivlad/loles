@@ -49,12 +49,20 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
+console.log('[TagsInput] Initializing for {{ $name }}');
+console.log('[TagsInput] Value:', {!! json_encode($value) !!});
+console.log('[TagsInput] User ID:', {{ $user_id ?? 'null' }});
+
 document.addEventListener('DOMContentLoaded', function() {
     const input = document.getElementById('{{ $name }}-input');
     const tagsContainer = document.getElementById('{{ $name }}-tags');
     const hiddenInput = document.getElementById('{{ $name }}');
     let selectedTags = new Set({!! json_encode(array_map('strval', is_array($value) ? $value : [])) !!});
     
+    console.log('[TagsInput] DOM loaded');
+    console.log('[TagsInput] Input element:', input);
+    console.log('[TagsInput] Selected tags:', Array.from(selectedTags));
+
     // Инициализация TomSelect
     const select = new TomSelect(input, {
         valueField: 'id',
@@ -67,22 +75,30 @@ document.addEventListener('DOMContentLoaded', function() {
         hideSelected: true,
         create: false,
         load: function(query, callback) {
+            console.log('[TagsInput] Load called with query:', query);
             if (query.length < 2) return callback();
             
             let url = '{{ $url }}?q=' + encodeURIComponent(query);
             @if(isset($user_id) && $user_id)url += '&user_id={{ $user_id }}';@endif
             
+            console.log('[TagsInput] Fetching URL:', url);
             fetch(url)
-                .then(response => response.json())
+                .then(response => {
+                    console.log('[TagsInput] Response status:', response.status);
+                    return response.json();
+                })
                 .then(json => {
+                    console.log('[TagsInput] Received items:', json);
                     // Фильтруем уже выбранные
                     const filtered = json.filter(item => !selectedTags.has(String(item.id)));
+                    console.log('[TagsInput] Filtered items:', filtered);
                     // Добавляем опции в TomSelect
                     filtered.forEach(item => {
                         this.addOption(item);
                     });
                     callback(filtered);
-                }).catch(() => {
+                }).catch(err => {
+                    console.error('[TagsInput] Fetch error:', err);
                     callback();
                 });
         },
@@ -95,16 +111,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
         onItemAdd: function(value, $item) {
+            console.log('[TagsInput] onItemAdd called with value:', value);
             const data = this.options[value];
+            console.log('[TagsInput] Option data:', data);
             if (data) {
                 addTag(value, data);
             }
         }
     });
+    
+    console.log('[TagsInput] TomSelect initialized:', select);
 
     // Добавление тега
     function addTag(id, data) {
-        if (!data || selectedTags.has(String(id))) return;
+        console.log('[TagsInput] addTag called with id:', id, 'data:', data);
+        if (!data || selectedTags.has(String(id))) {
+            console.log('[TagsInput] Skipping tag (no data or already selected)');
+            return;
+        }
 
         selectedTags.add(String(id));
         updateHiddenInput();
@@ -116,27 +140,31 @@ document.addEventListener('DOMContentLoaded', function() {
             <span>${escapeHtml(data.text)}</span>
             <span class="remove-tag" onclick="removeTag(${id}, this)">&times;</span>
         `;
+        console.log('[TagsInput] Appending tag:', tag);
         tagsContainer.appendChild(tag);
-        
+
         // Очищаем поле ввода
         setTimeout(() => {
+            console.log('[TagsInput] Clearing select');
             select.clear();
         }, 100);
     }
-    
+
     // Удаление тега
     window.removeTag = function(id, element) {
+        console.log('[TagsInput] removeTag called with id:', id);
         selectedTags.delete(String(id));
         updateHiddenInput();
         element.parentElement.remove();
         select.clear();
     };
-    
+
     // Обновление скрытого input
     function updateHiddenInput() {
         hiddenInput.value = Array.from(selectedTags).join(',');
+        console.log('[TagsInput] Hidden input value:', hiddenInput.value);
     }
-    
+
     // Экранирование HTML
     function escapeHtml(text) {
         const div = document.createElement('div');
@@ -146,23 +174,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Загрузка существующих тегов
     @if(count($value) > 0)
+    console.log('[TagsInput] Loading existing tags:', {!! json_encode(array_map('strval', is_array($value) ? $value : [])) !!});
     const existingIds = {!! json_encode(array_map('strval', is_array($value) ? $value : [])) !!};
     if (existingIds.length > 0) {
         // Загружаем все доступные группы (с user_id для фильтрации)
         let url = '{{ $url }}?q=';
         @if(isset($user_id) && $user_id)url += '&user_id={{ $user_id }}';@endif
         
+        console.log('[TagsInput] Fetching existing tags from URL:', url);
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                console.log('[TagsInput] Existing tags response status:', response.status);
+                return response.json();
+            })
             .then(allItems => {
+                console.log('[TagsInput] All items from API:', allItems);
                 // Фильтруем только нужные группы
                 const items = allItems.filter(item => existingIds.includes(String(item.id)));
+                console.log('[TagsInput] Filtered items for existing tags:', items);
                 items.forEach(item => {
+                    console.log('[TagsInput] Adding existing option:', item);
                     select.addOption(item);
                     addTag(item.id, item);
                 });
+            })
+            .catch(err => {
+                console.error('[TagsInput] Error loading existing tags:', err);
             });
     }
+    @else
+    console.log('[TagsInput] No existing tags to load');
     @endif
 });
 </script>
