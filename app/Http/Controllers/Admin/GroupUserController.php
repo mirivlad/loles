@@ -56,16 +56,11 @@ class GroupUserController extends Controller
         
         $validated = $request->validate([
             'group_type' => 'required|in:organization,general',
-            'organization_id' => 'nullable|exists:organizations,id',
+            'organization_id' => 'required_if:group_type,organization|nullable|exists:organizations,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
-        
-        // Для группы организации organization_id обязательна
-        if ($validated['group_type'] === 'organization' && empty($validated['organization_id'])) {
-            return back()->withErrors(['organization_id' => 'Выберите организацию для группы'])->withInput();
-        }
         
         Group::create([
             'organization_id' => $validated['group_type'] === 'organization' ? $validated['organization_id'] : null,

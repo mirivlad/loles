@@ -82,7 +82,21 @@
 <script>
 function toggleOrganizationField() {
     const type = document.getElementById('groupType').value;
-    document.getElementById('organizationField').style.display = (type === 'organization') ? 'block' : 'none';
+    const orgField = document.getElementById('organizationField');
+    const orgSelect = orgField.querySelector('select');
+    const orgHidden = document.getElementById('organization_id');
+    
+    if (type === 'organization') {
+        orgField.style.display = 'block';
+        orgSelect.setAttribute('required', 'required');
+        if (orgHidden) orgHidden.setAttribute('required', 'required');
+    } else {
+        orgField.style.display = 'none';
+        orgSelect.removeAttribute('required');
+        if (orgHidden) orgHidden.removeAttribute('required');
+        orgSelect.value = ''; // Очищаем значение
+        if (orgHidden) orgHidden.value = '';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {

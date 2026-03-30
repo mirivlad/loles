@@ -1,6 +1,6 @@
 @props(['name', 'url', 'placeholder' => 'Начните вводить...', 'value' => null, 'required' => false])
 
-<input type="hidden" name="{{ $name }}" id="{{ $name }}" value="{{ $value }}">
+<input type="hidden" name="{{ $name }}" id="{{ $name }}" value="{{ $value }}" {{ $required ? 'required' : '' }}>
 <select id="{{ $name }}-select" class="form-select @error($name) is-invalid @enderror" {{ $required ? 'required' : '' }}></select>
 
 @push('scripts')
