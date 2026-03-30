@@ -63,12 +63,11 @@
                                 @if($allGroups->count() > 0)
                                 <div class="mb-3">
                                     <label class="form-label">Группы</label>
-                                    <x-searchable-select
-                                        name="groups[]"
+                                    <x-tags-input
+                                        name="groups"
                                         url="{{ route('api.groups.search') }}"
                                         placeholder="Начните вводить название группы..."
                                         :value="$userGroups"
-                                        :multiple="true"
                                     />
                                     <small class="text-muted">Выберите группы</small>
                                 </div>

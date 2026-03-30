@@ -118,7 +118,7 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         Gate::authorize('update', $user);
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
@@ -126,10 +126,10 @@ class UserController extends Controller
             'phone' => 'nullable|string|max:20',
             'organization_id' => 'nullable|exists:organizations,id',
             'role' => 'required|exists:roles,name',
-            'groups' => 'array|exists:groups,id',
+            'groups' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
-        
+
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -137,23 +137,24 @@ class UserController extends Controller
             'organization_id' => $validated['organization_id'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
         ]);
-        
+
         // Обновление пароля
         if (!empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
             $user->save();
         }
-        
+
         // Обновление роли
         $user->syncRoles([$validated['role']]);
-        
-        // Обновление групп
-        if (isset($validated['groups'])) {
-            $user->groups()->sync($validated['groups']);
+
+        // Обновление групп (строка "1,2,3" → массив)
+        if (!empty($validated['groups'])) {
+            $groupIds = array_map('intval', array_filter(explode(',', $validated['groups'])));
+            $user->groups()->sync($groupIds);
         } else {
             $user->groups()->detach();
         }
-        
+
         return redirect()->route('admin.users.show', $user)
             ->with('success', 'Пользователь успешно обновлён.');
     }
