@@ -247,6 +247,14 @@
 
 @push('scripts')
 <script>
+// Автоматическое открытие modal редактирования если в URL есть #edit
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.hash === '#edit') {
+        const editModal = new bootstrap.Modal(document.getElementById('editAssignmentModal'));
+        editModal.show();
+    }
+});
+
 // AJAX добавление
 function setupAjaxForm(formId, type) {
     document.getElementById(formId).addEventListener('submit', function(e) {
