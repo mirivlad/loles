@@ -129,7 +129,8 @@ class GroupUserController extends Controller
                 $user = User::find($userId);
                 if (!$user) continue;
                 
-                // Проверка: если группа организации - только пользователи этой организации
+                // Проверка: ТОЛЬКО если группа организации - только пользователи этой организации
+                // Общие группы могут добавлять любых пользователей
                 if ($group->organization_id && $user->organization_id !== $group->organization_id) {
                     continue;
                 }
