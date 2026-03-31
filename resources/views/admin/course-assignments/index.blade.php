@@ -81,6 +81,9 @@
                                             <a href="{{ route('admin.course-assignments.show', ['course' => $group->course_id, 'start' => $group->start_date->format('Y-m-d'), 'end' => $group->end_date?->format('Y-m-d') ?? 'null']) }}" class="btn btn-outline-primary" title="Просмотр">
                                                 <i class="bi bi-eye"></i>
                                             </a>
+                                            <a href="{{ route('admin.course-assignments.show', ['course' => $group->course_id, 'start' => $group->start_date->format('Y-m-d'), 'end' => $group->end_date?->format('Y-m-d') ?? 'null']) }}#edit" class="btn btn-outline-warning" title="Редактировать">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
