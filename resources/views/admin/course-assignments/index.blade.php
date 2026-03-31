@@ -52,35 +52,35 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($assignments as $assignment)
+                                @forelse($course_assignments as $course_assignment)
                                 <tr>
-                                    <td><strong>{{ $assignment->course->title }}</strong></td>
+                                    <td><strong>{{ $course_assignment->course->title }}</strong></td>
                                     <td>
-                                        @if($assignment->type === 'individual')
+                                        @if($course_assignment->type === 'individual')
                                             <span class="badge bg-success"><i class="bi bi-person"></i> Индивидуально</span>
-                                        @elseif($assignment->type === 'group')
+                                        @elseif($course_assignment->type === 'group')
                                             <span class="badge bg-info"><i class="bi bi-people"></i> Группе</span>
                                         @else
                                             <span class="badge bg-primary"><i class="bi bi-building"></i> Организации</span>
                                         @endif
                                     </td>
                                     <td>
-                                        @if($assignment->type === 'individual')
-                                            {{ $assignment->user?->name ?? '—' }}
-                                        @elseif($assignment->type === 'group')
-                                            {{ $assignment->group?->name ?? '—' }}
+                                        @if($course_assignment->type === 'individual')
+                                            {{ $course_assignment->user?->name ?? '—' }}
+                                        @elseif($course_assignment->type === 'group')
+                                            {{ $course_assignment->group?->name ?? '—' }}
                                         @else
-                                            {{ $assignment->organization?->name ?? '—' }}
+                                            {{ $course_assignment->organization?->name ?? '—' }}
                                         @endif
                                     </td>
                                     <td>
-                                        <small>{{ $assignment->start_date->format('d.m.Y') }}</small>
-                                        @if($assignment->end_date)
-                                        <br><small>→ {{ $assignment->end_date->format('d.m.Y') }}</small>
+                                        <small>{{ $course_assignment->start_date->format('d.m.Y') }}</small>
+                                        @if($course_assignment->end_date)
+                                        <br><small>→ {{ $course_assignment->end_date->format('d.m.Y') }}</small>
                                         @endif
                                     </td>
                                     <td>
-                                        @if($assignment->is_active)
+                                        @if($course_assignment->is_active)
                                             <span class="badge bg-success">Активно</span>
                                         @else
                                             <span class="badge bg-secondary">Не активно</span>
@@ -88,9 +88,9 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
-                                            <a href="{{ route('admin.course-assignments.show', $assignment) }}" class="btn btn-outline-primary" title="Просмотр"><i class="bi bi-eye"></i></a>
-                                            <a href="{{ route('admin.course-assignments.edit', $assignment) }}" class="btn btn-outline-warning" title="Редактировать"><i class="bi bi-pencil"></i></a>
-                                            <form action="{{ route('admin.course-assignments.destroy', $assignment) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить?')">
+                                            <a href="{{ route('admin.course-assignments.show', $course_assignment) }}" class="btn btn-outline-primary" title="Просмотр"><i class="bi bi-eye"></i></a>
+                                            <a href="{{ route('admin.course-assignments.edit', $course_assignment) }}" class="btn btn-outline-warning" title="Редактировать"><i class="bi bi-pencil"></i></a>
+                                            <form action="{{ route('admin.course-assignments.destroy', $course_assignment) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить?')">
                                                 @csrf @method('DELETE')
                                                 <button class="btn btn-outline-danger" title="Удалить"><i class="bi bi-trash"></i></button>
                                             </form>
@@ -110,7 +110,7 @@
                     </div>
                 </div>
             </div>
-            {{ $assignments->links() }}
+            {{ $course_assignments->links() }}
         </main>
     </div>
 </div>

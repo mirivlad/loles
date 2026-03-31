@@ -146,28 +146,28 @@ class CourseAssignmentController extends Controller
             ->with('success', "Создано назначений: {$created}");
     }
 
-    public function show(CourseAssignment $assignment)
+    public function show(CourseAssignment $course_assignment)
     {
-        Gate::authorize('view', $assignment);
-        
-        $assignment->load(['course', 'user', 'group', 'organization', 'creator']);
-        
-        return view('admin.course-assignments.show', compact('assignment'));
+        Gate::authorize('view', $course_assignment);
+
+        $course_assignment->load(['course', 'user', 'group', 'organization', 'creator']);
+
+        return view('admin.course-assignments.show', compact('course_assignment'));
     }
 
-    public function edit(CourseAssignment $assignment)
+    public function edit(CourseAssignment $course_assignment)
     {
-        Gate::authorize('update', $assignment);
-        
+        Gate::authorize('update', $course_assignment);
+
         $courses = Course::pluck('title', 'id');
-        
-        return view('admin.course-assignments.edit', compact('assignment', 'courses'));
+
+        return view('admin.course-assignments.edit', compact('course_assignment', 'courses'));
     }
 
-    public function update(Request $request, CourseAssignment $assignment)
+    public function update(Request $request, CourseAssignment $course_assignment)
     {
-        Gate::authorize('update', $assignment);
-        
+        Gate::authorize('update', $course_assignment);
+
         $validated = $request->validate([
             'course_id' => 'required|exists:courses,id',
             'start_date' => 'required|date',
@@ -176,18 +176,18 @@ class CourseAssignmentController extends Controller
             'is_active' => 'boolean',
         ]);
         
-        $assignment->update($validated);
-        
-        return redirect()->route('admin.course-assignments.show', $assignment)
+        $course_assignment->update($validated);
+
+        return redirect()->route('admin.course-assignments.show', $course_assignment)
             ->with('success', 'Назначение успешно обновлено.');
     }
 
-    public function destroy(CourseAssignment $assignment)
+    public function destroy(CourseAssignment $course_assignment)
     {
-        Gate::authorize('delete', $assignment);
-        
-        $assignment->delete();
-        
+        Gate::authorize('delete', $course_assignment);
+
+        $course_assignment->delete();
+
         return redirect()->route('admin.course-assignments.index')
             ->with('success', 'Назначение успешно удалено.');
     }

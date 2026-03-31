@@ -7,10 +7,10 @@
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
             <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">Редактировать назначение</h1>
-                <a href="{{ route('admin.course-assignments.show', $assignment) }}" class="btn btn-secondary btn-sm">Назад</a>
+                <a href="{{ route('admin.course-assignments.show', $course_assignment) }}" class="btn btn-secondary btn-sm">Назад</a>
             </div>
             
-            <form action="{{ route('admin.course-assignments.update', $assignment) }}" method="POST">
+            <form action="{{ route('admin.course-assignments.update', $course_assignment) }}" method="POST">
                 @csrf @method('PUT')
                 <div class="row">
                     <div class="col-md-8 mb-4">
@@ -19,22 +19,22 @@
                             <div class="card-body">
                                 <div class="mb-3">
                                     <label class="form-label">Курс</label>
-                                    <input type="text" class="form-control" value="{{ $assignment->course->title }}" disabled>
+                                    <input type="text" class="form-control" value="{{ $course_assignment->course->title }}" disabled>
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label class="form-label">Тип</label>
-                                    <input type="text" class="form-control" value="@if($assignment->type === 'individual')Индивидуально@elseif($assignment->type === 'group')Группе@elseОрганизации@endif" disabled>
+                                    <input type="text" class="form-control" value="@if($course_assignment->type === 'individual')Индивидуально@elseif($course_assignment->type === 'group')Группе@elseОрганизации@endif" disabled>
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label class="form-label">Назначено</label>
-                                    <input type="text" class="form-control" value="@if($assignment->type === 'individual'){{ $assignment->user?->name }}@elseif($assignment->type === 'group'){{ $assignment->group?->name }}@else{{ $assignment->organization?->name }}@endif" disabled>
+                                    <input type="text" class="form-control" value="@if($course_assignment->type === 'individual'){{ $course_assignment->user?->name }}@elseif($course_assignment->type === 'group'){{ $course_assignment->group?->name }}@else{{ $course_assignment->organization?->name }}@endif" disabled>
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label class="form-label">Заметка</label>
-                                    <textarea name="note" class="form-control" rows="3">{{ old('note', $assignment->note) }}</textarea>
+                                    <textarea name="note" class="form-control" rows="3">{{ old('note', $course_assignment->note) }}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -46,17 +46,17 @@
                             <div class="card-body">
                                 <div class="mb-3">
                                     <label class="form-label">Дата начала *</label>
-                                    <input type="date" name="start_date" class="form-control @error('start_date') is-invalid @enderror" value="{{ old('start_date', $assignment->start_date->format('Y-m-d')) }}" required>
+                                    <input type="date" name="start_date" class="form-control @error('start_date') is-invalid @enderror" value="{{ old('start_date', $course_assignment->start_date->format('Y-m-d')) }}" required>
                                     @error('start_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Дата окончания</label>
-                                    <input type="date" name="end_date" class="form-control @error('end_date') is-invalid @enderror" value="{{ old('end_date', $assignment->end_date?->format('Y-m-d')) }}">
+                                    <input type="date" name="end_date" class="form-control @error('end_date') is-invalid @enderror" value="{{ old('end_date', $course_assignment->end_date?->format('Y-m-d')) }}">
                                     <small class="text-muted">Оставьте пустым для бессрочного доступа</small>
                                     @error('end_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="form-check mb-3">
-                                    <input type="checkbox" name="is_active" value="1" class="form-check-input" {{ old('is_active', $assignment->is_active) ? 'checked' : '' }}>
+                                    <input type="checkbox" name="is_active" value="1" class="form-check-input" {{ old('is_active', $course_assignment->is_active) ? 'checked' : '' }}>
                                     <label class="form-check-label">Активно</label>
                                 </div>
                             </div>
@@ -65,7 +65,7 @@
                 </div>
                 
                 <button type="submit" class="btn btn-primary">Сохранить</button>
-                <a href="{{ route('admin.course-assignments.show', $assignment) }}" class="btn btn-secondary">Отмена</a>
+                <a href="{{ route('admin.course-assignments.show', $course_assignment) }}" class="btn btn-secondary">Отмена</a>
             </form>
         </main>
     </div>

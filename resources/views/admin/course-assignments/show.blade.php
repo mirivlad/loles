@@ -8,7 +8,7 @@
             <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">Назначение курса</h1>
                 <div>
-                    <a href="{{ route('admin.course-assignments.edit', $assignment) }}" class="btn btn-warning btn-sm me-2">Редактировать</a>
+                    <a href="{{ route('admin.course-assignments.edit', $course_assignment) }}" class="btn btn-warning btn-sm me-2">Редактировать</a>
                     <a href="{{ route('admin.course-assignments.index') }}" class="btn btn-secondary btn-sm">Назад</a>
                 </div>
             </div>
@@ -21,14 +21,14 @@
                             <table class="table table-sm">
                                 <tr>
                                     <th width="40%">Курс:</th>
-                                    <td><strong>{{ $assignment->course->title }}</strong></td>
+                                    <td><strong>{{ $course_assignment->course->title }}</strong></td>
                                 </tr>
                                 <tr>
                                     <th>Тип:</th>
                                     <td>
-                                        @if($assignment->type === 'individual')
+                                        @if($course_assignment->type === 'individual')
                                             <span class="badge bg-success"><i class="bi bi-person"></i> Индивидуально</span>
-                                        @elseif($assignment->type === 'group')
+                                        @elseif($course_assignment->type === 'group')
                                             <span class="badge bg-info"><i class="bi bi-people"></i> Группе</span>
                                         @else
                                             <span class="badge bg-primary"><i class="bi bi-building"></i> Организации</span>
@@ -38,22 +38,22 @@
                                 <tr>
                                     <th>Назначено:</th>
                                     <td>
-                                        @if($assignment->type === 'individual')
-                                            {{ $assignment->user?->name ?? '—' }}
-                                        @elseif($assignment->type === 'group')
-                                            {{ $assignment->group?->name ?? '—' }}
+                                        @if($course_assignment->type === 'individual')
+                                            {{ $course_assignment->user?->name ?? '—' }}
+                                        @elseif($course_assignment->type === 'group')
+                                            {{ $course_assignment->group?->name ?? '—' }}
                                         @else
-                                            {{ $assignment->organization?->name ?? '—' }}
+                                            {{ $course_assignment->organization?->name ?? '—' }}
                                         @endif
                                     </td>
                                 </tr>
                                 <tr>
                                     <th>Заметка:</th>
-                                    <td>{{ $assignment->note ?? '—' }}</td>
+                                    <td>{{ $course_assignment->note ?? '—' }}</td>
                                 </tr>
                                 <tr>
                                     <th>Создано:</th>
-                                    <td>{{ $assignment->creator?->name ?? '—' }}, {{ $assignment->created_at->format('d.m.Y H:i') }}</td>
+                                    <td>{{ $course_assignment->creator?->name ?? '—' }}, {{ $course_assignment->created_at->format('d.m.Y H:i') }}</td>
                                 </tr>
                             </table>
                         </div>
@@ -66,13 +66,13 @@
                         <div class="card-body">
                             <div class="mb-3">
                                 <label class="text-muted small">Дата начала</label>
-                                <div class="fs-5">{{ $assignment->start_date->format('d.m.Y') }}</div>
+                                <div class="fs-5">{{ $course_assignment->start_date->format('d.m.Y') }}</div>
                             </div>
                             <div class="mb-3">
                                 <label class="text-muted small">Дата окончания</label>
                                 <div class="fs-5">
-                                    @if($assignment->end_date)
-                                        {{ $assignment->end_date->format('d.m.Y') }}
+                                    @if($course_assignment->end_date)
+                                        {{ $course_assignment->end_date->format('d.m.Y') }}
                                     @else
                                         <span class="text-muted">Бессрочно</span>
                                     @endif
@@ -81,7 +81,7 @@
                             <hr>
                             <div>
                                 <label class="text-muted small">Статус</label>
-                                @if($assignment->is_active)
+                                @if($course_assignment->is_active)
                                     <span class="badge bg-success">Активно</span>
                                 @else
                                     <span class="badge bg-secondary">Не активно</span>
