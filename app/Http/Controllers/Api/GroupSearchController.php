@@ -12,8 +12,17 @@ class GroupSearchController extends Controller
     {
         $query = $request->get('q', '');
         $userId = $request->get('user_id', null);
-        
+        $organizationId = $request->get('organization_id', null);
+
         $groupsQuery = Group::query()->with('organization');
+
+        // Если указан organization_id - показываем только общие группы или группы из других организаций
+        if ($organizationId) {
+            $groupsQuery->where(function($q) use ($organizationId) {
+                $q->whereNull('organization_id')
+                  ->orWhere('organization_id', '!=', $organizationId);
+            });
+        }
         
         // Если указан user_id - фильтруем по доступным группам
         if ($userId) {
@@ -31,12 +40,12 @@ class GroupSearchController extends Controller
                 }
             }
         }
-        
+
         // Если запрос не пустой - фильтруем по названию
         if (!empty(trim($query))) {
             $groupsQuery->where('name', 'like', "%{$query}%");
         }
-        
+
         $groups = $groupsQuery
             ->orderBy('name')
             ->limit(50)
@@ -47,7 +56,7 @@ class GroupSearchController extends Controller
                     'text' => $group->name . ($group->organization ? " ({$group->organization->name})" : ' (Общая)'),
                 ];
             });
-        
+
         return response()->json($groups);
     }
 }

@@ -45,8 +45,14 @@ Route::middleware('auth')->group(function () {
     
     // Администрирование
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::resource('organizations', OrganizationController::class);
+        Route::resource('organizations', OrganizationController::class)->except(['edit', 'update']);
         Route::resource('organizations.groups', GroupController::class);
+        Route::get('/organizations/{organization}/edit', [OrganizationController::class, 'edit'])->name('organizations.edit');
+        Route::put('/organizations/{organization}', [OrganizationController::class, 'update'])->name('organizations.update');
+        Route::post('/organizations/{organization}/users/add', [OrganizationController::class, 'addUser'])->name('organizations.users.add');
+        Route::delete('/organizations/{organization}/users/{user}/remove', [OrganizationController::class, 'removeUser'])->name('organizations.users.remove');
+        Route::post('/organizations/{organization}/groups/add', [OrganizationController::class, 'addGroup'])->name('organizations.groups.add');
+        Route::delete('/organizations/{organization}/groups/{group}/remove', [OrganizationController::class, 'removeGroup'])->name('organizations.groups.remove');
         Route::resource('users', UserController::class);
         Route::resource('course-categories', CourseCategoryController::class);
         Route::resource('courses', CourseController::class);

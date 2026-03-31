@@ -62,14 +62,124 @@ class OrganizationController extends Controller
         
         return view('admin.organizations.show', compact('organization'));
     }
-
+    
+    /**
+     * Добавить пользователя в организацию
+     */
+    public function addUser(Organization $organization, Request $request)
+    {
+        Gate::authorize('update', $organization);
+        
+        $validated = $request->validate([
+            'user_ids' => 'nullable|string',
+        ]);
+        
+        if (!empty($validated['user_ids'])) {
+            $userIds = array_map('intval', array_filter(explode(',', $validated['user_ids'])));
+            
+            foreach ($userIds as $userId) {
+                $user = User::find($userId);
+                if (!$user) continue;
+                
+                // Проверка: не состоит ли уже в организации
+                if ($user->organization_id === $organization->id) {
+                    continue;
+                }
+                
+                $user->update(['organization_id' => $organization->id]);
+            }
+        }
+        
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+        
+        return back()->with('success', 'Пользователи добавлены в организацию.');
+    }
+    
+    /**
+     * Удалить пользователя из организации
+     */
+    public function removeUser(Organization $organization, User $user)
+    {
+        Gate::authorize('update', $organization);
+        
+        if ($user->organization_id === $organization->id) {
+            $user->update(['organization_id' => null]);
+        }
+        
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+        
+        return back()->with('success', 'Пользователь удалён из организации.');
+    }
+    
+    /**
+     * Добавить группу в организацию
+     */
+    public function addGroup(Organization $organization, Request $request)
+    {
+        Gate::authorize('update', $organization);
+        
+        $validated = $request->validate([
+            'group_ids' => 'nullable|string',
+        ]);
+        
+        if (!empty($validated['group_ids'])) {
+            $groupIds = array_map('intval', array_filter(explode(',', $validated['group_ids'])));
+            
+            foreach ($groupIds as $groupId) {
+                $group = Group::find($groupId);
+                if (!$group) continue;
+                
+                // Проверка: не состоит ли уже в организации
+                if ($group->organization_id === $organization->id) {
+                    continue;
+                }
+                
+                $group->update(['organization_id' => $organization->id]);
+            }
+        }
+        
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+        
+        return back()->with('success', 'Группы добавлены в организацию.');
+    }
+    
+    /**
+     * Удалить группу из организации
+     */
+    public function removeGroup(Organization $organization, Group $group)
+    {
+        Gate::authorize('update', $organization);
+        
+        if ($group->organization_id === $organization->id) {
+            $group->update(['organization_id' => null]);
+        }
+        
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+        
+        return back()->with('success', 'Группа удалена из организации.');
+    }
+    
+    /**
+     * Редактирование организации (modal)
+     */
     public function edit(Organization $organization)
     {
         Gate::authorize('update', $organization);
         
-        return view('admin.organizations.edit', compact('organization'));
+        return redirect()->route('admin.organizations.show', $organization)->with('edit', true);
     }
-
+    
+    /**
+     * Обновление организации
+     */
     public function update(Request $request, Organization $organization)
     {
         Gate::authorize('update', $organization);
@@ -82,11 +192,15 @@ class OrganizationController extends Controller
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'description' => 'nullable|string',
+            'is_active' => 'boolean',
         ]);
         
-        $validated['is_active'] = $request->boolean('is_active');
-        
         $organization->update($validated);
+        
+        // Для AJAX запросов
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'organization' => $organization]);
+        }
         
         return redirect()->route('admin.organizations.show', $organization)
             ->with('success', 'Организация успешно обновлена.');
