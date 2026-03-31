@@ -57,7 +57,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('groups', GroupUserController::class)->except(['edit', 'update']);
         Route::get('/groups/{group}/edit', [GroupUserController::class, 'edit'])->name('groups.edit');
         Route::put('/groups/{group}', [GroupUserController::class, 'update'])->name('groups.update');
-        Route::post('/users/{user}/groups/add', [GroupUserController::class, 'addUser'])->name('groups.users.add');
+        Route::post('/groups/{group}/users/add', [GroupUserController::class, 'addUser'])->name('groups.users.add');
         Route::delete('/groups/{group}/users/{user}/remove', [GroupUserController::class, 'removeUser'])->name('groups.users.remove');
     });
     

@@ -137,7 +137,7 @@ document.getElementById('addUserForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
     
-    fetch('/admin/groups/{{ $group->id }}/users/0/add', {
+    fetch('/admin/groups/{{ $group->id }}/users/add', {
         method: 'POST',
         body: formData,
         headers: {

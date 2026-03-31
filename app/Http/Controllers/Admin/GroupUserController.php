@@ -115,14 +115,11 @@ class GroupUserController extends Controller
     /**
      * Добавить пользователя в группу
      */
-    public function addUser(User $user, Request $request)
+    public function addUser(Group $group, Request $request)
     {
         $validated = $request->validate([
-            'group_id' => 'required|exists:groups,id',
             'user_ids' => 'nullable|string',
         ]);
-        
-        $group = Group::findOrFail($validated['group_id']);
         
         // Если переданы user_ids (из tags-input)
         if (!empty($validated['user_ids'])) {
