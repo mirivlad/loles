@@ -94,26 +94,8 @@ class GroupUserController extends Controller
             })
             ->get();
         }
-        
-        return view('admin.groups.show', compact('group', 'users'));
-    }
 
-    public function edit(Group $group)
-    {
-        Gate::authorize('update', $group);
-        
-        $group->load(['organization', 'users']);
-        
-        // Получаем доступных пользователей для этой группы
-        if ($group->organization_id) {
-            // Группа организации — только пользователи этой организации
-            $users = User::where('organization_id', $group->organization_id)->get();
-        } else {
-            // Общая группа — все пользователи
-            $users = User::all();
-        }
-        
-        return view('admin.groups.edit', compact('group', 'users'));
+        return view('admin.groups.show', compact('group', 'users'));
     }
 
     public function update(Request $request, Group $group)
