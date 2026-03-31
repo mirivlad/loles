@@ -52,7 +52,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('courses', CourseController::class);
         Route::resource('courses.tests', TestController::class);
         Route::resource('tests.questions', QuestionController::class);
-        Route::resource('course-assignments', CourseAssignmentController::class);
+        Route::resource('course-assignments', CourseAssignmentController::class)->except(['show', 'edit', 'update']);
+        Route::get('/course-assignments/{course}', CourseAssignmentController::class . '@show')->name('course-assignments.show');
         Route::resource('groups', GroupUserController::class);
         Route::post('/users/{user}/groups/add', [GroupUserController::class, 'addUser'])->name('groups.users.add');
         Route::delete('/groups/{group}/users/{user}/remove', [GroupUserController::class, 'removeUser'])->name('groups.users.remove');

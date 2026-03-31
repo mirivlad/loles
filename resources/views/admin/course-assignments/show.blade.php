@@ -1,12 +1,12 @@
 @extends('layouts.app')
-@section('title', 'Назначение: ' . $course->title)
+@section('title', 'Назначение: ' . $courseModel->title)
 @section('content')
 <div class="container-fluid">
     <div class="row">
         <nav class="col-md-3 col-lg-2 d-md-block sidebar"><div class="position-sticky pt-3">@include('partials._sidebar')</div></nav>
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
             <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">{{ $course->title }}</h1>
+                <h1 class="h2">{{ $courseModel->title }}</h1>
                 <a href="{{ route('admin.course-assignments.index') }}" class="btn btn-secondary btn-sm">Назад</a>
             </div>
             
@@ -132,7 +132,7 @@
         <div class="modal-content">
             <form action="{{ route('admin.course-assignments.store') }}" method="POST">
                 @csrf
-                <input type="hidden" name="course_ids" value="{{ $course->id }}">
+                <input type="hidden" name="course_ids" value="{{ $courseModel->id }}">
                 <input type="hidden" name="start_date" value="{{ $start_date }}">
                 <input type="hidden" name="end_date" value="{{ $end_date }}">
                 <div class="modal-header">
@@ -157,7 +157,7 @@
         <div class="modal-content">
             <form action="{{ route('admin.course-assignments.store') }}" method="POST">
                 @csrf
-                <input type="hidden" name="course_ids" value="{{ $course->id }}">
+                <input type="hidden" name="course_ids" value="{{ $courseModel->id }}">
                 <input type="hidden" name="start_date" value="{{ $start_date }}">
                 <input type="hidden" name="end_date" value="{{ $end_date }}">
                 <div class="modal-header">
@@ -182,7 +182,7 @@
         <div class="modal-content">
             <form action="{{ route('admin.course-assignments.store') }}" method="POST">
                 @csrf
-                <input type="hidden" name="course_ids" value="{{ $course->id }}">
+                <input type="hidden" name="course_ids" value="{{ $courseModel->id }}">
                 <input type="hidden" name="start_date" value="{{ $start_date }}">
                 <input type="hidden" name="end_date" value="{{ $end_date }}">
                 <div class="modal-header">

@@ -155,14 +155,14 @@ class CourseAssignmentController extends Controller
             ->with('success', "Создано назначений: {$created}");
     }
 
-    public function show(Request $request, $course_id)
+    public function show(Request $request, $course)
     {
         Gate::authorize('viewAny', CourseAssignment::class);
         
         $start_date = $request->get('start');
         $end_date = $request->get('end') !== 'null' ? $request->get('end') : null;
         
-        $query = CourseAssignment::where('course_id', $course_id)
+        $query = CourseAssignment::where('course_id', $course)
             ->where('start_date', $start_date);
         
         if ($end_date) {
@@ -172,14 +172,14 @@ class CourseAssignmentController extends Controller
         }
         
         $assignments = $query->with(['course', 'user', 'group', 'organization', 'creator'])->get();
-        $course = $assignments->first()?->course;
+        $courseModel = $assignments->first()?->course ?? Course::find($course);
         
         // Группируем по типам
         $individual = $assignments->where('type', 'individual');
         $groups = $assignments->where('type', 'group');
         $organizations = $assignments->where('type', 'organization');
         
-        return view('admin.course-assignments.show', compact('course', 'assignments', 'individual', 'groups', 'organizations', 'start_date', 'end_date'));
+        return view('admin.course-assignments.show', compact('courseModel', 'assignments', 'individual', 'groups', 'organizations', 'start_date', 'end_date'));
     }
 
     public function destroy(CourseAssignment $course_assignment)
