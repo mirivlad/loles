@@ -14,20 +14,12 @@
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
                     <form action="{{ route('admin.course-assignments.index') }}" method="GET" class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-8">
                             <select name="course_id" class="form-select">
                                 <option value="">Все курсы</option>
                                 @foreach($courses as $id => $title)
                                 <option value="{{ $id }}" {{ request('course_id') == $id ? 'selected' : '' }}>{{ $title }}</option>
                                 @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <select name="type" class="form-select">
-                                <option value="">Все типы</option>
-                                <option value="individual">Индивидуальное</option>
-                                <option value="group">Группе</option>
-                                <option value="organization">Организации</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -44,56 +36,51 @@
                             <thead>
                                 <tr>
                                     <th>Курс</th>
-                                    <th>Тип</th>
-                                    <th>Назначено</th>
                                     <th>Период</th>
-                                    <th>Статус</th>
+                                    <th class="text-center"><i class="bi bi-person" title="Индивидуальные"></i></th>
+                                    <th class="text-center"><i class="bi bi-people" title="Группы"></i></th>
+                                    <th class="text-center"><i class="bi bi-building" title="Организации"></i></th>
                                     <th>Действия</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($assignments as $course_assignment)
+                                @forelse($assignments as $group)
                                 <tr>
-                                    <td><strong>{{ $course_assignment->course->title }}</strong></td>
                                     <td>
-                                        @if($course_assignment->type === 'individual')
-                                            <span class="badge bg-success"><i class="bi bi-person"></i> Индивидуально</span>
-                                        @elseif($course_assignment->type === 'group')
-                                            <span class="badge bg-info"><i class="bi bi-people"></i> Группе</span>
-                                        @else
-                                            <span class="badge bg-primary"><i class="bi bi-building"></i> Организации</span>
-                                        @endif
+                                        <strong>{{ $group->course->title }}</strong>
                                     </td>
                                     <td>
-                                        @if($course_assignment->type === 'individual')
-                                            {{ $course_assignment->user?->name ?? '—' }}
-                                        @elseif($course_assignment->type === 'group')
-                                            {{ $course_assignment->group?->name ?? '—' }}
-                                        @else
-                                            {{ $course_assignment->organization?->name ?? '—' }}
+                                        <small>{{ $group->start_date->format('d.m.Y') }}</small>
+                                        @if($group->end_date)
+                                        <br><small>→ {{ $group->end_date->format('d.m.Y') }}</small>
                                         @endif
                                     </td>
-                                    <td>
-                                        <small>{{ $course_assignment->start_date->format('d.m.Y') }}</small>
-                                        @if($course_assignment->end_date)
-                                        <br><small>→ {{ $course_assignment->end_date->format('d.m.Y') }}</small>
+                                    <td class="text-center">
+                                        @if($group->individual_count > 0)
+                                        <span class="badge bg-success">{{ $group->individual_count }}</span>
+                                        @else
+                                        <span class="text-muted">—</span>
                                         @endif
                                     </td>
-                                    <td>
-                                        @if($course_assignment->is_active)
-                                            <span class="badge bg-success">Активно</span>
+                                    <td class="text-center">
+                                        @if($group->group_count > 0)
+                                        <span class="badge bg-info">{{ $group->group_count }}</span>
                                         @else
-                                            <span class="badge bg-secondary">Не активно</span>
+                                        <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        @if($group->organization_count > 0)
+                                        <span class="badge bg-primary">{{ $group->organization_count }}</span>
+                                        @else
+                                        <span class="text-muted">—</span>
                                         @endif
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
-                                            <a href="{{ route('admin.course-assignments.show', $course_assignment) }}" class="btn btn-outline-primary" title="Просмотр"><i class="bi bi-eye"></i></a>
-                                            <a href="{{ route('admin.course-assignments.edit', $course_assignment) }}" class="btn btn-outline-warning" title="Редактировать"><i class="bi bi-pencil"></i></a>
-                                            <form action="{{ route('admin.course-assignments.destroy', $course_assignment) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить?')">
-                                                @csrf @method('DELETE')
-                                                <button class="btn btn-outline-danger" title="Удалить"><i class="bi bi-trash"></i></button>
-                                            </form>
+                                            <a href="{{ route('admin.course-assignments.show', ['course' => $group->course_id, 'start' => $group->start_date->format('Y-m-d'), 'end' => $group->end_date?->format('Y-m-d') ?? 'null']) }}" class="btn btn-outline-primary" title="Просмотр">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>

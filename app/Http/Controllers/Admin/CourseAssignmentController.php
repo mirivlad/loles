@@ -23,17 +23,26 @@ class CourseAssignmentController extends Controller
     {
         Gate::authorize('viewAny', CourseAssignment::class);
         
-        $query = CourseAssignment::with(['course', 'user', 'group', 'organization', 'creator']);
+        $query = CourseAssignment::with(['course', 'user', 'group', 'organization']);
         
         if ($request->filled('course_id')) {
             $query->where('course_id', $request->course_id);
         }
         
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
+        // Группируем по курсу и датам
+        $assignments = $query->selectRaw('
+                course_id, start_date, end_date,
+                COUNT(CASE WHEN type = "individual" THEN 1 END) as individual_count,
+                COUNT(CASE WHEN type = "group" THEN 1 END) as group_count,
+                COUNT(CASE WHEN type = "organization" THEN 1 END) as organization_count,
+                GROUP_CONCAT(CASE WHEN type = "individual" THEN id END) as individual_ids,
+                GROUP_CONCAT(CASE WHEN type = "group" THEN id END) as group_ids,
+                GROUP_CONCAT(CASE WHEN type = "organization" THEN id END) as organization_ids
+            ')
+            ->groupBy('course_id', 'start_date', 'end_date')
+            ->orderBy('start_date', 'desc')
+            ->paginate(20);
         
-        $assignments = $query->orderBy('created_at', 'desc')->paginate(20);
         $courses = Course::pluck('title', 'id');
         
         return view('admin.course-assignments.index', compact('assignments', 'courses'));
@@ -146,40 +155,31 @@ class CourseAssignmentController extends Controller
             ->with('success', "Создано назначений: {$created}");
     }
 
-    public function show(CourseAssignment $course_assignment)
+    public function show(Request $request, $course_id)
     {
-        Gate::authorize('view', $course_assignment);
-
-        $course_assignment->load(['course', 'user', 'group', 'organization', 'creator']);
-
-        return view('admin.course-assignments.show', compact('course_assignment'));
-    }
-
-    public function edit(CourseAssignment $course_assignment)
-    {
-        Gate::authorize('update', $course_assignment);
-
-        $courses = Course::pluck('title', 'id');
-
-        return view('admin.course-assignments.edit', compact('course_assignment', 'courses'));
-    }
-
-    public function update(Request $request, CourseAssignment $course_assignment)
-    {
-        Gate::authorize('update', $course_assignment);
-
-        $validated = $request->validate([
-            'course_id' => 'required|exists:courses,id',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'note' => 'nullable|string',
-            'is_active' => 'boolean',
-        ]);
+        Gate::authorize('viewAny', CourseAssignment::class);
         
-        $course_assignment->update($validated);
-
-        return redirect()->route('admin.course-assignments.show', $course_assignment)
-            ->with('success', 'Назначение успешно обновлено.');
+        $start_date = $request->get('start');
+        $end_date = $request->get('end') !== 'null' ? $request->get('end') : null;
+        
+        $query = CourseAssignment::where('course_id', $course_id)
+            ->where('start_date', $start_date);
+        
+        if ($end_date) {
+            $query->where('end_date', $end_date);
+        } else {
+            $query->whereNull('end_date');
+        }
+        
+        $assignments = $query->with(['course', 'user', 'group', 'organization', 'creator'])->get();
+        $course = $assignments->first()?->course;
+        
+        // Группируем по типам
+        $individual = $assignments->where('type', 'individual');
+        $groups = $assignments->where('type', 'group');
+        $organizations = $assignments->where('type', 'organization');
+        
+        return view('admin.course-assignments.show', compact('course', 'assignments', 'individual', 'groups', 'organizations', 'start_date', 'end_date'));
     }
 
     public function destroy(CourseAssignment $course_assignment)
