@@ -78,7 +78,22 @@ class GroupUserController extends Controller
         Gate::authorize('view', $group);
         
         $group->load(['organization', 'users']);
-        $users = User::where('organization_id', $group->organization_id)->get();
+        
+        // Получаем доступных пользователей для этой группы
+        if ($group->organization_id) {
+            // Группа организации — только пользователи этой организации
+            $users = User::where('organization_id', $group->organization_id)
+                ->whereDoesntHave('groups', function($q) use ($group) {
+                    $q->where('groups.id', $group->id);
+                })
+                ->get();
+        } else {
+            // Общая группа — все пользователи которые ещё не в группе
+            $users = User::whereDoesntHave('groups', function($q) use ($group) {
+                $q->where('groups.id', $group->id);
+            })
+            ->get();
+        }
         
         return view('admin.groups.show', compact('group', 'users'));
     }
@@ -145,18 +160,33 @@ class GroupUserController extends Controller
     {
         $validated = $request->validate([
             'group_id' => 'required|exists:groups,id',
+            'user_ids' => 'nullable|string',
         ]);
         
         $group = Group::findOrFail($validated['group_id']);
         
-        // Проверка доступа
-        if ($group->organization_id && $user->organization_id !== $group->organization_id) {
-            return back()->with('error', 'Нельзя добавить пользователя в группу другой организации.');
+        // Если переданы user_ids (из tags-input)
+        if (!empty($validated['user_ids'])) {
+            $userIds = array_map('intval', array_filter(explode(',', $validated['user_ids'])));
+            
+            foreach ($userIds as $userId) {
+                $user = User::find($userId);
+                if (!$user) continue;
+                
+                // Проверка доступа
+                if ($group->organization_id && $user->organization_id !== $group->organization_id) {
+                    continue; // Пропускаем пользователей из других организаций
+                }
+                
+                $group->users()->attach($userId);
+            }
         }
         
-        $group->users()->attach($user->id);
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
         
-        return back()->with('success', 'Пользователь добавлен в группу.');
+        return back()->with('success', 'Пользователи добавлены в группу.');
     }
     
     /**
@@ -168,6 +198,45 @@ class GroupUserController extends Controller
         
         $group->users()->detach($user->id);
         
+        // Для AJAX запросов
+        if (request()->ajax()) {
+            return response()->json(['success' => true]);
+        }
+        
         return back()->with('success', 'Пользователь удалён из группы.');
+    }
+    
+    /**
+     * Редактирование группы (modal)
+     */
+    public function edit(Group $group)
+    {
+        Gate::authorize('update', $group);
+        
+        return redirect()->route('admin.groups.show', $group)->with('edit', true);
+    }
+    
+    /**
+     * Обновление группы
+     */
+    public function update(Request $request, Group $group)
+    {
+        Gate::authorize('update', $group);
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'is_active' => 'boolean',
+        ]);
+        
+        $group->update($validated);
+        
+        // Для AJAX запросов
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'group' => $group]);
+        }
+        
+        return redirect()->route('admin.groups.show', $group)
+            ->with('success', 'Группа успешно обновлена.');
     }
 }
