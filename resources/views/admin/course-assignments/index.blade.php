@@ -52,7 +52,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($course_assignments as $course_assignment)
+                                @forelse($assignments as $course_assignment)
                                 <tr>
                                     <td><strong>{{ $course_assignment->course->title }}</strong></td>
                                     <td>
@@ -110,7 +110,7 @@
                     </div>
                 </div>
             </div>
-            {{ $course_assignments->links() }}
+            {{ $assignments->links() }}
         </main>
     </div>
 </div>
