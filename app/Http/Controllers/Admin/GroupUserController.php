@@ -98,29 +98,6 @@ class GroupUserController extends Controller
         return view('admin.groups.show', compact('group', 'users'));
     }
 
-    public function update(Request $request, Group $group)
-    {
-        Gate::authorize('update', $group);
-        
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'is_active' => 'boolean',
-            'users' => 'nullable|array',
-            'users.*' => 'exists:users,id',
-        ]);
-        
-        $group->update($validated);
-        
-        // Синхронизируем пользователей в группе
-        if (isset($validated['users'])) {
-            $group->users()->sync($validated['users']);
-        }
-        
-        return redirect()->route('admin.groups.show', $group)
-            ->with('success', 'Группа успешно обновлена.');
-    }
-
     public function destroy(Group $group)
     {
         Gate::authorize('delete', $group);
