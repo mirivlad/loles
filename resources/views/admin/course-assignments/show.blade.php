@@ -219,6 +219,7 @@
         <div class="modal-content">
             <form action="{{ route('admin.course-assignments.store') }}" method="POST">
                 @csrf
+                <input type="hidden" name="assignment_ids" value="{{ $assignments->pluck('id')->implode(',') }}">
                 <input type="hidden" name="course_ids" value="{{ $courseModel->id }}">
                 <input type="hidden" name="start_date" value="{{ $start_date }}">
                 <div class="modal-header">
@@ -226,6 +227,39 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    @if($canEditCourse)
+                    <div class="mb-3">
+                        <label class="form-label">Курс</label>
+                        <x-tags-input
+                            name="course_ids"
+                            url="{{ route('api.courses.search') }}"
+                            placeholder="Начните вводить название курса..."
+                            badge_color="dark"
+                            :value="[$courseModel->id]"
+                        />
+                        <small class="text-muted">Можно изменить курс</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Дата начала *</label>
+                        <input type="date" name="start_date" class="form-control" value="{{ $start_date }}" required>
+                    </div>
+                    @else
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Нельзя изменить курс и дату начала!</strong>
+                        <br>
+                        <small>Уже есть начатые тесты. Для изменения курса создайте новое назначение.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Курс</label>
+                        <input type="text" class="form-control" value="{{ $courseModel->title }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Дата начала</label>
+                        <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($start_date)->format('d.m.Y') }}" disabled>
+                    </div>
+                    @endif
+                    
                     <div class="mb-3">
                         <label class="form-label">Дата окончания</label>
                         <input type="date" name="end_date" class="form-control" value="{{ $end_date }}">

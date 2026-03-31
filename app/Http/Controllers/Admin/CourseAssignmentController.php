@@ -69,10 +69,31 @@ class CourseAssignmentController extends Controller
             'end_date' => 'nullable|date|after:start_date',
             'note' => 'nullable|string',
             'is_active' => 'boolean',
+            'assignment_ids' => 'nullable|string',  // Для обновления существующих
         ]);
         
         $validated['created_by'] = auth()->id();
         $validated['is_active'] = $request->boolean('is_active');
+        
+        // Если это обновление существующих назначений
+        if (!empty($validated['assignment_ids'])) {
+            $assignmentIds = array_map('intval', array_filter(explode(',', $validated['assignment_ids'])));
+            
+            CourseAssignment::whereIn('id', $assignmentIds)->update([
+                'course_id' => !empty($validated['course_ids']) 
+                    ? explode(',', $validated['course_ids'])[0] 
+                    : null,
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'] ?? null,
+                'note' => $validated['note'] ?? null,
+            ]);
+            
+            if ($request->ajax()) {
+                return response()->json(['success' => true, 'message' => 'Обновлено']);
+            }
+            
+            return redirect()->back()->with('success', 'Назначение обновлено');
+        }
         
         // Определяем тип назначения по выбранным элементам
         if (empty($validated['type'])) {
@@ -187,12 +208,27 @@ class CourseAssignmentController extends Controller
         $assignments = $query->with(['course', 'user', 'group', 'organization', 'creator'])->get();
         $courseModel = $assignments->first()?->course ?? Course::find($course);
         
+        // Проверяем можно ли редактировать (нет ли начатых тестов)
+        $canEditCourse = true;
+        $assignmentIds = $assignments->pluck('id')->toArray();
+        
+        // Проверяем есть ли начатые тесты у назначений
+        if (!empty($assignmentIds)) {
+            // Проверяем через тесты и результаты
+            $hasStartedTests = \DB::table('test_results')
+                ->whereIn('assignment_id', $assignmentIds)
+                ->whereNotNull('started_at')
+                ->exists();
+            
+            $canEditCourse = !$hasStartedTests;
+        }
+        
         // Группируем по типам
         $individual = $assignments->where('type', 'individual');
         $groups = $assignments->where('type', 'group');
         $organizations = $assignments->where('type', 'organization');
         
-        return view('admin.course-assignments.show', compact('courseModel', 'assignments', 'individual', 'groups', 'organizations', 'start_date', 'end_date'));
+        return view('admin.course-assignments.show', compact('courseModel', 'assignments', 'individual', 'groups', 'organizations', 'start_date', 'end_date', 'canEditCourse'));
     }
 
     public function destroy(CourseAssignment $course_assignment)
