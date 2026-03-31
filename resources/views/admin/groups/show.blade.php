@@ -85,7 +85,15 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <x-tags-input name="user_ids" url="{{ route('api.users.search') }}" placeholder="Начните вводить имя..." badge_color="success" />
+                    <x-tags-input 
+                        name="user_ids" 
+                        url="{{ route('api.users.search') }}?{{ $group->organization_id ? 'organization_id=' . $group->organization_id : '' }}" 
+                        placeholder="{{ $group->organization_id ? 'Начните вводить имя (только ваша организация)...' : 'Начните вводить имя...' }}" 
+                        badge_color="success" 
+                    />
+                    @if($group->organization_id)
+                    <small class="text-muted">Показываются только пользователи вашей организации</small>
+                    @endif
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>

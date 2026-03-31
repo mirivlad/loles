@@ -11,9 +11,16 @@ class UserSearchController extends Controller
     public function __invoke(Request $request)
     {
         $query = $request->get('q', '');
+        $organizationId = $request->get('organization_id', null);
         
-        $users = User::query()
-            ->with('organization')
+        $usersQuery = User::query()->with('organization');
+        
+        // Если указан organization_id - фильтруем
+        if ($organizationId) {
+            $usersQuery->where('organization_id', $organizationId);
+        }
+        
+        $users = $usersQuery
             ->where('name', 'like', "%{$query}%")
             ->orWhere('email', 'like', "%{$query}%")
             ->orderBy('name')

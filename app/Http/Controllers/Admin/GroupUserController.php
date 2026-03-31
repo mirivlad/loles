@@ -129,9 +129,14 @@ class GroupUserController extends Controller
                 $user = User::find($userId);
                 if (!$user) continue;
                 
-                // Проверка доступа
+                // Проверка: если группа организации - только пользователи этой организации
                 if ($group->organization_id && $user->organization_id !== $group->organization_id) {
-                    continue; // Пропускаем пользователей из других организаций
+                    continue;
+                }
+                
+                // Проверка: не состоит ли уже в группе
+                if ($group->users()->where('user_id', $userId)->exists()) {
+                    continue;
                 }
                 
                 $group->users()->attach($userId);
