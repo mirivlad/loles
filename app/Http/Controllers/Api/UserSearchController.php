@@ -20,9 +20,13 @@ class UserSearchController extends Controller
             $usersQuery->where('organization_id', $organizationId);
         }
         
+        // Фильтр по имени И email (правильная группировка)
+        $usersQuery->where(function($q) use ($query) {
+            $q->where('name', 'like', "%{$query}%")
+              ->orWhere('email', 'like', "%{$query}%");
+        });
+        
         $users = $usersQuery
-            ->where('name', 'like', "%{$query}%")
-            ->orWhere('email', 'like', "%{$query}%")
             ->orderBy('name')
             ->limit(50)
             ->get()
