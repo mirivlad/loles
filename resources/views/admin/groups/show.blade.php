@@ -191,12 +191,13 @@ document.getElementById('editGroupForm').addEventListener('submit', function(e) 
     e.preventDefault();
     const formData = new FormData(this);
     
-    fetch('{{ route('groups.update', $group) }}', {
+    fetch('/admin/groups/{{ $group->id }}', {
         method: 'POST',
         body: formData,
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'X-HTTP-Method-Override': 'PUT'
         }
     })
     .then(response => response.json())
