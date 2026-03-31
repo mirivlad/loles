@@ -209,19 +209,8 @@ class CourseAssignmentController extends Controller
         $courseModel = $assignments->first()?->course ?? Course::find($course);
         
         // Проверяем можно ли редактировать (нет ли начатых тестов)
+        // Пока всегда разрешаем - таблица test_results будет создана позже
         $canEditCourse = true;
-        $assignmentIds = $assignments->pluck('id')->toArray();
-        
-        // Проверяем есть ли начатые тесты у назначений
-        if (!empty($assignmentIds)) {
-            // Проверяем через тесты и результаты
-            $hasStartedTests = \DB::table('test_results')
-                ->whereIn('assignment_id', $assignmentIds)
-                ->whereNotNull('started_at')
-                ->exists();
-            
-            $canEditCourse = !$hasStartedTests;
-        }
         
         // Группируем по типам
         $individual = $assignments->where('type', 'individual');
