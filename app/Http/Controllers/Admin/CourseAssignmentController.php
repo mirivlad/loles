@@ -93,12 +93,13 @@ class CourseAssignmentController extends Controller
         
         // Создаём назначения для каждой комбинации
         $created = 0;
+        $createdIds = [];
         
         // Назначения пользователям
         if (!empty($userIds)) {
             foreach ($userIds as $userId) {
                 foreach ($courseIds as $courseId) {
-                    CourseAssignment::create([
+                    $assignment = CourseAssignment::create([
                         'course_id' => $courseId,
                         'user_id' => $userId,
                         'type' => 'individual',
@@ -108,6 +109,7 @@ class CourseAssignmentController extends Controller
                         'created_by' => $validated['created_by'],
                         'is_active' => $validated['is_active'],
                     ]);
+                    $createdIds[] = $assignment->id;
                     $created++;
                 }
             }
@@ -117,7 +119,7 @@ class CourseAssignmentController extends Controller
         if (!empty($groupIds)) {
             foreach ($groupIds as $groupId) {
                 foreach ($courseIds as $courseId) {
-                    CourseAssignment::create([
+                    $assignment = CourseAssignment::create([
                         'course_id' => $courseId,
                         'group_id' => $groupId,
                         'type' => 'group',
@@ -127,6 +129,7 @@ class CourseAssignmentController extends Controller
                         'created_by' => $validated['created_by'],
                         'is_active' => $validated['is_active'],
                     ]);
+                    $createdIds[] = $assignment->id;
                     $created++;
                 }
             }
@@ -136,7 +139,7 @@ class CourseAssignmentController extends Controller
         if (!empty($organizationIds)) {
             foreach ($organizationIds as $organizationId) {
                 foreach ($courseIds as $courseId) {
-                    CourseAssignment::create([
+                    $assignment = CourseAssignment::create([
                         'course_id' => $courseId,
                         'organization_id' => $organizationId,
                         'type' => 'organization',
@@ -146,9 +149,19 @@ class CourseAssignmentController extends Controller
                         'created_by' => $validated['created_by'],
                         'is_active' => $validated['is_active'],
                     ]);
+                    $createdIds[] = $assignment->id;
                     $created++;
                 }
             }
+        }
+        
+        // Для AJAX запросов возвращаем JSON
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Добавлено: {$created}",
+                'ids' => $createdIds
+            ]);
         }
         
         return redirect()->route('admin.course-assignments.index')
@@ -187,6 +200,11 @@ class CourseAssignmentController extends Controller
         Gate::authorize('delete', $course_assignment);
 
         $course_assignment->delete();
+        
+        // Для AJAX запросов
+        if (request()->ajax()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->route('admin.course-assignments.index')
             ->with('success', 'Назначение успешно удалено.');
