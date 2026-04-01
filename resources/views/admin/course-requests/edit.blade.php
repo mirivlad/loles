@@ -23,30 +23,45 @@
                                     <div class="item-row border rounded p-3 mb-3 bg-light">
                                         <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
                                         <div class="row g-2">
-                                            <div class="col-md-4">
-                                                <label class="form-label small">Курс *</label>
-                                                <select name="items[{{ $index }}][course_id]" class="form-select form-select-sm" required>
+                                            <!-- Строка 1: Курс -->
+                                            <div class="col-md-12">
+                                                <label class="form-label">Курс *</label>
+                                                <select name="items[{{ $index }}][course_id]" class="form-select" required>
                                                     @foreach($courses as $id => $title)
                                                     <option value="{{ $id }}" {{ $item->course_id == $id ? 'selected' : '' }}>{{ $title }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label small">Пользователь</label>
-                                                <input type="text" class="form-control form-control-sm" value="{{ $item->user_id }}" placeholder="ID пользователей" name="items[{{ $index }}][user_id]">
-                                                <small class="text-muted">Или</small>
+                                            
+                                            <!-- Строка 2: Получатели -->
+                                            <div class="col-md-4">
+                                                <label class="form-label">Организация</label>
+                                                <select name="items[{{ $index }}][organization_id]" class="form-select">
+                                                    <option value="">Не выбрано</option>
+                                                    @foreach($organizations as $id => $name)
+                                                    <option value="{{ $id }}" {{ $item->organization_id == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <small class="text-muted">И</small>
                                             </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label small">Группа</label>
-                                                <input type="text" class="form-control form-control-sm" value="{{ $item->group_id }}" placeholder="ID групп" name="items[{{ $index }}][group_id]">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Группа</label>
+                                                <input type="text" class="form-control" value="{{ $item->group_id }}" placeholder="ID групп" name="items[{{ $index }}][group_id]">
+                                                <small class="text-muted">И</small>
                                             </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label small">Дата начала *</label>
-                                                <input type="date" name="items[{{ $index }}][start_date]" class="form-control form-control-sm" value="{{ $item->start_date->format('Y-m-d') }}" required>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Пользователь</label>
+                                                <input type="text" class="form-control" value="{{ $item->user_id }}" placeholder="ID пользователей" name="items[{{ $index }}][user_id]">
                                             </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label small">Дата окончания</label>
-                                                <input type="date" name="items[{{ $index }}][end_date]" class="form-control form-control-sm" value="{{ $item->end_date?->format('Y-m-d') }}">
+                                            
+                                            <!-- Строка 3: Даты -->
+                                            <div class="col-md-6">
+                                                <label class="form-label">Дата начала *</label>
+                                                <input type="date" name="items[{{ $index }}][start_date]" class="form-control" value="{{ $item->start_date->format('Y-m-d') }}" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Дата окончания</label>
+                                                <input type="date" name="items[{{ $index }}][end_date]" class="form-control" value="{{ $item->end_date?->format('Y-m-d') }}">
                                             </div>
                                         </div>
                                         <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-item"><i class="bi bi-trash"></i> Удалить</button>
@@ -91,31 +106,46 @@ document.getElementById('add-item-btn').addEventListener('click', function() {
     newItem.className = 'item-row border rounded p-3 mb-3 bg-light';
     newItem.innerHTML = `
         <div class="row g-2">
-            <div class="col-md-4">
-                <label class="form-label small">Курс *</label>
-                <select name="items[${itemCount}][course_id]" class="form-select form-select-sm" required>
+            <!-- Строка 1: Курс -->
+            <div class="col-md-12">
+                <label class="form-label">Курс *</label>
+                <select name="items[${itemCount}][course_id]" class="form-select" required>
                     <option value="">Выберите курс</option>
                     @foreach($courses as $id => $title)
                     <option value="{{ $id }}">{{ $title }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3">
-                <label class="form-label small">Пользователь</label>
-                <input type="text" class="form-control form-control-sm" placeholder="ID пользователей" name="items[${itemCount}][user_id]">
-                <small class="text-muted">Или</small>
+            
+            <!-- Строка 2: Получатели -->
+            <div class="col-md-4">
+                <label class="form-label">Организация</label>
+                <select name="items[${itemCount}][organization_id]" class="form-select">
+                    <option value="">Не выбрано</option>
+                    @foreach($organizations as $id => $name)
+                    <option value="{{ $id }}">{{ $name }}</option>
+                    @endforeach
+                </select>
+                <small class="text-muted">И</small>
             </div>
-            <div class="col-md-3">
-                <label class="form-label small">Группа</label>
-                <input type="text" class="form-control form-control-sm" placeholder="ID групп" name="items[${itemCount}][group_id]">
+            <div class="col-md-4">
+                <label class="form-label">Группа</label>
+                <input type="text" class="form-control" placeholder="ID групп" name="items[${itemCount}][group_id]">
+                <small class="text-muted">И</small>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small">Дата начала *</label>
-                <input type="date" name="items[${itemCount}][start_date]" class="form-control form-control-sm" required>
+            <div class="col-md-4">
+                <label class="form-label">Пользователь</label>
+                <input type="text" class="form-control" placeholder="ID пользователей" name="items[${itemCount}][user_id]">
             </div>
-            <div class="col-md-2">
-                <label class="form-label small">Дата окончания</label>
-                <input type="date" name="items[${itemCount}][end_date]" class="form-control form-control-sm">
+            
+            <!-- Строка 3: Даты -->
+            <div class="col-md-6">
+                <label class="form-label">Дата начала *</label>
+                <input type="date" name="items[${itemCount}][start_date]" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Дата окончания</label>
+                <input type="date" name="items[${itemCount}][end_date]" class="form-control">
             </div>
         </div>
         <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-item"><i class="bi bi-trash"></i> Удалить</button>
