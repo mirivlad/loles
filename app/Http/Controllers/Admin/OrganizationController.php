@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use App\Models\User;
+use App\Models\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 

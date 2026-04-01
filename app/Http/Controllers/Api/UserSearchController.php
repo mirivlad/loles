@@ -12,8 +12,17 @@ class UserSearchController extends Controller
     {
         $query = $request->get('q', '');
         $organizationId = $request->get('organization_id', null);
+        $excludeOrganizationId = $request->get('exclude_organization_id', null);
         
         $usersQuery = User::query()->with('organization');
+        
+        // Исключаем пользователей из организации (для добавления в организацию)
+        if ($excludeOrganizationId) {
+            $usersQuery->where(function($q) use ($excludeOrganizationId) {
+                $q->whereNull('organization_id')
+                  ->orWhere('organization_id', '!=', $excludeOrganizationId);
+            });
+        }
         
         // Если указан organization_id - фильтруем
         if ($organizationId) {
@@ -33,7 +42,7 @@ class UserSearchController extends Controller
             ->map(function($user) {
                 return [
                     'id' => $user->id,
-                    'text' => $user->name . ($user->organization ? " ({$user->organization->name})" : ''),
+                    'text' => $user->name . ($user->organization ? " ({$user->organization->name})" : ' (Без организации)'),
                 ];
             });
         

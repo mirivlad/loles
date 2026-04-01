@@ -134,11 +134,11 @@
                 <div class="modal-body">
                     <x-tags-input 
                         name="user_ids" 
-                        url="{{ route('api.users.search') }}" 
-                        placeholder="Начните вводить имя (пользователи без организации)..." 
+                        url="{{ route('api.users.search', ['exclude_organization_id' => $organization->id]) }}" 
+                        placeholder="Начните вводить имя (пользователи без организации или из других организаций)..." 
                         badge_color="success" 
                     />
-                    <small class="text-muted">Можно добавить пользователей без организации</small>
+                    <small class="text-muted">Можно добавить пользователей без организации или из других организаций</small>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
