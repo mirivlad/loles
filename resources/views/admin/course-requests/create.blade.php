@@ -23,22 +23,23 @@
                                             <!-- Строка 1: Курс -->
                                             <div class="col-md-12">
                                                 <label class="form-label">Курс *</label>
-                                                <x-searchable-select
-                                                    name="items[0][course_id]"
-                                                    url="{{ route('api.courses.search') }}"
-                                                    placeholder="Выберите курс..."
-                                                    :required="true"
-                                                />
+                                                <select name="items[0][course_id]" class="form-select course-select" required>
+                                                    <option value="">Выберите курс</option>
+                                                    @foreach($courses as $id => $title)
+                                                    <option value="{{ $id }}">{{ $title }}</option>
+                                                    @endforeach
+                                                </select>
                                             </div>
                                             
                                             <!-- Строка 2: Получатели -->
                                             <div class="col-md-4">
                                                 <label class="form-label">Организация</label>
-                                                <x-searchable-select
-                                                    name="items[0][organization_id]"
-                                                    url="{{ route('api.organizations.search') }}"
-                                                    placeholder="Или оставьте пустым..."
-                                                />
+                                                <select name="items[0][organization_id]" class="form-select org-select">
+                                                    <option value="">Не выбрано</option>
+                                                    @foreach($organizations as $id => $name)
+                                                    <option value="{{ $id }}">{{ $name }}</option>
+                                                    @endforeach
+                                                </select>
                                                 <small class="text-muted">И</small>
                                             </div>
                                             <div class="col-md-4">
@@ -114,8 +115,61 @@
 </div>
 
 @push('scripts')
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
 let itemCount = 1;
+
+// Функция инициализации TomSelect для нового элемента
+function initTomSelectForElement(rowElement) {
+    // Инициализация для курса
+    const courseSelect = rowElement.querySelector('.course-select');
+    if (courseSelect && !courseSelect.tomselect) {
+        new TomSelect(courseSelect, {
+            valueField: 'id',
+            labelField: 'text',
+            searchField: 'text',
+            placeholder: 'Выберите курс...',
+            preload: false,
+            maxOptions: null,
+            load: function(query, callback) {
+                if (query.length < 2) return callback();
+                fetch('/api/courses/search?q=' + encodeURIComponent(query))
+                    .then(response => response.json())
+                    .then(json => callback(json))
+                    .catch(() => callback());
+            }
+        });
+    }
+    
+    // Инициализация для организации
+    const orgSelect = rowElement.querySelector('.org-select');
+    if (orgSelect && !orgSelect.tomselect) {
+        new TomSelect(orgSelect, {
+            valueField: 'id',
+            labelField: 'text',
+            searchField: 'text',
+            placeholder: 'Или оставьте пустым...',
+            preload: false,
+            maxOptions: null,
+            load: function(query, callback) {
+                if (query.length < 2) return callback();
+                fetch('/api/organizations/search?q=' + encodeURIComponent(query))
+                    .then(response => response.json())
+                    .then(json => callback(json))
+                    .catch(() => callback());
+            }
+        });
+    }
+}
+
+// Инициализация для первого элемента при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    const firstRow = document.querySelector('.item-row');
+    if (firstRow) {
+        initTomSelectForElement(firstRow);
+    }
+});
 
 document.getElementById('add-item-btn').addEventListener('click', function() {
     const container = document.getElementById('items-container');
@@ -126,7 +180,7 @@ document.getElementById('add-item-btn').addEventListener('click', function() {
             <!-- Строка 1: Курс -->
             <div class="col-md-12">
                 <label class="form-label">Курс *</label>
-                <select name="items[${itemCount}][course_id]" class="form-select" required>
+                <select name="items[${itemCount}][course_id]" class="form-select course-select" required>
                     <option value="">Выберите курс</option>
                     @foreach($courses as $id => $title)
                     <option value="{{ $id }}">{{ $title }}</option>
@@ -137,7 +191,7 @@ document.getElementById('add-item-btn').addEventListener('click', function() {
             <!-- Строка 2: Получатели -->
             <div class="col-md-4">
                 <label class="form-label">Организация</label>
-                <select name="items[${itemCount}][organization_id]" class="form-select">
+                <select name="items[${itemCount}][organization_id]" class="form-select org-select">
                     <option value="">Не выбрано</option>
                     @foreach($organizations as $id => $name)
                     <option value="{{ $id }}">{{ $name }}</option>
@@ -168,6 +222,10 @@ document.getElementById('add-item-btn').addEventListener('click', function() {
         <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-item"><i class="bi bi-trash"></i> Удалить</button>
     `;
     container.appendChild(newItem);
+    
+    // Инициализируем TomSelect для нового элемента
+    initTomSelectForElement(newItem);
+    
     itemCount++;
     
     // Показываем кнопки удаления
