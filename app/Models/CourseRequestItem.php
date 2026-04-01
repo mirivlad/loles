@@ -15,6 +15,7 @@ class CourseRequestItem extends Model
         'course_id',
         'user_id',
         'group_id',
+        'organization_id',
         'start_date',
         'end_date',
     ];
