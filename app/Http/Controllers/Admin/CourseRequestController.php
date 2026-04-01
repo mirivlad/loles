@@ -178,7 +178,7 @@ class CourseRequestController extends Controller
     {
         Gate::authorize('view', $courseRequest);
         
-        $courseRequest->load(['organization', 'requestedBy', 'approvedBy', 'items.course', 'items.user', 'items.group']);
+        $courseRequest->load(['organization', 'requestedBy', 'approvedBy', 'items.course', 'items.user', 'items.group', 'items.organization']);
         
         return view('admin.course-requests.show', compact('courseRequest'));
     }

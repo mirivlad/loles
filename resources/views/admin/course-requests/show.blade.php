@@ -95,8 +95,10 @@
                                         <span class="badge bg-success"><i class="bi bi-person"></i> Индивидуально</span>
                                         @elseif($item->group_id)
                                         <span class="badge bg-info"><i class="bi bi-people"></i> Группе</span>
-                                        @else
+                                        @elseif($item->organization_id)
                                         <span class="badge bg-primary"><i class="bi bi-building"></i> Организации</span>
+                                        @else
+                                        <span class="badge bg-secondary"><i class="bi bi-building"></i> Организации заявки</span>
                                         @endif
                                     </td>
                                     <td>
@@ -104,6 +106,8 @@
                                         {{ $item->user?->name ?? '—' }}
                                         @elseif($item->group_id)
                                         {{ $item->group?->name ?? '—' }}
+                                        @elseif($item->organization_id)
+                                        {{ $item->organization?->name ?? '—' }}
                                         @else
                                         {{ $courseRequest->organization->name }}
                                         @endif

@@ -44,6 +44,11 @@ class CourseRequestItem extends Model
         return $this->belongsTo(Group::class);
     }
 
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
     public function getTypeAttribute(): string
     {
         if ($this->user_id) {
