@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\TestController;
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\CourseAssignmentController;
 use App\Http\Controllers\Admin\GroupUserController;
+use App\Http\Controllers\Admin\CourseRequestController;
 use App\Http\Controllers\Api\OrganizationSearchController;
 use App\Http\Controllers\Api\GroupSearchController;
 use App\Http\Controllers\Api\UserSearchController;
@@ -53,6 +54,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('/organizations/{organization}/users/{user}/remove', [OrganizationController::class, 'removeUser'])->name('organizations.users.remove');
         Route::post('/organizations/{organization}/groups/add', [OrganizationController::class, 'addGroup'])->name('organizations.groups.add');
         Route::delete('/organizations/{organization}/groups/{group}/remove', [OrganizationController::class, 'removeGroup'])->name('organizations.groups.remove');
+        Route::resource('course-requests', CourseRequestController::class);
+        Route::post('/course-requests/{courseRequest}/approve', [CourseRequestController::class, 'approve'])->name('course-requests.approve');
+        Route::post('/course-requests/{courseRequest}/reject', [CourseRequestController::class, 'reject'])->name('course-requests.reject');
         Route::resource('users', UserController::class);
         Route::resource('course-categories', CourseCategoryController::class);
         Route::resource('courses', CourseController::class);

@@ -11,12 +11,20 @@ class CourseRequestItem extends Model
     use HasFactory;
 
     protected $fillable = [
-        'request_id',
+        'course_request_id',
         'course_id',
         'user_id',
+        'group_id',
+        'start_date',
+        'end_date',
     ];
 
-    public function request(): BelongsTo
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+    ];
+
+    public function courseRequest(): BelongsTo
     {
         return $this->belongsTo(CourseRequest::class);
     }
@@ -29,5 +37,20 @@ class CourseRequestItem extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
+    }
+
+    public function getTypeAttribute(): string
+    {
+        if ($this->user_id) {
+            return 'individual';
+        } elseif ($this->group_id) {
+            return 'group';
+        }
+        return 'organization';
     }
 }

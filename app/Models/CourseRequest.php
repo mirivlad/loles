@@ -14,10 +14,10 @@ class CourseRequest extends Model
     protected $fillable = [
         'organization_id',
         'requested_by_user_id',
-        'approved_by_user_id',
         'status',
-        'comment',
+        'approved_by',
         'approved_at',
+        'note',
     ];
 
     protected $casts = [
@@ -36,11 +36,44 @@ class CourseRequest extends Model
 
     public function approvedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'approved_by_user_id');
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     public function items(): HasMany
     {
         return $this->hasMany(CourseRequestItem::class);
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->status === 'approved';
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === 'rejected';
+    }
+
+    public function approve(User $approvedBy): void
+    {
+        $this->update([
+            'status' => 'approved',
+            'approved_by' => $approvedBy->id,
+            'approved_at' => now(),
+        ]);
+    }
+
+    public function reject(User $approvedBy): void
+    {
+        $this->update([
+            'status' => 'rejected',
+            'approved_by' => $approvedBy->id,
+            'approved_at' => now(),
+        ]);
     }
 }
