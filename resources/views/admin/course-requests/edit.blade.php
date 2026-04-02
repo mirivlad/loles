@@ -67,19 +67,26 @@
                             <label class="form-label">Курс *</label>
                             <select id="element_course_id" class="form-select" required></select>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Организация</label>
-                            <select id="element_organization_id" class="form-select"></select>
-                            <small class="text-muted">И</small>
+                        <div class="col-md-12">
+                            <label class="form-label">Тип получателя *</label>
+                            <select id="element_recipient_type" class="form-select" onchange="toggleRecipientFields()">
+                                <option value="">Выберите тип</option>
+                                <option value="user">Пользователь</option>
+                                <option value="group">Группа</option>
+                                <option value="organization">Организация</option>
+                            </select>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Группа</label>
-                            <select id="element_group_ids" multiple></select>
-                            <small class="text-muted">И</small>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Пользователь</label>
+                        <div class="col-md-12" id="recipient_user_field" style="display:none;">
+                            <label class="form-label">Пользователь *</label>
                             <select id="element_user_ids" multiple></select>
+                        </div>
+                        <div class="col-md-12" id="recipient_group_field" style="display:none;">
+                            <label class="form-label">Группа *</label>
+                            <select id="element_group_ids" multiple></select>
+                        </div>
+                        <div class="col-md-12" id="recipient_organization_field" style="display:none;">
+                            <label class="form-label">Организация *</label>
+                            <select id="element_organization_id" class="form-select"></select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Дата начала *</label>
@@ -122,6 +129,14 @@ let items = @json($courseRequest->items->map(fn($item) => [
 let elementCounter = items.length;
 let courseSelect = null, orgSelect = null, groupTags = null, userTags = null;
 let modalInitialized = false;
+
+// Переключение полей получателей
+window.toggleRecipientFields = function() {
+    const type = document.getElementById('element_recipient_type').value;
+    document.getElementById('recipient_user_field').style.display = (type === 'user') ? 'block' : 'none';
+    document.getElementById('recipient_group_field').style.display = (type === 'group') ? 'block' : 'none';
+    document.getElementById('recipient_organization_field').style.display = (type === 'organization') ? 'block' : 'none';
+};
 
 // Инициализация TomSelect при ПЕРВОМ открытии modal
 document.getElementById('addElementModal').addEventListener('show.bs.modal', function() {
@@ -183,34 +198,57 @@ document.getElementById('addElementModal').addEventListener('hidden.bs.modal', f
 
 document.getElementById('addElementBtn').addEventListener('click', function() {
     const courseId = courseSelect.getValue();
-    const organizationId = orgSelect.getValue();
-    const groupIds = groupTags.getValue() || [];
-    const userIds = userTags.getValue() || [];
+    const recipientType = document.getElementById('element_recipient_type').value;
     const startDate = document.getElementById('element_start_date').value;
     const endDate = document.getElementById('element_end_date').value;
     
     if (!courseId) { alert('Выберите курс'); return; }
+    if (!recipientType) { alert('Выберите тип получателя'); return; }
     if (!startDate) { alert('Укажите дату начала'); return; }
     
+    let organizationId = null, organizationName = null;
+    let groupIds = [], groupNames = [];
+    let userIds = [], userNames = [];
+    
+    if (recipientType === 'user') {
+        userIds = userTags.getValue() || [];
+        if (!userIds || (Array.isArray(userIds) && userIds.length === 0)) {
+            alert('Выберите хотя бы одного пользователя'); return;
+        }
+        userIds = Array.isArray(userIds) ? userIds : [userIds];
+        userNames = userIds.map(id => {
+            const opt = userTags.options[id];
+            return opt ? opt.text : 'Пользователь #' + id;
+        }).filter(Boolean);
+    } else if (recipientType === 'group') {
+        groupIds = groupTags.getValue() || [];
+        if (!groupIds || (Array.isArray(groupIds) && groupIds.length === 0)) {
+            alert('Выберите хотя бы одну группу'); return;
+        }
+        groupIds = Array.isArray(groupIds) ? groupIds : [groupIds];
+        groupNames = groupIds.map(id => {
+            const opt = groupTags.options[id];
+            return opt ? opt.text : 'Группа #' + id;
+        }).filter(Boolean);
+    } else if (recipientType === 'organization') {
+        organizationId = orgSelect.getValue();
+        if (!organizationId) { alert('Выберите организацию'); return; }
+        const orgOption = orgSelect.options[organizationId];
+        organizationName = orgOption ? orgOption.text : null;
+    }
+    
     const courseOption = courseSelect.options[courseId];
-    const orgOption = organizationId ? orgSelect.options[organizationId] : null;
     
     items.push({
         id: elementCounter++,
         course_id: courseId,
         course_name: courseOption ? courseOption.text : 'Курс #' + courseId,
-        organization_id: organizationId || null,
-        organization_name: orgOption ? orgOption.text : null,
-        group_ids: Array.isArray(groupIds) ? groupIds : [groupIds],
-        group_names: (Array.isArray(groupIds) ? groupIds : [groupIds]).map(id => {
-            const opt = groupTags.options[id];
-            return opt ? opt.text : 'Группа #' + id;
-        }).filter(Boolean),
-        user_ids: Array.isArray(userIds) ? userIds : [userIds],
-        user_names: (Array.isArray(userIds) ? userIds : [userIds]).map(id => {
-            const opt = userTags.options[id];
-            return opt ? opt.text : 'Пользователь #' + id;
-        }).filter(Boolean),
+        organization_id: organizationId,
+        organization_name: organizationName,
+        group_ids: groupIds,
+        group_names: groupNames,
+        user_ids: userIds,
+        user_names: userNames,
         start_date: startDate,
         end_date: endDate || null
     });
