@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\OrganizationSearchController;
 use App\Http\Controllers\Api\GroupSearchController;
 use App\Http\Controllers\Api\UserSearchController;
 use App\Http\Controllers\Api\CourseSearchController;
+use App\Http\Controllers\Student\CourseController as StudentCourseController;
+use App\Http\Controllers\Student\TestController as StudentTestController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -77,5 +79,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/api/groups/search', GroupSearchController::class)->name('api.groups.search');
         Route::get('/api/users/search', UserSearchController::class)->name('api.users.search');
         Route::get('/api/courses/search', CourseSearchController::class)->name('api.courses.search');
+    });
+    
+    // Учебная часть (требуется аутентификация)
+    Route::middleware('auth')->prefix('student')->name('student.')->group(function() {
+        Route::get('/courses', [StudentCourseController::class, 'index'])->name('courses.index');
+        Route::get('/courses/{course}', [StudentCourseController::class, 'show'])->name('courses.show');
+        Route::get('/tests', [StudentTestController::class, 'index'])->name('tests.index');
+        Route::get('/tests/{test}', [StudentTestController::class, 'show'])->name('tests.show');
     });
 });

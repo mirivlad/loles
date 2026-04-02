@@ -75,6 +75,23 @@
                                 <i class="bi bi-speedometer2"></i> Панель управления
                             </a>
                         </li>
+                        @if(Auth::user()->hasRole(['Administrator', 'Manager', 'Curator']))
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('admin.organizations.index') }}">
+                                <i class="bi bi-gear"></i> Админка
+                            </a>
+                        </li>
+                        @endif
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('student.courses.index') }}">
+                                <i class="bi bi-book"></i> Мои курсы
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('student.tests.index') }}">
+                                <i class="bi bi-file-earmark-text"></i> Тесты
+                            </a>
+                        </li>
                     @endauth
                 </ul>
                 <ul class="navbar-nav">
@@ -98,16 +115,53 @@
                         </li>
                     @else
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('login') }}">Войти</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('register') }}">Регистрация</a>
+                            <button class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#loginModal">
+                                <i class="bi bi-box-arrow-in-right"></i> Войти
+                            </button>
                         </li>
                     @endauth
                 </ul>
             </div>
         </div>
     </nav>
+
+    @if(!Auth::check())
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="{{ route('login') }}" method="POST">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-box-arrow-in-right"></i> Вход в систему</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Пароль</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" name="remember" class="form-check-input" id="remember">
+                            <label class="form-check-label" for="remember">Запомнить меня</label>
+                        </div>
+                        @if(session('error'))
+                        <div class="alert alert-danger">{{ session('error') }}</div>
+                        @endif
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="submit" class="btn btn-primary">Войти</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
 
     @yield('content')
 
