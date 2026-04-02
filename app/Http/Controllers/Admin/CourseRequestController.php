@@ -61,16 +61,14 @@ class CourseRequestController extends Controller
             'organization_id' => 'nullable|exists:organizations,id',
             'status' => 'nullable|in:pending,approved,rejected',
             'note' => 'nullable|string',
-            'items' => 'required|array',
-            'items.*.course_id' => 'required|exists:courses,id',
-            'items.*.organization_id' => 'nullable|exists:organizations,id',
-            'items.*.user_id' => 'nullable|exists:users,id',
-            'items.*.user_ids' => 'nullable|string',
-            'items.*.group_id' => 'nullable|exists:groups,id',
-            'items.*.group_ids' => 'nullable|string',
-            'items.*.start_date' => 'required|date',
-            'items.*.end_date' => 'nullable|date|after:items.*.start_date',
+            'items_json' => 'required|string',
         ]);
+        
+        // Парсим JSON
+        $items = json_decode($validated['items_json'], true);
+        if (!is_array($items) || empty($items)) {
+            return back()->withErrors(['items_json' => 'Добавьте хотя бы один элемент'])->withInput();
+        }
         
         // Определяем статус
         $user = auth()->user();
@@ -97,21 +95,16 @@ class CourseRequestController extends Controller
             ]);
             
             // Создаём элементы заявки
-            foreach ($validated['items'] as $itemData) {
-                // Определяем тип назначения
-                $hasUsers = !empty($itemData['user_ids']);
-                $hasGroups = !empty($itemData['group_ids']);
-                $hasOrganization = !empty($itemData['organization_id']);
-                
+            foreach ($items as $itemData) {
                 // Создаём отдельные записи для каждого пользователя
-                if ($hasUsers) {
-                    $userIds = array_map('intval', array_filter(explode(',', $itemData['user_ids'])));
-                    foreach ($userIds as $userId) {
+                if (!empty($itemData['user_ids'])) {
+                    foreach ($itemData['user_ids'] as $userId) {
                         CourseRequestItem::create([
                             'course_request_id' => $courseRequest->id,
                             'course_id' => $itemData['course_id'],
                             'user_id' => $userId,
                             'group_id' => null,
+                            'organization_id' => $itemData['organization_id'] ?? null,
                             'start_date' => $itemData['start_date'],
                             'end_date' => $itemData['end_date'] ?? null,
                         ]);
@@ -119,14 +112,14 @@ class CourseRequestController extends Controller
                 }
                 
                 // Создаём отдельные записи для каждой группы
-                if ($hasGroups) {
-                    $groupIds = array_map('intval', array_filter(explode(',', $itemData['group_ids'])));
-                    foreach ($groupIds as $groupId) {
+                if (!empty($itemData['group_ids'])) {
+                    foreach ($itemData['group_ids'] as $groupId) {
                         CourseRequestItem::create([
                             'course_request_id' => $courseRequest->id,
                             'course_id' => $itemData['course_id'],
                             'user_id' => null,
                             'group_id' => $groupId,
+                            'organization_id' => $itemData['organization_id'] ?? null,
                             'start_date' => $itemData['start_date'],
                             'end_date' => $itemData['end_date'] ?? null,
                         ]);
@@ -134,24 +127,26 @@ class CourseRequestController extends Controller
                 }
                 
                 // Если только организация (без пользователей и групп)
-                if (!$hasUsers && !$hasGroups && $hasOrganization) {
+                if (empty($itemData['user_ids']) && empty($itemData['group_ids']) && !empty($itemData['organization_id'])) {
                     CourseRequestItem::create([
                         'course_request_id' => $courseRequest->id,
                         'course_id' => $itemData['course_id'],
                         'user_id' => null,
                         'group_id' => null,
+                        'organization_id' => $itemData['organization_id'],
                         'start_date' => $itemData['start_date'],
                         'end_date' => $itemData['end_date'] ?? null,
                     ]);
                 }
                 
-                // Если ничего не указано - создаём запись без привязки (для организации заявки)
-                if (!$hasUsers && !$hasGroups && !$hasOrganization) {
+                // Если ничего не указано - создаём запись без привязки
+                if (empty($itemData['user_ids']) && empty($itemData['group_ids']) && empty($itemData['organization_id'])) {
                     CourseRequestItem::create([
                         'course_request_id' => $courseRequest->id,
                         'course_id' => $itemData['course_id'],
                         'user_id' => null,
                         'group_id' => null,
+                        'organization_id' => null,
                         'start_date' => $itemData['start_date'],
                         'end_date' => $itemData['end_date'] ?? null,
                     ]);
@@ -208,42 +203,71 @@ class CourseRequestController extends Controller
         
         $validated = $request->validate([
             'note' => 'nullable|string',
-            'items' => 'required|array',
-            'items.*.id' => 'nullable|exists:course_request_items,id',
-            'items.*.course_id' => 'required|exists:courses,id',
-            'items.*.organization_id' => 'nullable|exists:organizations,id',
-            'items.*.user_id' => 'nullable|exists:users,id',
-            'items.*.group_id' => 'nullable|exists:groups,id',
-            'items.*.start_date' => 'required|date',
-            'items.*.end_date' => 'nullable|date|after:items.*.start_date',
+            'items_json' => 'required|string',
         ]);
+        
+        $items = json_decode($validated['items_json'], true);
+        if (!is_array($items) || empty($items)) {
+            return back()->withErrors(['items_json' => 'Добавьте хотя бы один элемент'])->withInput();
+        }
         
         DB::beginTransaction();
         
         try {
             $courseRequest->update(['note' => $validated['note'] ?? null]);
             
-            // Обновляем элементы
-            foreach ($validated['items'] as $itemData) {
-                if (!empty($itemData['id'])) {
-                    // Обновляем существующий
-                    $item = CourseRequestItem::find($itemData['id']);
-                    $item->update([
-                        'course_id' => $itemData['course_id'],
-                        'organization_id' => $itemData['organization_id'] ?? null,
-                        'user_id' => $itemData['user_id'] ?? null,
-                        'group_id' => $itemData['group_id'] ?? null,
-                        'start_date' => $itemData['start_date'],
-                        'end_date' => $itemData['end_date'] ?? null,
-                    ]);
-                } else {
-                    // Создаём новый
+            // Удаляем старые элементы
+            $courseRequest->items()->delete();
+            
+            // Создаём новые элементы
+            foreach ($items as $itemData) {
+                if (!empty($itemData['user_ids'])) {
+                    foreach ($itemData['user_ids'] as $userId) {
+                        CourseRequestItem::create([
+                            'course_request_id' => $courseRequest->id,
+                            'course_id' => $itemData['course_id'],
+                            'user_id' => $userId,
+                            'group_id' => null,
+                            'organization_id' => $itemData['organization_id'] ?? null,
+                            'start_date' => $itemData['start_date'],
+                            'end_date' => $itemData['end_date'] ?? null,
+                        ]);
+                    }
+                }
+                
+                if (!empty($itemData['group_ids'])) {
+                    foreach ($itemData['group_ids'] as $groupId) {
+                        CourseRequestItem::create([
+                            'course_request_id' => $courseRequest->id,
+                            'course_id' => $itemData['course_id'],
+                            'user_id' => null,
+                            'group_id' => $groupId,
+                            'organization_id' => $itemData['organization_id'] ?? null,
+                            'start_date' => $itemData['start_date'],
+                            'end_date' => $itemData['end_date'] ?? null,
+                        ]);
+                    }
+                }
+                
+                if (empty($itemData['user_ids']) && empty($itemData['group_ids']) && !empty($itemData['organization_id'])) {
                     CourseRequestItem::create([
                         'course_request_id' => $courseRequest->id,
                         'course_id' => $itemData['course_id'],
-                        'organization_id' => $itemData['organization_id'] ?? null,
-                        'user_id' => $itemData['user_id'] ?? null,
-                        'group_id' => $itemData['group_id'] ?? null,
+                        'user_id' => null,
+                        'group_id' => null,
+                        'organization_id' => $itemData['organization_id'],
+                        'start_date' => $itemData['start_date'],
+                        'end_date' => $itemData['end_date'] ?? null,
+                    ]);
+                }
+                
+                if (empty($itemData['user_ids']) && empty($itemData['group_ids']) && empty($itemData['organization_id'])) {
+                    CourseRequestItem::create([
+                        'course_request_id' => $courseRequest->id,
+                        'course_id' => $itemData['course_id'],
+                        'user_id' => null,
+                        'group_id' => null,
+                        'organization_id' => null,
                         'start_date' => $itemData['start_date'],
                         'end_date' => $itemData['end_date'] ?? null,
                     ]);

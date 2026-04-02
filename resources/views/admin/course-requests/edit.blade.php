@@ -16,62 +16,18 @@
                 <div class="row">
                     <div class="col-md-8 mb-4">
                         <div class="card shadow-sm">
-                            <div class="card-header bg-primary text-white"><h5 class="mb-0">Элементы заявки</h5></div>
-                            <div class="card-body">
-                                <div id="items-container">
-                                    @foreach($courseRequest->items as $index => $item)
-                                    <div class="item-row border rounded p-3 mb-3 bg-light">
-                                        <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
-                                        <div class="row g-2">
-                                            <!-- Строка 1: Курс -->
-                                            <div class="col-md-12">
-                                                <label class="form-label">Курс *</label>
-                                                <select name="items[{{ $index }}][course_id]" class="form-select" required>
-                                                    @foreach($courses as $id => $title)
-                                                    <option value="{{ $id }}" {{ $item->course_id == $id ? 'selected' : '' }}>{{ $title }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            
-                                            <!-- Строка 2: Получатели -->
-                                            <div class="col-md-4">
-                                                <label class="form-label">Организация</label>
-                                                <select name="items[{{ $index }}][organization_id]" class="form-select">
-                                                    <option value="">Не выбрано</option>
-                                                    @foreach($organizations as $id => $name)
-                                                    <option value="{{ $id }}" {{ $item->organization_id == $id ? 'selected' : '' }}>{{ $name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                <small class="text-muted">И</small>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Группа</label>
-                                                <input type="text" class="form-control" value="{{ $item->group_id }}" placeholder="ID групп" name="items[{{ $index }}][group_id]">
-                                                <small class="text-muted">И</small>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Пользователь</label>
-                                                <input type="text" class="form-control" value="{{ $item->user_id }}" placeholder="ID пользователей" name="items[{{ $index }}][user_id]">
-                                            </div>
-                                            
-                                            <!-- Строка 3: Даты -->
-                                            <div class="col-md-6">
-                                                <label class="form-label">Дата начала *</label>
-                                                <input type="date" name="items[{{ $index }}][start_date]" class="form-control" value="{{ $item->start_date->format('Y-m-d') }}" required>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label">Дата окончания</label>
-                                                <input type="date" name="items[{{ $index }}][end_date]" class="form-control" value="{{ $item->end_date?->format('Y-m-d') }}">
-                                            </div>
-                                        </div>
-                                        <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-item"><i class="bi bi-trash"></i> Удалить</button>
-                                    </div>
-                                    @endforeach
-                                </div>
-                                
-                                <button type="button" class="btn btn-outline-primary btn-sm" id="add-item-btn">
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Элементы заявки</h5>
+                                <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addElementModal">
                                     <i class="bi bi-plus-lg"></i> Добавить элемент
                                 </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="items-container">
+                                    <!-- Сюда добавляются элементы -->
+                                </div>
+                                <input type="hidden" name="items_json" id="items_json" value="[]">
+                                @error('items_json')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
                         </div>
                     </div>
@@ -96,70 +52,212 @@
     </div>
 </div>
 
-@push('scripts')
-<script>
-let itemCount = {{ $courseRequest->items->count() }};
-
-document.getElementById('add-item-btn').addEventListener('click', function() {
-    const container = document.getElementById('items-container');
-    const newItem = document.createElement('div');
-    newItem.className = 'item-row border rounded p-3 mb-3 bg-light';
-    newItem.innerHTML = `
-        <div class="row g-2">
-            <!-- Строка 1: Курс -->
-            <div class="col-md-12">
-                <label class="form-label">Курс *</label>
-                <select name="items[${itemCount}][course_id]" class="form-select" required>
-                    <option value="">Выберите курс</option>
-                    @foreach($courses as $id => $title)
-                    <option value="{{ $id }}">{{ $title }}</option>
-                    @endforeach
-                </select>
+<!-- Modal добавления элемента -->
+<div class="modal fade" id="addElementModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Добавить элемент заявки</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            
-            <!-- Строка 2: Получатели -->
-            <div class="col-md-4">
-                <label class="form-label">Организация</label>
-                <select name="items[${itemCount}][organization_id]" class="form-select">
-                    <option value="">Не выбрано</option>
-                    @foreach($organizations as $id => $name)
-                    <option value="{{ $id }}">{{ $name }}</option>
-                    @endforeach
-                </select>
-                <small class="text-muted">И</small>
+            <div class="modal-body">
+                <form id="addElementForm">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Курс *</label>
+                            <select id="element_course_id" class="form-select" required></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Организация</label>
+                            <select id="element_organization_id" class="form-select"></select>
+                            <small class="text-muted">И</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Группа</label>
+                            <div id="element_group_ids"></div>
+                            <small class="text-muted">И</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Пользователь</label>
+                            <div id="element_user_ids"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Дата начала *</label>
+                            <input type="date" id="element_start_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Дата окончания</label>
+                            <input type="date" id="element_end_date" class="form-control">
+                        </div>
+                    </div>
+                </form>
             </div>
-            <div class="col-md-4">
-                <label class="form-label">Группа</label>
-                <input type="text" class="form-control" placeholder="ID групп" name="items[${itemCount}][group_id]">
-                <small class="text-muted">И</small>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Пользователь</label>
-                <input type="text" class="form-control" placeholder="ID пользователей" name="items[${itemCount}][user_id]">
-            </div>
-            
-            <!-- Строка 3: Даты -->
-            <div class="col-md-6">
-                <label class="form-label">Дата начала *</label>
-                <input type="date" name="items[${itemCount}][start_date]" class="form-control" required>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Дата окончания</label>
-                <input type="date" name="items[${itemCount}][end_date]" class="form-control">
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="addElementBtn">Добавить в заявку</button>
             </div>
         </div>
-        <button type="button" class="btn btn-sm btn-outline-danger mt-2 remove-item"><i class="bi bi-trash"></i> Удалить</button>
-    `;
-    container.appendChild(newItem);
-    itemCount++;
-});
+    </div>
+</div>
 
-// Удаление элемента
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('remove-item') || e.target.closest('.remove-item')) {
-        e.target.closest('.item-row').remove();
+@push('scripts')
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script>
+// Данные элементов
+let items = @json($courseRequest->items->map(fn($item) => [
+    'id' => $item->id,
+    'course_id' => $item->course_id,
+    'course_name' => $item->course->title,
+    'organization_id' => $item->organization_id,
+    'organization_name' => $item->organization?->name,
+    'group_ids' => $item->group_id ? [$item->group_id] : [],
+    'group_names' => $item->group_id ? [$item->group->name] : [],
+    'user_ids' => $item->user_id ? [$item->user_id] : [],
+    'user_names' => $item->user_id ? [$item->user->name] : [],
+    'start_date' => $item->start_date->format('Y-m-d'),
+    'end_date' => $item->end_date?->format('Y-m-d')
+]) ?? []);
+
+let elementCounter = items.length;
+let courseSelect, orgSelect, groupTags, userTags;
+
+// Инициализация TomSelect при открытии modal
+document.getElementById('addElementModal').addEventListener('show.bs.modal', function() {
+    if (!courseSelect) {
+        courseSelect = new TomSelect('#element_course_id', {
+            valueField: 'id', labelField: 'text', searchField: 'text',
+            placeholder: 'Выберите курс...', preload: false,
+            load: function(query, callback) {
+                if (query.length < 2) return callback();
+                fetch('/api/courses/search?q=' + encodeURIComponent(query))
+                    .then(response => response.json()).then(json => callback(json)).catch(() => callback());
+            }
+        });
+    }
+    if (!orgSelect) {
+        orgSelect = new TomSelect('#element_organization_id', {
+            valueField: 'id', labelField: 'text', searchField: 'text',
+            placeholder: 'Не выбрано', preload: false,
+            load: function(query, callback) {
+                if (query.length < 2) return callback();
+                fetch('/api/organizations/search?q=' + encodeURIComponent(query))
+                    .then(response => response.json()).then(json => callback(json)).catch(() => callback());
+            }
+        });
+    }
+    if (!groupTags) {
+        groupTags = new TomSelect('#element_group_ids', {
+            valueField: 'id', labelField: 'text', searchField: 'text',
+            placeholder: 'Выберите группы...', preload: false,
+            load: function(query, callback) {
+                if (query.length < 2) return callback();
+                fetch('/api/groups/search?q=' + encodeURIComponent(query))
+                    .then(response => response.json()).then(json => callback(json)).catch(() => callback());
+            }
+        });
+    }
+    if (!userTags) {
+        userTags = new TomSelect('#element_user_ids', {
+            valueField: 'id', labelField: 'text', searchField: 'text',
+            placeholder: 'Выберите пользователей...', preload: false,
+            load: function(query, callback) {
+                if (query.length < 2) return callback();
+                fetch('/api/users/search?q=' + encodeURIComponent(query))
+                    .then(response => response.json()).then(json => callback(json)).catch(() => callback());
+            }
+        });
     }
 });
+
+document.getElementById('addElementModal').addEventListener('hidden.bs.modal', function() {
+    if (courseSelect) courseSelect.clear();
+    if (orgSelect) orgSelect.clear();
+    if (groupTags) groupTags.clear();
+    if (userTags) userTags.clear();
+    document.getElementById('element_start_date').value = '';
+    document.getElementById('element_end_date').value = '';
+});
+
+document.getElementById('addElementBtn').addEventListener('click', function() {
+    const courseId = courseSelect.getValue();
+    const organizationId = orgSelect.getValue();
+    const groupIds = groupTags.getValue();
+    const userIds = userTags.getValue();
+    const startDate = document.getElementById('element_start_date').value;
+    const endDate = document.getElementById('element_end_date').value;
+    
+    if (!courseId) { alert('Выберите курс'); return; }
+    if (!startDate) { alert('Укажите дату начала'); return; }
+    
+    items.push({
+        id: elementCounter++,
+        course_id: courseId,
+        course_name: courseSelect.options[courseId]?.text || 'Курс',
+        organization_id: organizationId || null,
+        organization_name: organizationId ? orgSelect.options[organizationId]?.text : null,
+        group_ids: Array.isArray(groupIds) ? groupIds : (groupIds ? [groupIds] : []),
+        group_names: Array.isArray(groupIds) ? groupIds.map(id => groupTags.options[id]?.text) : (groupIds ? [groupTags.options[groupIds]?.text] : []),
+        user_ids: Array.isArray(userIds) ? userIds : (userIds ? [userIds] : []),
+        user_names: Array.isArray(userIds) ? userIds.map(id => userTags.options[id]?.text) : (userIds ? [userTags.options[userIds]?.text] : []),
+        start_date: startDate,
+        end_date: endDate || null
+    });
+    
+    updateItemsDisplay();
+    bootstrap.Modal.getInstance(document.getElementById('addElementModal')).hide();
+});
+
+function updateItemsDisplay() {
+    const container = document.getElementById('items-container');
+    document.getElementById('items_json').value = JSON.stringify(items);
+    
+    if (items.length === 0) {
+        container.innerHTML = '<p class="text-muted text-center py-4">Нет элементов. Нажмите "Добавить элемент"</p>';
+        return;
+    }
+    
+    container.innerHTML = items.map((item, index) => {
+        let recipients = [];
+        if (item.organization_name) recipients.push(`<span class="badge bg-primary">${item.organization_name}</span>`);
+        if (item.group_names && item.group_names.length > 0) {
+            item.group_names.forEach(name => recipients.push(`<span class="badge bg-info">${name}</span>`));
+        }
+        if (item.user_names && item.user_names.length > 0) {
+            item.user_names.forEach(name => recipients.push(`<span class="badge bg-success">${name}</span>`));
+        }
+        if (recipients.length === 0) recipients.push('<span class="text-muted">—</span>');
+        
+        return `
+            <div class="border rounded p-3 mb-3 bg-light">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="mb-2"><strong>Курс:</strong> ${item.course_name}</div>
+                        <div class="mb-2"><strong>Получатели:</strong> ${recipients.join(' ')}</div>
+                        <div><strong>Даты:</strong> ${item.start_date} ${item.end_date ? '→ ' + item.end_date : ''}</div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(${item.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+window.removeItem = function(id) {
+    items = items.filter(item => item.id !== id);
+    updateItemsDisplay();
+};
+
+document.getElementById('editRequestForm').addEventListener('submit', function(e) {
+    if (items.length === 0) {
+        e.preventDefault();
+        alert('Добавьте хотя бы один элемент');
+    }
+});
+
+updateItemsDisplay();
 </script>
 @endpush
 @endsection
