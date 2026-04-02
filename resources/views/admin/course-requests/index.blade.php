@@ -44,9 +44,10 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Организация</th>
+                                    <th>№</th>
                                     <th>Статус</th>
                                     <th>Курсов</th>
+                                    <th>Получатели</th>
                                     <th>Создана</th>
                                     <th>Кем</th>
                                     <th>Действия</th>
@@ -55,7 +56,7 @@
                             <tbody>
                                 @forelse($requests as $request)
                                 <tr>
-                                    <td><strong>{{ $request->organization?->name ?? 'Без организации' }}</strong></td>
+                                    <td><strong>#{{ $request->id }}</strong></td>
                                     <td>
                                         @if($request->isPending())
                                         <span class="badge bg-warning">Ожидает</span>
@@ -66,6 +67,24 @@
                                         @endif
                                     </td>
                                     <td><span class="badge bg-info">{{ $request->items->count() }}</span></td>
+                                    <td>
+                                        @php
+                                            $recipients = [];
+                                            if ($request->items->where('user_id')->count() > 0) {
+                                                $recipients[] = '<span class="badge bg-success"><i class="bi bi-person"></i> ' . $request->items->where('user_id')->count() . '</span>';
+                                            }
+                                            if ($request->items->where('group_id')->count() > 0) {
+                                                $recipients[] = '<span class="badge bg-info"><i class="bi bi-people"></i> ' . $request->items->where('group_id')->count() . '</span>';
+                                            }
+                                            if ($request->items->where('organization_id')->count() > 0) {
+                                                $recipients[] = '<span class="badge bg-primary"><i class="bi bi-building"></i> ' . $request->items->where('organization_id')->count() . '</span>';
+                                            }
+                                            if (empty($recipients)) {
+                                                $recipients[] = '<span class="text-muted">—</span>';
+                                            }
+                                        @endphp
+                                        {!! implode(' ', $recipients) !!}
+                                    </td>
                                     <td><small>{{ $request->created_at->format('d.m.Y H:i') }}</small></td>
                                     <td>{{ $request->requestedBy?->name ?? 'Удалён' }}</td>
                                     <td>

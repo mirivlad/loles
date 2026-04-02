@@ -28,7 +28,7 @@
                     <div class="card shadow-sm">
                         <div class="card-header bg-primary text-white"><h5 class="mb-0">Информация</h5></div>
                         <div class="card-body">
-                            <div><strong>Организация:</strong> {{ $courseRequest->organization->name }}</div>
+                            <div><strong>Организация:</strong> {{ $courseRequest->organization?->name ?? 'Без организации' }}</div>
                             <div><strong>Статус:</strong>
                                 @if($courseRequest->isPending())
                                 <span class="badge bg-warning">Ожидает</span>
@@ -103,13 +103,13 @@
                                     </td>
                                     <td>
                                         @if($item->user_id)
-                                        {{ $item->user?->name ?? '—' }}
+                                        <span class="badge bg-success">{{ $item->user?->name ?? 'Пользователь #' . $item->user_id }}</span>
                                         @elseif($item->group_id)
-                                        {{ $item->group?->name ?? '—' }}
+                                        <span class="badge bg-info">{{ $item->group?->name ?? 'Группа #' . $item->group_id }}</span>
                                         @elseif($item->organization_id)
-                                        {{ $item->organization?->name ?? '—' }}
+                                        <span class="badge bg-primary">{{ $item->organization?->name ?? 'Организация #' . $item->organization_id }}</span>
                                         @else
-                                        {{ $courseRequest->organization->name }}
+                                        <span class="text-muted">—</span>
                                         @endif
                                     </td>
                                     <td>
