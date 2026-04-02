@@ -39,9 +39,9 @@
                                 @endif
                             </div>
                             <div><strong>Создана:</strong> {{ $courseRequest->created_at->format('d.m.Y H:i') }}</div>
-                            <div><strong>Кем:</strong> {{ $courseRequest->requestedBy->name }}</div>
+                            <div><strong>Кем:</strong> {{ $courseRequest->requestedBy?->name ?? 'Удалён' }}</div>
                             @if($courseRequest->approved_by)
-                            <div><strong>{{ $courseRequest->isApproved() ? 'Одобрена' : 'Отклонена' }}:</strong> {{ $courseRequest->approvedBy?->name }} {{ $courseRequest->approved_at->format('d.m.Y H:i') }}</div>
+                            <div><strong>{{ $courseRequest->isApproved() ? 'Одобрена' : 'Отклонена' }}:</strong> {{ $courseRequest->approvedBy?->name ?? 'Удалён' }} {{ $courseRequest->approved_at->format('d.m.Y H:i') }}</div>
                             @endif
                             @if($courseRequest->note)
                             <div class="mt-3"><strong>Заметка:</strong><br>{{ $courseRequest->note }}</div>

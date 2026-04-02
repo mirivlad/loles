@@ -67,7 +67,7 @@
                                     </td>
                                     <td><span class="badge bg-info">{{ $request->items->count() }}</span></td>
                                     <td><small>{{ $request->created_at->format('d.m.Y H:i') }}</small></td>
-                                    <td>{{ $request->requestedBy->name }}</td>
+                                    <td>{{ $request->requestedBy?->name ?? 'Удалён' }}</td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
                                             <a href="{{ route('admin.course-requests.show', $request) }}" class="btn btn-outline-primary" title="Просмотр"><i class="bi bi-eye"></i></a>
