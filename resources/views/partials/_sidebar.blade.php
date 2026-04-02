@@ -94,8 +94,13 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.tests') ? 'active' : '' }}" href="{{ route('admin.courses.tests.index', \App\Models\Course::first()) }}">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.tests') ? 'active' : '' }}" href="{{ route('student.tests.index') }}">
             <i class="bi bi-file-earmark-text"></i> Тесты
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'student.schedule') ? 'active' : '' }}" href="{{ route('student.schedule.index') }}">
+            <i class="bi bi-calendar3"></i> Расписание
         </a>
     </li>
     <li class="nav-item">

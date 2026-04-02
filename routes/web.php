@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\UserSearchController;
 use App\Http\Controllers\Api\CourseSearchController;
 use App\Http\Controllers\Student\CourseController as StudentCourseController;
 use App\Http\Controllers\Student\TestController as StudentTestController;
+use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -86,5 +87,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/courses/{course}', [StudentCourseController::class, 'show'])->name('courses.show');
         Route::get('/tests', [StudentTestController::class, 'index'])->name('tests.index');
         Route::get('/tests/{test}', [StudentTestController::class, 'show'])->name('tests.show');
+        Route::get('/schedule', [StudentScheduleController::class, 'index'])->name('schedule.index');
+        Route::get('/calendar', [StudentScheduleController::class, 'calendar'])->name('schedule.calendar');
     });
 });
