@@ -233,17 +233,27 @@ document.getElementById('addElementBtn').addEventListener('click', function() {
         return;
     }
     
+    // Получаем названия
+    const courseOption = courseSelect.options[courseId];
+    const orgOption = organizationId ? orgSelect.options[organizationId] : null;
+    
     // Добавляем элемент
     items.push({
         id: elementCounter++,
         course_id: courseId,
-        course_name: courseSelect.options[courseId]?.text || 'Курс',
+        course_name: courseOption ? courseOption.text : 'Курс #' + courseId,
         organization_id: organizationId || null,
-        organization_name: organizationId ? orgSelect.options[organizationId]?.text : null,
+        organization_name: orgOption ? orgOption.text : null,
         group_ids: Array.isArray(groupIds) ? groupIds : [groupIds],
-        group_names: (Array.isArray(groupIds) ? groupIds : [groupIds]).map(id => groupTags.options[id]?.text).filter(Boolean),
+        group_names: (Array.isArray(groupIds) ? groupIds : [groupIds]).map(id => {
+            const opt = groupTags.options[id];
+            return opt ? opt.text : 'Группа #' + id;
+        }).filter(Boolean),
         user_ids: Array.isArray(userIds) ? userIds : [userIds],
-        user_names: (Array.isArray(userIds) ? userIds : [userIds]).map(id => userTags.options[id]?.text).filter(Boolean),
+        user_names: (Array.isArray(userIds) ? userIds : [userIds]).map(id => {
+            const opt = userTags.options[id];
+            return opt ? opt.text : 'Пользователь #' + id;
+        }).filter(Boolean),
         start_date: startDate,
         end_date: endDate || null
     });
