@@ -45,6 +45,11 @@
         </a>
     </li>
     <li class="nav-item">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.course-requests') ? 'active' : '' }}" href="{{ route('admin.course-requests.index') }}">
+            <i class="bi bi-file-earmark-plus"></i> Заявки на курсы
+        </a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link" href="#">
             <i class="bi bi-file-earmark-spreadsheet"></i> Отчёты
         </a>
@@ -69,6 +74,11 @@
     <li class="nav-item">
         <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.course-assignments') ? 'active' : '' }}" href="{{ route('admin.course-assignments.index') }}">
             <i class="bi bi-calendar-check"></i> Назначения
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.course-requests') ? 'active' : '' }}" href="{{ route('admin.course-requests.index') }}">
+            <i class="bi bi-file-earmark-plus"></i> Заявки на курсы
         </a>
     </li>
     <li class="nav-item">
