@@ -64,7 +64,8 @@ class TestController extends Controller
             abort(403, 'У вас нет доступа к этому тесту');
         }
         
-        $test->load(['questions.answers', 'course']);
+        // НЕ загружаем вопросы и ответы - только общую информацию
+        $test->load(['course']);
         
         return view('student.tests.show', compact('test'));
     }

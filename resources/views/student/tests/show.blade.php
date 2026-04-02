@@ -20,7 +20,14 @@
                             @if($test->passing_score)
                             <div><strong>Проходной балл:</strong> {{ $test->passing_score }}%</div>
                             @endif
+                            <div><strong>Время:</strong> <span class="text-muted">Не ограничено</span></div>
                         </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-info-circle"></i> 
+                        <strong>Важно!</strong> Вопросы будут показаны только после начала тестирования. 
+                        У вас будет одна попытка для прохождения теста.
                     </div>
                 </div>
                 
@@ -32,43 +39,12 @@
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
-            
-            <div class="card shadow-sm">
-                <div class="card-header"><h5 class="mb-0">Вопросы</h5></div>
-                <div class="card-body">
-                    <div class="accordion" id="questionsAccordion">
-                        @foreach($test->questions as $index => $question)
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="heading{{ $question->id }}">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $question->id }}">
-                                    Вопрос {{ $index + 1 }}: {{ Str::limit($question->question_text, 100) }}
-                                </button>
-                            </h2>
-                            <div id="collapse{{ $question->id }}" class="accordion-collapse collapse" data-bs-parent="#questionsAccordion">
-                                <div class="accordion-body">
-                                    <p><strong>{{ $question->question_text }}</strong></p>
-                                    
-                                    @if($question->type === 'multiple_choice')
-                                    <div class="mb-3">
-                                        @foreach($question->answers as $answer)
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="{{ $answer->is_correct ? 'checkbox' : 'checkbox' }}" name="question_{{ $question->id }}" value="{{ $answer->id }}" id="answer_{{ $answer->id }}">
-                                            <label class="form-check-label" for="answer_{{ $answer->id }}">
-                                                {{ $answer->answer_text }}
-                                                @if($answer->image)
-                                                <br><img src="/storage/{{ $answer->image }}" alt="Ответ" style="max-width:200px;max-height:150px;margin-top:10px;">
-                                                @endif
-                                            </label>
-                                        </div>
-                                        @endforeach
-                                    </div>
-                                    @endif
-                                </div>
-                            </div>
+                    
+                    <div class="card shadow-sm mt-3">
+                        <div class="card-header"><h6 class="mb-0">Попытки</h6></div>
+                        <div class="card-body">
+                            <p class="text-muted mb-0">Попыток пока не было</p>
                         </div>
-                        @endforeach
                     </div>
                 </div>
             </div>
@@ -79,7 +55,11 @@
 @push('scripts')
 <script>
 function startTest() {
-    alert('Функционал прохождения тестов будет реализован в следующем этапе');
+    if (confirm('Вы готовы начать тестирование? Вопросы будут показаны по одному.')) {
+        alert('Функционал прохождения тестов будет реализован в следующем этапе');
+        // TODO: Перенаправление на страницу прохождения теста
+        // window.location.href = '{{ route('student.tests.take', $test) }}';
+    }
 }
 </script>
 @endpush
