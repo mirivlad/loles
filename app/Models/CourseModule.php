@@ -16,11 +16,15 @@ class CourseModule extends Model
         'parent_id',
         'title',
         'content',
-        'type',
+        'type',  // section, lesson, video, file, link, test
         'sort_order',
         'duration_minutes',
         'is_required',
         'is_active',
+        'video_url',
+        'file_path',
+        'external_url',
+        'test_id',  // Связь с тестом
     ];
 
     protected $casts = [
@@ -46,6 +50,11 @@ class CourseModule extends Model
     public function tests(): HasMany
     {
         return $this->hasMany(Test::class);
+    }
+
+    public function test(): BelongsTo
+    {
+        return $this->belongsTo(Test::class);
     }
 
     public function userProgress(): HasMany

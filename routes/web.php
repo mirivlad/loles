@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CourseCategoryController;
 use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\CourseModuleController;
 use App\Http\Controllers\Admin\TestController;
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\CourseAssignmentController;
@@ -63,6 +64,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('course-categories', CourseCategoryController::class);
         Route::resource('courses', CourseController::class);
         Route::resource('courses.tests', TestController::class);
+        Route::post('/courses/{course}/modules', [CourseModuleController::class, 'store'])->name('courses.modules.store');
+        Route::put('/courses/{course}/modules/{module}', [CourseModuleController::class, 'update'])->name('courses.modules.update');
+        Route::delete('/courses/{course}/modules/{module}', [CourseModuleController::class, 'destroy'])->name('courses.modules.destroy');
         Route::resource('tests.questions', QuestionController::class);
         Route::resource('course-assignments', CourseAssignmentController::class)->except(['show', 'edit', 'update']);
         Route::get('/course-assignments/{course}', CourseAssignmentController::class . '@show')->name('course-assignments.show');
