@@ -80,9 +80,14 @@ class CourseRequestController extends Controller
         DB::beginTransaction();
         
         try {
-            // Берём organization_id из первого элемента или null
-            $firstItem = reset($items);
-            $organizationId = $firstItem['organization_id'] ?? null;
+            // Берём organization_id из ПЕРВОГО элемента у которого он есть
+            $organizationId = null;
+            foreach ($items as $item) {
+                if (!empty($item['organization_id'])) {
+                    $organizationId = $item['organization_id'];
+                    break;
+                }
+            }
             
             // Создаём заявку
             $courseRequest = CourseRequest::create([
