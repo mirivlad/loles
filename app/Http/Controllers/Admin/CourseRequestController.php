@@ -101,57 +101,47 @@ class CourseRequestController extends Controller
             
             // Создаём элементы заявки
             foreach ($items as $itemData) {
-                // Создаём отдельные записи для каждого пользователя
-                if (!empty($itemData['user_ids'])) {
+                // Определяем тип получателя
+                $hasUsers = !empty($itemData['user_ids']);
+                $hasGroups = !empty($itemData['group_ids']);
+                $hasOrganization = !empty($itemData['organization_id']);
+                
+                // Создаём ОТДЕЛЬНЫЕ записи для КАЖДОГО получателя
+                if ($hasUsers) {
                     foreach ($itemData['user_ids'] as $userId) {
                         CourseRequestItem::create([
                             'course_request_id' => $courseRequest->id,
                             'course_id' => $itemData['course_id'],
                             'user_id' => $userId,
                             'group_id' => null,
-                            'organization_id' => $itemData['organization_id'] ?? null,
+                            'organization_id' => null,  // Для пользователей organization_id = null
                             'start_date' => $itemData['start_date'],
                             'end_date' => $itemData['end_date'] ?? null,
                         ]);
                     }
                 }
                 
-                // Создаём отдельные записи для каждой группы
-                if (!empty($itemData['group_ids'])) {
+                if ($hasGroups) {
                     foreach ($itemData['group_ids'] as $groupId) {
                         CourseRequestItem::create([
                             'course_request_id' => $courseRequest->id,
                             'course_id' => $itemData['course_id'],
                             'user_id' => null,
                             'group_id' => $groupId,
-                            'organization_id' => $itemData['organization_id'] ?? null,
+                            'organization_id' => null,  // Для групп organization_id = null
                             'start_date' => $itemData['start_date'],
                             'end_date' => $itemData['end_date'] ?? null,
                         ]);
                     }
                 }
                 
-                // Если только организация (без пользователей и групп)
-                if (empty($itemData['user_ids']) && empty($itemData['group_ids']) && !empty($itemData['organization_id'])) {
+                if ($hasOrganization) {
                     CourseRequestItem::create([
                         'course_request_id' => $courseRequest->id,
                         'course_id' => $itemData['course_id'],
                         'user_id' => null,
                         'group_id' => null,
                         'organization_id' => $itemData['organization_id'],
-                        'start_date' => $itemData['start_date'],
-                        'end_date' => $itemData['end_date'] ?? null,
-                    ]);
-                }
-                
-                // Если ничего не указано - создаём запись без привязки
-                if (empty($itemData['user_ids']) && empty($itemData['group_ids']) && empty($itemData['organization_id'])) {
-                    CourseRequestItem::create([
-                        'course_request_id' => $courseRequest->id,
-                        'course_id' => $itemData['course_id'],
-                        'user_id' => null,
-                        'group_id' => null,
-                        'organization_id' => null,
                         'start_date' => $itemData['start_date'],
                         'end_date' => $itemData['end_date'] ?? null,
                     ]);
