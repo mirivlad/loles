@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Admin\OrganizationController;
@@ -28,9 +29,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Главная страница
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Маршруты аутентификации
 Route::middleware('guest')->group(function () {
