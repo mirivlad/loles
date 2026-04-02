@@ -74,12 +74,12 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Группа</label>
-                            <div id="element_group_ids"></div>
+                            <select id="element_group_ids" multiple></select>
                             <small class="text-muted">И</small>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Пользователь</label>
-                            <div id="element_user_ids"></div>
+                            <select id="element_user_ids" multiple></select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Дата начала *</label>
@@ -120,54 +120,56 @@ let items = @json($courseRequest->items->map(fn($item) => [
 ]) ?? []);
 
 let elementCounter = items.length;
-let courseSelect, orgSelect, groupTags, userTags;
+let courseSelect = null, orgSelect = null, groupTags = null, userTags = null;
+let modalInitialized = false;
 
-// Инициализация TomSelect при открытии modal
+// Инициализация TomSelect при ПЕРВОМ открытии modal
 document.getElementById('addElementModal').addEventListener('show.bs.modal', function() {
-    if (!courseSelect) {
-        courseSelect = new TomSelect('#element_course_id', {
-            valueField: 'id', labelField: 'text', searchField: 'text',
-            placeholder: 'Выберите курс...', preload: false,
-            load: function(query, callback) {
-                if (query.length < 2) return callback();
-                fetch('/api/courses/search?q=' + encodeURIComponent(query))
-                    .then(response => response.json()).then(json => callback(json)).catch(() => callback());
-            }
-        });
-    }
-    if (!orgSelect) {
-        orgSelect = new TomSelect('#element_organization_id', {
-            valueField: 'id', labelField: 'text', searchField: 'text',
-            placeholder: 'Не выбрано', preload: false,
-            load: function(query, callback) {
-                if (query.length < 2) return callback();
-                fetch('/api/organizations/search?q=' + encodeURIComponent(query))
-                    .then(response => response.json()).then(json => callback(json)).catch(() => callback());
-            }
-        });
-    }
-    if (!groupTags) {
-        groupTags = new TomSelect('#element_group_ids', {
-            valueField: 'id', labelField: 'text', searchField: 'text',
-            placeholder: 'Выберите группы...', preload: false,
-            load: function(query, callback) {
-                if (query.length < 2) return callback();
-                fetch('/api/groups/search?q=' + encodeURIComponent(query))
-                    .then(response => response.json()).then(json => callback(json)).catch(() => callback());
-            }
-        });
-    }
-    if (!userTags) {
-        userTags = new TomSelect('#element_user_ids', {
-            valueField: 'id', labelField: 'text', searchField: 'text',
-            placeholder: 'Выберите пользователей...', preload: false,
-            load: function(query, callback) {
-                if (query.length < 2) return callback();
-                fetch('/api/users/search?q=' + encodeURIComponent(query))
-                    .then(response => response.json()).then(json => callback(json)).catch(() => callback());
-            }
-        });
-    }
+    if (modalInitialized) return;
+    
+    courseSelect = new TomSelect('#element_course_id', {
+        valueField: 'id', labelField: 'text', searchField: 'text',
+        placeholder: 'Выберите курс...', preload: false, maxOptions: null,
+        load: function(query, callback) {
+            if (query.length < 2) return callback();
+            fetch('/api/courses/search?q=' + encodeURIComponent(query))
+                .then(response => response.json()).then(json => callback(json)).catch(() => callback());
+        }
+    });
+    
+    orgSelect = new TomSelect('#element_organization_id', {
+        valueField: 'id', labelField: 'text', searchField: 'text',
+        placeholder: 'Не выбрано', preload: false, maxOptions: null,
+        load: function(query, callback) {
+            if (query.length < 2) return callback();
+            fetch('/api/organizations/search?q=' + encodeURIComponent(query))
+                .then(response => response.json()).then(json => callback(json)).catch(() => callback());
+        }
+    });
+    
+    groupTags = new TomSelect('#element_group_ids', {
+        valueField: 'id', labelField: 'text', searchField: 'text',
+        placeholder: 'Выберите группы...', preload: false, maxOptions: null,
+        plugins: ['remove_button'],
+        load: function(query, callback) {
+            if (query.length < 2) return callback();
+            fetch('/api/groups/search?q=' + encodeURIComponent(query))
+                .then(response => response.json()).then(json => callback(json)).catch(() => callback());
+        }
+    });
+    
+    userTags = new TomSelect('#element_user_ids', {
+        valueField: 'id', labelField: 'text', searchField: 'text',
+        placeholder: 'Выберите пользователей...', preload: false, maxOptions: null,
+        plugins: ['remove_button'],
+        load: function(query, callback) {
+            if (query.length < 2) return callback();
+            fetch('/api/users/search?q=' + encodeURIComponent(query))
+                .then(response => response.json()).then(json => callback(json)).catch(() => callback());
+        }
+    });
+    
+    modalInitialized = true;
 });
 
 document.getElementById('addElementModal').addEventListener('hidden.bs.modal', function() {
@@ -182,8 +184,8 @@ document.getElementById('addElementModal').addEventListener('hidden.bs.modal', f
 document.getElementById('addElementBtn').addEventListener('click', function() {
     const courseId = courseSelect.getValue();
     const organizationId = orgSelect.getValue();
-    const groupIds = groupTags.getValue();
-    const userIds = userTags.getValue();
+    const groupIds = groupTags.getValue() || [];
+    const userIds = userTags.getValue() || [];
     const startDate = document.getElementById('element_start_date').value;
     const endDate = document.getElementById('element_end_date').value;
     
@@ -196,10 +198,10 @@ document.getElementById('addElementBtn').addEventListener('click', function() {
         course_name: courseSelect.options[courseId]?.text || 'Курс',
         organization_id: organizationId || null,
         organization_name: organizationId ? orgSelect.options[organizationId]?.text : null,
-        group_ids: Array.isArray(groupIds) ? groupIds : (groupIds ? [groupIds] : []),
-        group_names: Array.isArray(groupIds) ? groupIds.map(id => groupTags.options[id]?.text) : (groupIds ? [groupTags.options[groupIds]?.text] : []),
-        user_ids: Array.isArray(userIds) ? userIds : (userIds ? [userIds] : []),
-        user_names: Array.isArray(userIds) ? userIds.map(id => userTags.options[id]?.text) : (userIds ? [userTags.options[userIds]?.text] : []),
+        group_ids: Array.isArray(groupIds) ? groupIds : [groupIds],
+        group_names: (Array.isArray(groupIds) ? groupIds : [groupIds]).map(id => groupTags.options[id]?.text).filter(Boolean),
+        user_ids: Array.isArray(userIds) ? userIds : [userIds],
+        user_names: (Array.isArray(userIds) ? userIds : [userIds]).map(id => userTags.options[id]?.text).filter(Boolean),
         start_date: startDate,
         end_date: endDate || null
     });
