@@ -264,6 +264,13 @@ document.getElementById('addElementBtn').addEventListener('click', function() {
     bootstrap.Modal.getInstance(document.getElementById('addElementModal')).hide();
 });
 
+// Удаление элемента
+window.removeItem = function(id) {
+    if (!confirm('Удалить этот элемент из заявки?')) return;
+    items = items.filter(item => item.id !== id);
+    updateItemsDisplay();
+};
+
 // Обновление отображения элементов
 function updateItemsDisplay() {
     const container = document.getElementById('items-container');

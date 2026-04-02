@@ -18,6 +18,11 @@
                         <button class="btn btn-danger btn-sm"><i class="bi bi-x-lg"></i> Отклонить</button>
                     </form>
                     <a href="{{ route('admin.course-requests.edit', $courseRequest) }}" class="btn btn-warning btn-sm"><i class="bi bi-pencil"></i> Редактировать</a>
+                    <form action="{{ route('admin.course-requests.destroy', $courseRequest) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить заявку?')">
+                        @csrf
+                        @method('DELETE')
+                        <button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i> Удалить</button>
+                    </form>
                     @endif
                     <a href="{{ route('admin.course-requests.index') }}" class="btn btn-secondary btn-sm">Назад</a>
                 </div>

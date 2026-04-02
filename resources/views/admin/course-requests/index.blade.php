@@ -91,13 +91,19 @@
                                         <div class="btn-group btn-group-sm">
                                             <a href="{{ route('admin.course-requests.show', $request) }}" class="btn btn-outline-primary" title="Просмотр"><i class="bi bi-eye"></i></a>
                                             @if($request->isPending())
-                                            <form action="{{ route('admin.course-requests.approve', $request) }}" method="POST" class="d-inline">
+                                            <a href="{{ route('admin.course-requests.edit', $request) }}" class="btn btn-outline-warning" title="Редактировать"><i class="bi bi-pencil"></i></a>
+                                            <form action="{{ route('admin.course-requests.approve', $request) }}" method="POST" class="d-inline" title="Одобрить">
                                                 @csrf
-                                                <button class="btn btn-outline-success" title="Одобрить" onclick="return confirm('Одобрить заявку?')"><i class="bi bi-check-lg"></i></button>
+                                                <button class="btn btn-outline-success" onclick="return confirm('Одобрить заявку?')"><i class="bi bi-check-lg"></i></button>
                                             </form>
-                                            <form action="{{ route('admin.course-requests.reject', $request) }}" method="POST" class="d-inline">
+                                            <form action="{{ route('admin.course-requests.reject', $request) }}" method="POST" class="d-inline" title="Отклонить">
                                                 @csrf
-                                                <button class="btn btn-outline-danger" title="Отклонить" onclick="return confirm('Отклонить заявку?')"><i class="bi bi-x-lg"></i></button>
+                                                <button class="btn btn-outline-danger" onclick="return confirm('Отклонить заявку?')"><i class="bi bi-x-lg"></i></button>
+                                            </form>
+                                            <form action="{{ route('admin.course-requests.destroy', $request) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить заявку?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-outline-danger" title="Удалить"><i class="bi bi-trash"></i></button>
                                             </form>
                                             @endif
                                         </div>
