@@ -58,7 +58,6 @@ class CourseRequestController extends Controller
         Gate::authorize('create', CourseRequest::class);
         
         $validated = $request->validate([
-            'organization_id' => 'nullable|exists:organizations,id',
             'status' => 'nullable|in:pending,approved,rejected',
             'note' => 'nullable|string',
             'items_json' => 'required|string',
@@ -81,8 +80,9 @@ class CourseRequestController extends Controller
         DB::beginTransaction();
         
         try {
-            // Определяем организацию из первого элемента или общую
-            $organizationId = $validated['organization_id'] ?? null;
+            // Берём organization_id из первого элемента или null
+            $firstItem = reset($items);
+            $organizationId = $firstItem['organization_id'] ?? null;
             
             // Создаём заявку
             $courseRequest = CourseRequest::create([

@@ -55,7 +55,7 @@
                             <tbody>
                                 @forelse($requests as $request)
                                 <tr>
-                                    <td><strong>{{ $request->organization->name }}</strong></td>
+                                    <td><strong>{{ $request->organization?->name ?? 'Без организации' }}</strong></td>
                                     <td>
                                         @if($request->isPending())
                                         <span class="badge bg-warning">Ожидает</span>
