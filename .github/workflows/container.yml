@@ -73,8 +73,12 @@ jobs:
           docker compose exec -T app php artisan migrate:status
           docker compose exec -T app php artisan help loles:create-admin >/dev/null
           docker compose exec -T app php artisan view:cache
-          docker compose exec -T app composer install --no-interaction --no-progress --prefer-dist
-          docker compose exec -T app php artisan test --stop-on-failure
+          # Development dependencies and tests are intentionally absent from the production image.
+          # Install them into the disposable Actions container only.
+          docker compose exec -T app composer install --dev --no-interaction --no-progress --prefer-dist
+          docker compose exec -T app mkdir -p /var/www/html/tests
+          docker cp tests/. "$(docker compose ps -q app)":/var/www/html/tests/
+          docker compose exec -T -e APP_ENV=testing app vendor/bin/phpunit --stop-on-failure
           # Simulate Portainer Pull + Redeploy and verify the file volume survives.
           docker compose exec -T app sh -c 'printf persisted > storage/app/public/persistence-test.txt'
           docker compose up -d --force-recreate app
