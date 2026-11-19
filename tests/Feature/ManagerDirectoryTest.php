@@ -30,6 +30,16 @@ class ManagerDirectoryTest extends TestCase
         return $manager;
     }
 
+    public function test_manager_can_open_test_catalog_before_any_course_exists(): void
+    {
+        $manager = $this->manager();
+
+        $this->actingAs($manager)
+            ->get(route('admin.tests.index'))
+            ->assertOk()
+            ->assertSee('Тестов пока нет');
+    }
+
     public function test_manager_can_filter_users_by_organization_status_and_name(): void
     {
         $manager = $this->manager();

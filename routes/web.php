@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\CourseCategoryController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\CourseModuleController;
 use App\Http\Controllers\Admin\TestController;
+use App\Http\Controllers\Admin\TestCatalogController;
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\CourseAssignmentController;
 use App\Http\Controllers\Admin\GroupUserController;
@@ -63,6 +64,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class);
         Route::resource('course-categories', CourseCategoryController::class);
         Route::resource('courses', CourseController::class);
+        Route::get('/tests', [TestCatalogController::class, 'index'])->name('tests.index');
         Route::resource('courses.tests', TestController::class);
         Route::post('/courses/{course}/modules', [CourseModuleController::class, 'store'])->name('courses.modules.store');
         Route::put('/courses/{course}/modules/{module}', [CourseModuleController::class, 'update'])->name('courses.modules.update');

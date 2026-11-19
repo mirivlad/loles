@@ -35,7 +35,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.courses.tests') || Str::startsWith($currentRoute, 'admin.tests.questions') ? 'active' : '' }}" href="{{ route('admin.courses.tests.index', \App\Models\Course::first()) }}">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.courses.tests') || Str::startsWith($currentRoute, 'admin.tests') ? 'active' : '' }}" href="{{ route('admin.tests.index') }}">
             <i class="bi bi-file-earmark-text"></i> Тесты
         </a>
     </li>
