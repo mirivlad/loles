@@ -71,4 +71,8 @@ jobs:
           done
           test "$healthy" = 1
           docker compose exec -T app php artisan migrate:status
-          docker compose exec -T app php artisan list --raw | grep -q '^loles:create-admin'
+          docker compose exec -T app php artisan help loles:create-admin >/dev/null
+          # Simulate Portainer Pull + Redeploy and verify the file volume survives.
+          docker compose exec -T app sh -c 'printf persisted > storage/app/public/persistence-test.txt'
+          docker compose up -d --force-recreate app
+          docker compose exec -T app test -f storage/app/public/persistence-test.txt
