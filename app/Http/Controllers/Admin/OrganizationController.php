@@ -16,15 +16,32 @@ class OrganizationController extends Controller
         $this->middleware('auth');
     }
 
-    public function index()
+    public function index(Request $request)
     {
         Gate::authorize('viewAny', Organization::class);
-        
-        $organizations = Organization::withCount(['users', 'groups'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-        
-        return view('admin.organizations.index', compact('organizations'));
+
+        $search = trim(mb_substr((string) $request->query('search', ''), 0, 150));
+        $status = (string) $request->query('status', '');
+
+        $organizations = Organization::query()
+            ->withCount(['users', 'groups'])
+            ->when($search !== '', fn ($query) => $query->where(function ($inner) use ($search) {
+                $inner->where('name', 'like', "%{$search}%")
+                    ->orWhere('inn', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            }))
+            ->when(in_array($status, ['active', 'inactive'], true),
+                fn ($query) => $query->where('is_active', $status === 'active'))
+            ->orderBy('name')
+            ->paginate(20)
+            ->withQueryString();
+
+        $totalOrganizations = Organization::count();
+        $activeOrganizations = Organization::where('is_active', true)->count();
+        $totalCompanyUsers = User::whereNotNull('organization_id')->count();
+
+        return view('admin.organizations.index',
+            compact('organizations', 'totalOrganizations', 'activeOrganizations', 'totalCompanyUsers'));
     }
 
     public function create()
@@ -102,7 +119,7 @@ class OrganizationController extends Controller
     /**
      * Удалить пользователя из организации
      */
-    public function removeUser(Organization $organization, User $user)
+    public function removeUser(Request $request, Organization $organization, User $user)
     {
         Gate::authorize('update', $organization);
         
@@ -154,7 +171,7 @@ class OrganizationController extends Controller
     /**
      * Удалить группу из организации
      */
-    public function removeGroup(Organization $organization, Group $group)
+    public function removeGroup(Request $request, Organization $organization, Group $group)
     {
         Gate::authorize('update', $organization);
         

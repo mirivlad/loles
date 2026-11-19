@@ -23,7 +23,7 @@
 
 | Сервис | Назначение |
 | --- | --- |
-| `app` — `ghcr.io/mirivlad/loles:latest` | PHP 8.3, Apache, Laravel |
+| `app` — `ghcr.io/mirivlad/loles:latest` | PHP 8.5, Apache, Laravel |
 | `db` — `mariadb:11.4` | База данных, не открывается наружу |
 
 В `compose.yaml` уже описаны health checks, автоматические миграции и роли, настройки для Portainer и постоянные тома `db_data` и `app_storage`. При пересоздании контейнеров эти тома **сохраняются**.
@@ -129,12 +129,14 @@ docker compose exec app php artisan migrate:status
 
 ## Разработка
 
-Технологии: PHP 8.3+, Laravel (версия закреплена в `composer.lock`), Blade, MariaDB/MySQL, Spatie Laravel Permission, TinyMCE.
+Технологии: PHP 8.5 для Docker (Laravel 13 поддерживает PHP 8.3+), Laravel (версия закреплена в `composer.lock`), Blade, MariaDB/MySQL, Spatie Laravel Permission, TinyMCE.
 
 Для разработки без Docker понадобятся PHP и расширения из `Dockerfile`, Composer и MySQL/MariaDB. Настройте локальную `.env` на основе `.env.example`, затем:
 
 ```bash
 composer install
+npm ci
+npm run build
 php artisan key:generate
 php artisan migrate
 php artisan db:seed --class=RoleSeeder
@@ -151,3 +153,11 @@ php artisan serve
 ## Лицензия
 
 В репозитории пока отсутствует отдельный файл `LICENSE`. Перед публикацией как открытого программного обеспечения необходимо выбрать и оформить лицензию. Метаданные исходного Laravel-шаблона не заменяют лицензию проекта.
+
+### Зависимости и совместимость
+
+- Backend закреплён на стабильной ветке Laravel 13 (точные версии находятся в \`composer.lock\`); не используем \`dev-master\`. PHP-контейнер основан на поддерживаемой PHP 8.5.
+- Bootstrap, Bootstrap Icons, Tom Select и TinyMCE устанавливаются из \`package-lock.json\`, собираются локально и не требуют CDN во время работы приложения. FullCalendar используется в совместимой ветке 6.1.x, локальный бандл включён в контейнер.
+- MariaDB 11.4 — поддерживаемая LTS-ветка. **Не меняйте образ БД на 12.3 автоматически на уже работающем томе:** сначала сделайте копию и отдельно проверьте обновление БД на тестовых данных.
+- TinyMCE 8 распространяется в GPLv2+ режиме (\`license_key: 'gpl'\`). Перед использованием продукта как самостоятельной публичной open-source программы следует выбрать и явно оформить совместимую лицензию.
+- Для локальной разработки фронтенда нужен Node.js 22 и npm. Изменения фронтенда после \`npm run build\` попадают в \`public/build\`, TinyMCE и FullCalendar копируются в \`public/\`. Созданные файлы не коммитятся.

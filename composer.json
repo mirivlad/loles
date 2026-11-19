@@ -1,16 +1,20 @@
 {
-    "name": "laravel/laravel",
+    "name": "mirivlad/loles",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
-    "license": "MIT",
+    "description": "LoLeS — self-hosted learning management platform",
+    "keywords": [
+        "loles",
+        "learning",
+        "education",
+        "self-hosted"
+    ],
     "require": {
         "php": "^8.3",
         "guzzlehttp/guzzle": "^7.9",
         "intervention/image": "^3.11",
-        "laravel/framework": "dev-master as 13.0",
+        "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^2.10",
+        "laravel/tinker": "^3.0",
         "spatie/laravel-permission": "^6.12"
     },
     "require-dev": {
@@ -61,12 +65,6 @@
             "php-http/discovery": true
         }
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "repositories": {
-        "packagist": {
-            "type": "composer",
-            "url": "https://packagist.jp"
-        }
-    }
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }

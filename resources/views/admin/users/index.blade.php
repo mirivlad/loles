@@ -1,112 +1,146 @@
 @extends('layouts.app')
-
-@section('title', 'Пользователи')
-
+@section('title', 'Учащиеся и сотрудники')
 @section('content')
 <div class="container-fluid">
     <div class="row">
         <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-            <div class="position-sticky pt-3">
-                @include('partials._sidebar')
-            </div>
+            <div class="position-sticky pt-3">@include('partials._sidebar')</div>
         </nav>
-
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Пользователи</h1>
+            <div class="d-flex justify-content-between flex-wrap align-items-center gap-2 pt-3 pb-3 mb-3 border-bottom">
+                <div>
+                    <h1 class="h2 mb-1">Учащиеся и сотрудники</h1>
+                    <p class="text-secondary mb-0">Поиск, фильтрация и управление учётными записями</p>
+                </div>
                 @can('create', App\Models\User::class)
-                <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm">
-                    <i class="bi bi-plus-lg"></i> Добавить пользователя
-                </a>
+                    <a href="{{ route('admin.users.create', request()->only('organization_id')) }}" class="btn btn-primary">
+                        <i class="bi bi-person-plus me-1"></i> Добавить пользователя
+                    </a>
                 @endcan
             </div>
 
-            @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
+            @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
+            @if(session('error'))<div class="alert alert-danger" role="alert">{{ session('error') }}</div>@endif
 
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <form action="{{ route('admin.users.index') }}" method="GET" class="row g-3">
-                        <div class="col-md-3">
-                            <input type="text" name="search" class="form-control" placeholder="Поиск..." value="{{ request('search') }}">
-                        </div>
-                        <div class="col-md-3">
-                            <select name="organization_id" class="form-select">
-                                <option value="">Все организации</option>
-                                @foreach($organizations as $id => $name)
-                                <option value="{{ $id }}" {{ request('organization_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select name="role" class="form-select">
-                                <option value="">Все роли</option>
-                                @foreach($roles as $role)
-                                <option value="{{ $role }}" {{ request('role') == $role ? 'selected' : '' }}>{{ $role }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
-                            <a href="{{ route('admin.users.index') }}" class="btn btn-secondary"><i class="bi bi-x-lg"></i></a>
-                        </div>
-                    </form>
-                </div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4"><div class="manager-summary h-100">
+                    <div class="manager-summary__value">{{ number_format($totalUsers, 0, ',', ' ') }}</div>
+                    <div class="manager-summary__label">Всего пользователей</div>
+                </div></div>
+                <div class="col-md-4"><div class="manager-summary h-100">
+                    <div class="manager-summary__value">{{ number_format($activeUsers, 0, ',', ' ') }}</div>
+                    <div class="manager-summary__label">Активных аккаунтов</div>
+                </div></div>
+                <div class="col-md-4"><div class="manager-summary h-100">
+                    <div class="manager-summary__value">{{ number_format($unassignedUsers, 0, ',', ' ') }}</div>
+                    <div class="manager-summary__label">Без предприятия</div>
+                </div></div>
             </div>
 
+            <form action="{{ route('admin.users.index') }}" method="GET" class="manager-toolbar mb-3" aria-label="Фильтры пользователей">
+                <div class="row g-3 align-items-end">
+                    <div class="col-lg-3 col-md-6">
+                        <label for="userSearch" class="form-label">Имя, email или телефон</label>
+                        <input id="userSearch" type="search" name="search" value="{{ request('search') }}" class="form-control" placeholder="Найти пользователя…">
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label for="userOrganization" class="form-label">Предприятие</label>
+                        <select id="userOrganization" name="organization_id" class="form-select">
+                            <option value="">Все предприятия</option>
+                            @foreach($organizations as $id => $name)
+                                <option value="{{ $id }}" @selected((string) request('organization_id') === (string) $id)>{{ $name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <label for="userRole" class="form-label">Роль</label>
+                        <select id="userRole" name="role" class="form-select">
+                            <option value="">Все роли</option>
+                            @foreach($roles as $role)
+                                <option value="{{ $role }}" @selected(request('role') === $role)>{{ $role }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <label for="userStatus" class="form-label">Статус</label>
+                        <select id="userStatus" name="status" class="form-select">
+                            <option value="">Любой</option>
+                            <option value="active" @selected(request('status') === 'active')>Активен</option>
+                            <option value="inactive" @selected(request('status') === 'inactive')>Неактивен</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1" title="Применить фильтры"><i class="bi bi-search"></i> Найти</button>
+                        <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary" title="Сбросить фильтры" aria-label="Сбросить фильтры"><i class="bi bi-x-lg"></i></a>
+                    </div>
+                </div>
+            </form>
+
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="small text-secondary">Найдено: {{ $users->total() }}</span>
+                <span class="small text-secondary">Показано {{ $users->count() }} на странице</span>
+            </div>
             <div class="card shadow-sm">
-                <div class="card-body">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Имя</th>
-                                <th>Email</th>
-                                <th>Организация</th>
-                                <th>Роль</th>
-                                <th>Статус</th>
-                                <th>Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($users as $user)
-                            <tr>
-                                <td>{{ $user->id }}</td>
-                                <td><a href="{{ route('admin.users.show', $user) }}">{{ $user->name }}</a></td>
-                                <td>{{ $user->email }}</td>
-                                <td>{{ $user->organization?->name ?? '—' }}</td>
-                                <td><span class="badge bg-info">{{ $user->getRoleNames()->first() }}</span></td>
-                                <td>
-                                    @if($user->is_active)
-                                        <span class="badge bg-success">Активен</span>
-                                    @else
-                                        <span class="badge bg-secondary">Не активен</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="{{ route('admin.users.show', $user) }}" class="btn btn-outline-primary"><i class="bi bi-eye"></i></a>
-                                        @can('update', $user)
-                                        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-outline-warning"><i class="bi bi-pencil"></i></a>
-                                        @endcan
-                                        @can('delete', $user)
-                                        <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить?')">
-                                            @csrf @method('DELETE')
-                                            <button class="btn btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                        </form>
-                                        @endcan
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr><td colspan="7" class="text-center text-muted">Пользователей нет</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover manager-table align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Пользователь</th>
+                                    <th>Предприятие</th>
+                                    <th>Роль</th>
+                                    <th>Статус</th>
+                                    <th class="text-end pe-3">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($users as $user)
+                                    <tr>
+                                        <td class="ps-3">
+                                            <a class="fw-semibold text-decoration-none" href="{{ route('admin.users.show', $user) }}">{{ $user->name }}</a>
+                                            <div class="small text-secondary">{{ $user->email }}</div>
+                                            @if($user->phone)<div class="small text-secondary">{{ $user->phone }}</div>@endif
+                                        </td>
+                                        <td>
+                                            @if($user->organization)
+                                                <a href="{{ route('admin.organizations.show', $user->organization) }}" class="text-decoration-none">{{ $user->organization->name }}</a>
+                                            @else
+                                                <span class="text-secondary">Не указано</span>
+                                            @endif
+                                        </td>
+                                        <td><span class="badge bg-info text-dark">{{ $user->getRoleNames()->first() ?? '—' }}</span></td>
+                                        <td><span class="badge {{ $user->is_active ? 'bg-success' : 'bg-secondary' }}">{{ $user->is_active ? 'Активен' : 'Неактивен' }}</span></td>
+                                        <td class="text-end pe-3">
+                                            <div class="btn-group btn-group-sm" role="group" aria-label="Действия для {{ $user->name }}">
+                                                <a class="btn btn-outline-primary" href="{{ route('admin.users.show', $user) }}" title="Просмотр" aria-label="Просмотреть {{ $user->name }}"><i class="bi bi-eye"></i></a>
+                                                @can('update', $user)
+                                                    <a class="btn btn-outline-secondary" href="{{ route('admin.users.edit', $user) }}" title="Изменить" aria-label="Изменить {{ $user->name }}"><i class="bi bi-pencil"></i></a>
+                                                @endcan
+                                                @can('delete', $user)
+                                                    <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('Удалить пользователя?')">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="btn btn-outline-danger" title="Удалить" aria-label="Удалить {{ $user->name }}"><i class="bi bi-trash"></i></button>
+                                                    </form>
+                                                @endcan
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="5">
+                                        <div class="manager-empty">
+                                            <i class="bi bi-people fs-2 d-block mb-2"></i>
+                                            <strong>Никого не найдено</strong>
+                                            <p class="mb-2">Попробуйте изменить фильтры или добавьте первого пользователя.</p>
+                                            <a href="{{ route('admin.users.index') }}">Очистить фильтры</a>
+                                        </div>
+                                    </td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-            {{ $users->links() }}
+            <div class="mt-3">{{ $users->links() }}</div>
         </main>
     </div>
 </div>

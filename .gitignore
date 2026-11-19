@@ -17,3 +17,7 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Built from npm lockfile; do not vendor generated dependencies.
+/public/tinymce/js/tinymce/
+/public/vendor/fullcalendar/

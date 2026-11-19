@@ -7,7 +7,7 @@
 </div>
 
 @push('scripts')
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+
 <style>
 .tags-input-container {
     position: relative;
@@ -54,7 +54,7 @@
 .tag-badge.bg-secondary { background: #6c757d; }
 .tag-badge.bg-dark { background: #212529; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
 <script>
 console.log('[TagsInput] Initializing for {{ $name }}');
 console.log('[TagsInput] Value:', {!! json_encode($value) !!});

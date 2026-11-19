@@ -50,7 +50,8 @@
                                         name="organization_id"
                                         url="{{ route('api.organizations.search') }}"
                                         placeholder="Начните вводить название организации..."
-                                        :value="old('organization_id')"
+                                        :value="old('organization_id', $initialOrganization?->id)"
+                                        :initial-label="$initialOrganization?->name"
                                     />
                                 </div>
                                 <div class="mb-3">

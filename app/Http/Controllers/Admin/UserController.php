@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -21,39 +22,51 @@ class UserController extends Controller
     public function index(Request $request)
     {
         Gate::authorize('viewAny', User::class);
-        
-        $query = User::with(['organization', 'roles']);
-        
-        // Фильтры
+
+        $search = trim(mb_substr((string) $request->query('search', ''), 0, 150));
+        $status = (string) $request->query('status', '');
+
+        $query = User::query()->with(['organization', 'roles']);
+
         if ($request->filled('organization_id')) {
-            $query->where('organization_id', $request->organization_id);
+            $query->where('organization_id', $request->query('organization_id'));
         }
-        
+
         if ($request->filled('role')) {
-            $query->role($request->role);
+            $query->role((string) $request->query('role'));
         }
-        
-        if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('email', 'like', '%' . $request->search . '%');
+
+        if ($search !== '') {
+            $query->where(function ($inner) use ($search) {
+                $inner->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
             });
         }
-        
-        $users = $query->orderBy('created_at', 'desc')->paginate(20);
-        $organizations = Organization::pluck('name', 'id');
-        $roles = Role::pluck('name', 'name');
-        
-        return view('admin.users.index', compact('users', 'organizations', 'roles'));
+
+        if (in_array($status, ['active', 'inactive'], true)) {
+            $query->where('is_active', $status === 'active');
+        }
+
+        $users = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
+        $organizations = Organization::orderBy('name')->pluck('name', 'id');
+        $roles = Role::orderBy('name')->pluck('name', 'name');
+        $totalUsers = User::count();
+        $activeUsers = User::where('is_active', true)->count();
+        $unassignedUsers = User::whereNull('organization_id')->count();
+
+        return view('admin.users.index',
+            compact('users', 'organizations', 'roles', 'totalUsers', 'activeUsers', 'unassignedUsers'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         Gate::authorize('create', User::class);
 
-        $roles = Role::pluck('name', 'name');
+        $roles = Role::whereIn('name', $this->assignableRoleNames())->pluck('name', 'name');
+        $initialOrganization = Organization::find($request->integer('organization_id'));
 
-        return view('admin.users.create', compact('roles'));
+        return view('admin.users.create', compact('roles', 'initialOrganization'));
     }
 
     public function store(Request $request)
@@ -66,7 +79,7 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'phone' => 'nullable|string|max:20',
             'organization_id' => 'nullable|exists:organizations,id',
-            'role' => 'required|exists:roles,name',
+            'role' => ['required', Rule::in($this->assignableRoleNames())],
             'is_active' => 'boolean',
         ]);
         
@@ -76,7 +89,7 @@ class UserController extends Controller
             'password' => Hash::make($validated['password']),
             'phone' => $validated['phone'] ?? null,
             'organization_id' => $validated['organization_id'] ?? null,
-            'is_active' => $validated['is_active'] ?? true,
+            'is_active' => $request->boolean('is_active'),
         ]);
         
         $user->assignRole($validated['role']);
@@ -99,7 +112,7 @@ class UserController extends Controller
         Gate::authorize('update', $user);
 
         $user->load('groups');
-        $roles = Role::pluck('name', 'name');
+        $roles = Role::whereIn('name', $this->assignableRoleNames())->pluck('name', 'name');
         $userGroups = $user->groups->pluck('id')->toArray();
 
         // Показываем все доступные группы: общие + группы организации пользователя
@@ -124,7 +137,7 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
             'phone' => 'nullable|string|max:20',
             'organization_id' => 'nullable|exists:organizations,id',
-            'role' => 'required|exists:roles,name',
+            'role' => ['required', Rule::in($this->assignableRoleNames())],
             'groups' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
@@ -134,7 +147,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
             'organization_id' => $validated['organization_id'] ?? null,
-            'is_active' => $validated['is_active'] ?? true,
+            'is_active' => $request->boolean('is_active'),
         ]);
 
         // Обновление пароля
@@ -159,11 +172,29 @@ class UserController extends Controller
             ->with('success', 'Пользователь успешно обновлён.');
     }
 
+    /**
+     * Only administrators can grant administrative or manager-level roles.
+     * Managers may onboard students/curators; curators may onboard students.
+     */
+    private function assignableRoleNames(): array
+    {
+        $actor = auth()->user();
+
+        if ($actor?->hasRole('Administrator')) {
+            return Role::pluck('name')->all();
+        }
+        if ($actor?->hasRole('Manager')) {
+            return ['Student', 'Curator'];
+        }
+
+        return ['Student'];
+    }
+
     public function destroy(User $user)
     {
         Gate::authorize('delete', $user);
         
-        if ($user->isAdministrator()) {
+        if ($user->isAdministrator() && User::role('Administrator')->count() <= 1) {
             return back()->with('error', 'Невозможно удалить последнего администратора.');
         }
         

@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
         content_css: 'default',
         height: 300,
         plugins: 'image link table lists code',
-        toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | image link | code',
+        toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | image link | code',
         image_title: true,
         automatic_uploads: false,
         file_picker_types: 'image',

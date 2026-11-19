@@ -22,8 +22,8 @@
 </div>
 
 <!-- FullCalendar -->
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+<script src="{{ asset('vendor/fullcalendar/index.global.min.js') }}"></script>
 
 @push('scripts')
 <script>

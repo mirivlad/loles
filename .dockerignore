@@ -18,3 +18,7 @@ README.md
 TZ.md
 docker-compose*.yml
 compose*.yaml
+
+# Always build frontend artifacts from package-lock.json.
+public/tinymce/js/tinymce
+public/vendor/fullcalendar

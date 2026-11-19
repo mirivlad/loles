@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>LMS - Система обучения</title>
+    <title>LoLeS - Система обучения</title>
 
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
         :root {
@@ -211,7 +209,7 @@
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-8">
-                    <h1><i class="bi bi-mortarboard-fill"></i> LMS</h1>
+                    <h1><i class="bi bi-mortarboard-fill"></i> LoLeS</h1>
                     <p>Современная платформа для онлайн-обучения и управления знаниями вашей организации</p>
                     <div class="mt-4">
                         @auth
@@ -347,7 +345,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <p class="mb-0">© {{ date('Y') }} LMS. Все права защищены.</p>
+                    <p class="mb-0">© {{ date('Y') }} LoLeS. Все права защищены.</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     @guest
@@ -402,7 +400,6 @@
     </div>
     @endguest
 
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

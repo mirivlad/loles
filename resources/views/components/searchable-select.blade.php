@@ -1,10 +1,14 @@
-@props(['name', 'url', 'placeholder' => 'Начните вводить...', 'value' => null, 'required' => false, 'multiple' => false])
+@props(['name', 'url', 'placeholder' => 'Начните вводить...', 'value' => null, 'required' => false, 'multiple' => false, 'initialLabel' => null])
 
 <input type="hidden" name="{{ $name }}" id="{{ $name }}" value="{{ is_array($value) ? implode(',', $value) : $value }}" {{ $required ? 'required' : '' }}>
-<select id="{{ $name }}-select" class="form-select @error($name) is-invalid @enderror" {{ $required ? 'required' : '' }} {{ $multiple ? 'multiple' : '' }}></select>
+<select id="{{ $name }}-select" class="form-select @error($name) is-invalid @enderror" {{ $required ? 'required' : '' }} {{ $multiple ? 'multiple' : '' }}>
+    @if($value && $initialLabel && !$multiple)
+        <option value="{{ $value }}" selected>{{ $initialLabel }}</option>
+    @endif
+</select>
 
 @push('scripts')
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+
 <style>
 .tom-select .item {
     background: #0d6efd !important;
@@ -25,7 +29,7 @@
     color: #ffc107 !important;
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const select = new TomSelect('#{{ $name }}-select', {
@@ -63,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    @if($value)
+    @if($value && !$initialLabel)
     fetch('{{ $url }}?q=')
         .then(response => response.json())
         .then(items => {

@@ -1,4 +1,14 @@
-FROM php:8.3-apache-bookworm
+FROM node:22-alpine AS assets
+WORKDIR /src
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY vite.config.js ./
+COPY resources ./resources
+COPY scripts ./scripts
+COPY public ./public
+RUN npm run build
+
+FROM php:8.5-apache-bookworm
 LABEL org.opencontainers.image.source="https://github.com/mirivlad/loles"
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public \
@@ -30,6 +40,9 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
 COPY . .
+COPY --from=assets /src/public/build ./public/build
+COPY --from=assets /src/public/tinymce/js/tinymce ./public/tinymce/js/tinymce
+COPY --from=assets /src/public/vendor/fullcalendar ./public/vendor/fullcalendar
 RUN composer dump-autoload --no-dev --no-scripts --optimize && \
     php artisan package:discover --ansi && \
     mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/app/public storage/logs bootstrap/cache && \
