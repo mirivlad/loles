@@ -3,9 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\Organization;
+use App\Models\Course;
+use App\Models\Test as LearningTest;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Tests\TestCase;
 
 class ManagerDirectoryTest extends TestCase
@@ -126,6 +129,14 @@ class ManagerDirectoryTest extends TestCase
         $this->actingAs($manager)
             ->get(route('admin.users.edit', $admin))
             ->assertForbidden();
+    }
+
+    public function test_course_and_test_policies_are_registered(): void
+    {
+        $manager = $this->manager();
+
+        $this->assertTrue(Gate::forUser($manager)->allows('viewAny', Course::class));
+        $this->assertTrue(Gate::forUser($manager)->allows('viewAny', LearningTest::class));
     }
 
     public function test_last_administrator_cannot_be_deleted(): void

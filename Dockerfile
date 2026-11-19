@@ -21,7 +21,7 @@ RUN set -eux; \
         libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
         libicu-dev libonig-dev libzip-dev; \
     docker-php-ext-configure gd --with-freetype --with-jpeg; \
-    docker-php-ext-install -j2 bcmath exif gd intl mbstring opcache pdo_mysql zip; \
+    docker-php-ext-install -j2 bcmath exif gd intl mbstring pdo_mysql zip; \
     a2enmod rewrite headers; \
     sed -ri -e 's!/var/www/html!/var/www/html/public!g' \
         /etc/apache2/sites-available/*.conf \

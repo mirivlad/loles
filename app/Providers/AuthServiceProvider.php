@@ -2,11 +2,21 @@
 
 namespace App\Providers;
 
+use App\Models\Course;
+use App\Models\CourseAssignment;
+use App\Models\CourseRequest;
 use App\Models\CourseCategory;
+use App\Models\Question;
+use App\Models\Test;
 use App\Models\Group;
 use App\Models\Organization;
 use App\Models\User;
+use App\Policies\CoursePolicy;
+use App\Policies\CourseAssignmentPolicy;
+use App\Policies\CourseRequestPolicy;
 use App\Policies\CourseCategoryPolicy;
+use App\Policies\QuestionPolicy;
+use App\Policies\TestPolicy;
 use App\Policies\GroupPolicy;
 use App\Policies\OrganizationPolicy;
 use App\Policies\UserPolicy;
