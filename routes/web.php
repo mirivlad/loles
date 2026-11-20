@@ -6,6 +6,9 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Admin\OrganizationController;
 use App\Http\Controllers\Admin\GroupController;
+use App\Http\Controllers\Admin\TrainingProgramController;
+use App\Http\Controllers\Admin\TrainingIntakeController;
+use App\Http\Controllers\Admin\TrainingApplicationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserCredentialsController;
 use App\Http\Controllers\Admin\CourseCategoryController;
@@ -63,6 +66,22 @@ Route::middleware('auth')->group(function () {
     
     // Администрирование
     Route::prefix('admin')->name('admin.')->group(function () {
+        // Intake-centered workflow. Legacy course assignments remain for migration.
+        Route::prefix('training')->name('training.')->group(function () {
+            Route::resource('programs', TrainingProgramController::class)->except(['destroy']);
+            Route::post('programs/{program}/courses', [TrainingProgramController::class, 'addCourse'])->name('programs.courses.add');
+            Route::delete('programs/{program}/courses/{course}', [TrainingProgramController::class, 'removeCourse'])->name('programs.courses.remove');
+            Route::resource('intakes', TrainingIntakeController::class)->except(['destroy']);
+            Route::post('intakes/{intake}/groups', [TrainingIntakeController::class, 'addGroup'])->name('intakes.groups.add');
+            Route::post('intakes/{intake}/archive', [TrainingIntakeController::class, 'archive'])->name('intakes.archive');
+            Route::put('intakes/{intake}/enrollments/{enrollment}/group', [TrainingIntakeController::class, 'updateEnrollmentGroup'])->name('intakes.enrollments.group');
+            Route::get('intakes/{intake}/applications/create', [TrainingApplicationController::class, 'create'])->name('applications.create');
+            Route::post('intakes/{intake}/applications', [TrainingApplicationController::class, 'store'])->name('applications.store');
+            Route::get('intakes/{intake}/applications/{application}', [TrainingApplicationController::class, 'show'])->name('applications.show');
+            Route::post('intakes/{intake}/applications/{application}/review', [TrainingApplicationController::class, 'review'])->name('applications.review');
+            Route::post('intakes/{intake}/applications/{application}/payment', [TrainingApplicationController::class, 'payment'])->name('applications.payment');
+            Route::post('intakes/{intake}/applications/{application}/enroll', [TrainingApplicationController::class, 'enroll'])->name('applications.enroll');
+        });
         Route::resource('organizations', OrganizationController::class)->except(['edit', 'update']);
         Route::resource('organizations.groups', GroupController::class);
         Route::get('/organizations/{organization}/edit', [OrganizationController::class, 'edit'])->name('organizations.edit');

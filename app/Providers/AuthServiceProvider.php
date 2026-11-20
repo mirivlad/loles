@@ -11,6 +11,9 @@ use App\Models\Test;
 use App\Models\Group;
 use App\Models\Organization;
 use App\Models\User;
+use App\Models\TrainingProgram;
+use App\Models\TrainingIntake;
+use App\Policies\TrainingPolicy;
 use App\Policies\CoursePolicy;
 use App\Policies\CourseAssignmentPolicy;
 use App\Policies\CourseRequestPolicy;
@@ -39,6 +42,8 @@ class AuthServiceProvider extends ServiceProvider
         Organization::class => OrganizationPolicy::class,
         Group::class => GroupPolicy::class,
         User::class => UserPolicy::class,
+        TrainingProgram::class => TrainingPolicy::class,
+        TrainingIntake::class => TrainingPolicy::class,
     ];
 
     /**

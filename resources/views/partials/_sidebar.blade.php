@@ -20,6 +20,16 @@
         </a>
     </li>
     <li class="nav-item">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.training.programs') ? 'active' : '' }}" href="{{ route('admin.training.programs.index') }}">
+            <i class="bi bi-journal-bookmark"></i> Программы обучения
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.training.intakes') || Str::startsWith($currentRoute, 'admin.training.applications') ? 'active' : '' }}" href="{{ route('admin.training.intakes.index') }}">
+            <i class="bi bi-calendar-event"></i> Наборы на обучение
+        </a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.groups') ? 'active' : '' }}" href="{{ route('admin.groups.index') }}">
             <i class="bi bi-people-fill"></i> Группы
         </a>
