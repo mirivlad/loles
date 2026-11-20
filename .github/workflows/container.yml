@@ -92,7 +92,7 @@ jobs:
           docker compose exec -T app composer install --dev --no-interaction --no-progress --prefer-dist
           docker compose exec -T app mkdir -p /var/www/html/tests
           docker cp tests/. "$(docker compose ps -q app)":/var/www/html/tests/
-          docker compose exec -T -e APP_ENV=testing app vendor/bin/phpunit --stop-on-failure
+          docker compose exec -T -e APP_ENV=testing app vendor/bin/phpunit
           # Simulate Portainer Pull + Redeploy and verify the file volume survives.
           docker compose exec -T app sh -c 'printf persisted > storage/app/public/persistence-test.txt'
           docker compose up -d --force-recreate app

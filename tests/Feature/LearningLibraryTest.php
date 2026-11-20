@@ -85,7 +85,7 @@ class LearningLibraryTest extends TestCase
         $this->assertStringNotContainsString('<script', $item->content);
         $this->assertStringNotContainsString('javascript:', $item->content);
 
-        $this->actingAs($user)->get(route('admin.courses.preview', $course))
+        $this->actingAs($user)->get(route('admin.courses.preview.material', [$course, $item]))
             ->assertOk()->assertSee('Охрана труда');
         $this->actingAs($user)->get(route('admin.courses.modules.create', $course))
             ->assertOk()->assertSee('tinymce.min.js')->assertSee('course-library-root');
