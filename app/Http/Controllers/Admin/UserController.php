@@ -74,8 +74,9 @@ class UserController extends Controller
 
         $roles = Role::whereIn('name', $this->assignableRoleNames())->pluck('name', 'name');
         $initialOrganization = Organization::find($request->integer('organization_id'));
+        $allGroups = Group::with('organization')->orderBy('name')->get();
 
-        return view('admin.users.create', compact('roles', 'initialOrganization'));
+        return view('admin.users.create', compact('roles', 'initialOrganization', 'allGroups'));
     }
 
     public function store(Request $request, StudentCredentials $credentials)
@@ -94,6 +95,7 @@ class UserController extends Controller
             'generated_password_length' => ['nullable', Rule::in([6, 8])],
             'phone' => ['nullable', 'string', 'max:20'],
             'organization_id' => ['nullable', 'exists:organizations,id'],
+            'group_id' => ['nullable', 'exists:groups,id'],
             'role' => ['nullable', Rule::in($this->assignableRoleNames())],
             'is_active' => ['nullable', 'boolean'],
         ]);
@@ -111,8 +113,15 @@ class UserController extends Controller
                 : 'Пароль сотрудника должен содержать не менее 12 символов.']);
         }
 
+        $group = isset($validated['group_id']) ? Group::find($validated['group_id']) : null;
+        if ($group && $group->organization_id !== null
+            && (int) $group->organization_id !== (int) ($validated['organization_id'] ?? 0)) {
+            throw ValidationException::withMessages(['group_id' =>
+                'Учебная группа должна принадлежать выбранному предприятию.']);
+        }
+
         $username = strtolower(trim((string) ($validated['username'] ?? '')));
-        $user = DB::transaction(function () use ($request, $validated, $role, $username, $password, $isStudent, $credentials) {
+        $user = DB::transaction(function () use ($request, $validated, $role, $username, $password, $isStudent, $credentials, $group) {
             $user = User::create([
                 'name' => $validated['name'],
                 'username' => $username ?: 'new_' . Str::lower(Str::random(24)),
@@ -130,6 +139,9 @@ class UserController extends Controller
                 $user->update(['username' => $candidate]);
             }
             $user->assignRole($role);
+            if ($group) {
+                $user->groups()->syncWithoutDetaching([$group->id]);
+            }
             if ($isStudent) {
                 $credentials->issue($user, $password, $request->user());
             }
@@ -138,7 +150,7 @@ class UserController extends Controller
         });
 
         return redirect()->route('admin.users.index', ['search' => $user->username])
-            ->with('success', 'Учащийся создан. Логин и пароль доступны через кнопку «Показать пароли».');
+            ->with('success', 'Пользователь создан. Реквизиты учащегося доступны через кнопку «Показать пароли».');
     }
 
     public function show(User $user)

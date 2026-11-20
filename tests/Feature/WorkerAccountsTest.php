@@ -99,6 +99,28 @@ class WorkerAccountsTest extends TestCase
         $this->assertNotSame($credential->secret, $credential->getRawOriginal('secret'));
     }
 
+    public function test_manager_can_add_student_to_enterprise_group_in_one_form(): void
+    {
+        $manager = $this->manager();
+        $organization = Organization::create(['name' => 'Северный учебный центр', 'is_active' => true]);
+        $group = Group::create([
+            'name' => 'Вахта — день', 'organization_id' => $organization->id, 'is_active' => true,
+        ]);
+
+        $this->actingAs($manager)->post(route('admin.users.store'), [
+            'name' => 'Пётр Монтажник',
+            'role' => 'Student',
+            'organization_id' => $organization->id,
+            'group_id' => $group->id,
+            'generate_password' => 1,
+            'is_active' => 1,
+        ])->assertRedirect();
+
+        $student = User::where('name', 'Пётр Монтажник')->firstOrFail();
+        $this->assertTrue($student->groups()->where('groups.id', $group->id)->exists());
+        $this->assertTrue($student->hasRole('Student'));
+    }
+
     public function test_manager_can_choose_longer_generated_password(): void
     {
         $manager = $this->manager();

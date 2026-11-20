@@ -76,6 +76,18 @@
                                         :value="old('organization_id', $initialOrganization?->id)"
                                         :initial-label="$initialOrganization?->name" />
                                 </div>
+                                <div class="mb-3">
+                                    <label for="newUserGroup" class="form-label">Учебная группа <span class="text-secondary">(необязательно)</span></label>
+                                    <select name="group_id" id="newUserGroup" class="form-select @error('group_id') is-invalid @enderror">
+                                        <option value="">Без группы</option>
+                                        @foreach($allGroups as $group)
+                                            <option value="{{ $group->id }}" @selected((string) old('group_id') === (string) $group->id)>
+                                                {{ $group->name }} — {{ $group->organization?->name ?? 'Общая' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('group_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
                                 <div class="form-check mb-3">
                                     <input type="checkbox" class="form-check-input" id="newUserActive" name="is_active" value="1"
                                            @checked(old('is_active', true))>
