@@ -33,7 +33,8 @@ class CourseLibrary
         $existing = CoursePackage::where('format', $format)->where('sha256', $hash)->first();
         if ($existing && Storage::disk('local')->exists($existing->storage_path)) {
             $mergedTags = array_values(array_unique(array_merge($existing->tags ?? [], $this->normalizeTags($tags))));
-            $existing->update(['tags' => array_slice($mergedTags, 0, 12)]);
+            $mergedTags = array_slice($mergedTags, 0, 12);
+            $existing->update(['tags' => $mergedTags, 'tags_search' => implode(' ', $mergedTags)]);
             return $existing;
         }
 
@@ -53,6 +54,7 @@ class CourseLibrary
                 'sha256' => $hash,
                 'size_bytes' => $upload->getSize(),
                 'tags' => $this->normalizeTags($tags),
+                'tags_search' => implode(' ', $this->normalizeTags($tags)),
                 'metadata' => $inspection['metadata'],
             ]));
         } catch (\Throwable $exception) {

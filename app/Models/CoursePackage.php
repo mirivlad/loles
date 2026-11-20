@@ -9,7 +9,7 @@ class CoursePackage extends Model
 {
     protected $fillable = [
         'course_id', 'uploaded_by', 'format', 'standard_version', 'title',
-        'original_filename', 'storage_path', 'sha256', 'size_bytes', 'metadata', 'tags',
+        'original_filename', 'storage_path', 'sha256', 'size_bytes', 'metadata', 'tags', 'tags_search',
     ];
 
     protected $casts = ['metadata' => 'array', 'tags' => 'array'];

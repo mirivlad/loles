@@ -31,7 +31,7 @@ class CourseLibraryController extends Controller
                     $builder->where(fn ($q) => $q
                         ->where('title', 'like', "%{$word}%")
                         ->orWhere('original_filename', 'like', "%{$word}%")
-                        ->orWhere('tags', 'like', "%{$word}%"));
+                        ->orWhere('tags_search', 'like', "%{$word}%"));
                 }
             })
             ->orderBy('title')->limit(24)

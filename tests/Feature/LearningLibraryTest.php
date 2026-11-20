@@ -121,7 +121,7 @@ class LearningLibraryTest extends TestCase
             $this->assertSame($package->id, $first->modules()->firstOrFail()->course_package_id);
 
             $search = $this->actingAs($manager)->getJson(route('admin.courses.library.search', [
-                'course' => $second, 'format' => 'scorm', 'q' => 'Север',
+                'course' => $second, 'format' => 'scorm', 'q' => 'Сев',
             ]));
             $search->assertOk()
                 ->assertJsonCount(1, 'items')

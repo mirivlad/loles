@@ -16,6 +16,7 @@ return new class extends Migration {
         Schema::table('course_packages', function (Blueprint $table) {
             $table->foreignId('course_id')->nullable()->change();
             $table->json('tags')->nullable();
+            $table->text('tags_search')->nullable();
         });
         Schema::table('course_packages', function (Blueprint $table) {
             $table->foreign('course_id')->references('id')->on('courses')->nullOnDelete();
@@ -62,7 +63,7 @@ return new class extends Migration {
         });
         Schema::table('course_packages', function (Blueprint $table) {
             $table->dropForeign(['course_id']);
-            $table->dropColumn('tags');
+            $table->dropColumn(['tags', 'tags_search']);
             $table->foreignId('course_id')->nullable(false)->change();
         });
         Schema::table('course_packages', function (Blueprint $table) {
