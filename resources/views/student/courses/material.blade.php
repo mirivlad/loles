@@ -15,6 +15,10 @@
             </button>
         </div>
 
+        @if(session('success'))
+            <div class="alert alert-success" role="status">{{ session('success') }}</div>
+        @endif
+
         @if($preview ?? false)
             <div class="alert alert-info py-2" role="status">
                 Предпросмотр · результаты прохождения не записываются.
@@ -65,6 +69,29 @@
                 @include('student.courses._material_body')
             </div>
         </section>
+
+        @if(!($preview ?? false) && isset($activeStudyEnrollments) && $activeStudyEnrollments->isNotEmpty() && $module->type !== 'test')
+        <section class="card border-0 shadow-sm mb-4" aria-label="Отметка изучения">
+            <div class="card-body">
+                <h2 class="h5">Изучение материала</h2>
+                <p class="small text-muted">Просмотр страницы сам по себе не считается изучением.
+                    Отметьте материал после знакомства с содержанием. Для разных наборов отметки ведутся отдельно.</p>
+                @foreach($activeStudyEnrollments as $enrollment)
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                    <span>{{ $enrollment->intake->name }}</span>
+                    @if($studiedEnrollmentIds->contains($enrollment->id))
+                        <span class="badge bg-success">Изучено</span>
+                    @else
+                    <form method="POST" action="{{ route('student.trainings.progress.complete', [$enrollment, $course, $module]) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-success btn-sm">Отметить изученным</button>
+                    </form>
+                    @endif
+                </div>
+                @endforeach
+            </div>
+        </section>
+        @endif
 
         <nav class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4"
              aria-label="Переход по материалам">

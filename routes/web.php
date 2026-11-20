@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\TrainingProgramController;
 use App\Http\Controllers\Admin\TrainingIntakeController;
 use App\Http\Controllers\Admin\TrainingApplicationController;
 use App\Http\Controllers\Admin\TrainingExamController;
+use App\Http\Controllers\Admin\TrainingReportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserCredentialsController;
 use App\Http\Controllers\Admin\CourseCategoryController;
@@ -30,6 +31,7 @@ use App\Http\Controllers\Api\UserSearchController;
 use App\Http\Controllers\Api\CourseSearchController;
 use App\Http\Controllers\Student\CourseController as StudentCourseController;
 use App\Http\Controllers\Student\TrainingController as StudentTrainingController;
+use App\Http\Controllers\Student\TrainingProgressController as StudentTrainingProgressController;
 use App\Http\Controllers\Student\TestController as StudentTestController;
 use App\Http\Controllers\Student\ExamController as StudentExamController;
 use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
@@ -76,6 +78,8 @@ Route::middleware('auth')->group(function () {
             Route::delete('programs/{program}/courses/{course}', [TrainingProgramController::class, 'removeCourse'])->name('programs.courses.remove');
             Route::resource('intakes', TrainingIntakeController::class)->except(['destroy']);
             Route::post('intakes/{intake}/groups', [TrainingIntakeController::class, 'addGroup'])->name('intakes.groups.add');
+            Route::get('intakes/{intake}/report', [TrainingReportController::class, 'show'])->name('reports.show');
+            Route::get('intakes/{intake}/report/export', [TrainingReportController::class, 'export'])->name('reports.export');
             Route::get('intakes/{intake}/exams/create', [TrainingExamController::class, 'create'])->name('exams.create');
             Route::post('intakes/{intake}/exams', [TrainingExamController::class, 'store'])->name('exams.store');
             Route::get('intakes/{intake}/exams/{exam}', [TrainingExamController::class, 'show'])->name('exams.show');
@@ -161,6 +165,9 @@ Route::middleware('auth')->group(function () {
     // Учебная часть (требуется аутентификация)
     Route::middleware('auth')->prefix('student')->name('student.')->group(function() {
         Route::get('/trainings', [StudentTrainingController::class, 'index'])->name('trainings.index');
+        Route::post('/trainings/{enrollment}/courses/{course}/materials/{module}/complete',
+            [StudentTrainingProgressController::class, 'complete'])
+            ->middleware('throttle:60,1')->name('trainings.progress.complete');
         Route::get('/courses', [StudentCourseController::class, 'index'])->name('courses.index');
         Route::get('/courses/{course}', [StudentCourseController::class, 'show'])->name('courses.show');
         Route::get('/courses/{course}/materials/{module}', [StudentCourseController::class, 'material'])

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseModule;
+use App\Models\TrainingEnrollment;
+use App\Models\TrainingStudiedMaterial;
 use App\Services\CourseAccess;
 use App\Services\CourseOutline;
 use Illuminate\Support\Facades\Auth;
@@ -55,6 +57,19 @@ class CourseController extends Controller
         $previous = $steps->get($index - 1);
         $next = $steps->get($index + 1);
 
+        // Viewing a page alone does not complete it. The learner must
+        // explicitly confirm study, separately for each intake enrollment.
+        $today = today()->toDateString();
+        $activeStudyEnrollments = TrainingEnrollment::query()->with('intake')
+            ->where('user_id', Auth::id())->where('status', 'enrolled')
+            ->whereHas('intake', fn ($q) => $q->where('status', 'training')
+                ->where('starts_on', '<=', $today)->where('ends_on', '>=', $today)
+                ->whereHas('courses', fn ($query) => $query->where('course_id', $course->id)))
+            ->orderBy('id')->get();
+        $studiedEnrollmentIds = TrainingStudiedMaterial::where('course_module_id', $module->id)
+            ->whereIn('training_enrollment_id', $activeStudyEnrollments->pluck('id'))
+            ->pluck('training_enrollment_id');
+
         return view('student.courses.material', [
             'course' => $course,
             'module' => $module,
@@ -64,6 +79,8 @@ class CourseController extends Controller
             'previous' => $previous,
             'next' => $next,
             'preview' => false,
+            'activeStudyEnrollments' => $activeStudyEnrollments,
+            'studiedEnrollmentIds' => $studiedEnrollmentIds,
         ]);
     }
 }

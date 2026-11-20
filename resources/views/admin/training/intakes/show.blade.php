@@ -6,6 +6,8 @@
 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
 <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
 <h1 class="h2">{{ $intake->name }}</h1><div>
+<a href="{{ route('admin.training.reports.show', $intake) }}" class="btn btn-outline-primary">Ведомость результатов</a>
+
 @if(!in_array($intake->status, ['completed','archived']))
 <a href="{{ route('admin.training.intakes.edit', $intake) }}" class="btn btn-outline-secondary">Настроить</a>
 @elseif($intake->status === 'completed')

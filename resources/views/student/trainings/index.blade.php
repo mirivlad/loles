@@ -14,6 +14,10 @@
 <div><h2 class="h5">{{ $intake->name }}</h2>
 <div class="text-muted">{{ $intake->program?->name }} · {{ $intake->starts_on->format('d.m.Y') }} — {{ $intake->ends_on->format('d.m.Y') }}</div>
 @if($enrollment->group)<p class="small mb-0">Группа: {{ $enrollment->group->name }}</p>@endif
+@if(isset($outcomes[$enrollment->id]))
+<p class="small mb-0">Итог: {{ $outcomes[$enrollment->id]['label'] }}
+· Обязательных экзаменов сдано: {{ $outcomes[$enrollment->id]['passed_exam_count'] }} из {{ $outcomes[$enrollment->id]['required_exam_count'] }}</p>
+@endif
 </div><div><span class="badge {{ $canOpen ? 'bg-success' : 'bg-secondary' }}">{{ $canOpen ? 'Обучение доступно' : ($intake->status === 'completed' ? 'Завершено' : 'Ожидает начала / закрыто') }}</span></div></div>
 <hr><h3 class="h6">Курсы программы</h3><ul class="mb-0">
 @foreach($intake->courses as $item)<li>
@@ -21,6 +25,9 @@
 <a href="{{ route('student.courses.show', $item->course) }}">{{ $item->course->title }}</a>
 @else
 {{ $item->course?->title ?? 'Недоступный курс' }}
+@endif
+@if(isset($outcomes[$enrollment->id]))
+— {{ $outcomes[$enrollment->id]['course_progress'][$item->course_id] ?? 0 }}% отмечено изученным
 @endif</li>@endforeach
 </ul>
 @if($intake->exams->isNotEmpty())
