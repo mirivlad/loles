@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseModule;
+use App\Models\CoursePackage;
+use App\Services\CourseLibrary;
+use App\Services\LearningHtml;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -14,7 +17,7 @@ use Illuminate\Validation\ValidationException;
 
 class CourseModuleController extends Controller
 {
-    private const TYPES = ['section', 'lesson', 'video', 'file', 'link', 'test'];
+    private const TYPES = ['section', 'lesson', 'video', 'file', 'link', 'test', 'scorm', 'h5p'];
 
     private function validateItem(Request $request, Course $course, ?CourseModule $module = null): array
     {
@@ -25,7 +28,7 @@ class CourseModuleController extends Controller
         }
 
         $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
+            'title' => [in_array($request->input('type'), ['scorm', 'h5p'], true) ? 'nullable' : 'required', 'string', 'max:255'],
             'type' => ['required', Rule::in($types)],
             'parent_id' => ['nullable', 'integer',
                 Rule::exists('course_modules', 'id')->where('course_id', $course->id)->where('type', 'section')],
@@ -33,6 +36,11 @@ class CourseModuleController extends Controller
             'video_url' => ['nullable', 'url:http,https', 'max:2048'],
             'external_url' => ['nullable', 'url:http,https', 'max:2048'],
             'test_id' => ['nullable', 'integer', Rule::exists('tests', 'id')->where('course_id', $course->id)],
+            'course_package_id' => ['nullable', 'integer', Rule::exists('course_packages', 'id')
+                ->where('format', $request->input('type'))],
+            'package_upload' => ['nullable', 'file', 'max:102400'],
+            'package_tags' => ['nullable', 'string', 'max:300'],
+
             'file' => ['nullable', 'file', 'max:102400',
                 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,png,jpg,jpeg,webp,mp4,webm'],
             'duration_minutes' => ['nullable', 'integer', 'min:0', 'max:50000'],
@@ -60,13 +68,48 @@ class CourseModuleController extends Controller
             throw ValidationException::withMessages(['file' => 'Прикрепите файл.']);
         }
 
+        if (in_array($data['type'], ['scorm', 'h5p'], true)
+            && !$request->hasFile('package_upload')
+            && empty($data['course_package_id'])
+            && (!$module || $module->type !== $data['type'] || !$module->course_package_id)) {
+            throw ValidationException::withMessages(['course_package_id' =>
+                'Выберите материал из библиотеки или загрузите новый пакет.']);
+        }
+
         return $data;
     }
 
-    public function store(Request $request, Course $course)
+    private function applyPackage(Request $request, Course $course, array &$data, CourseLibrary $library, ?CourseModule $module = null): void
+    {
+        $format = $data['type'];
+        if (in_array($format, ['scorm', 'h5p'], true)) {
+            $package = $request->hasFile('package_upload')
+                ? $library->upload($request->file('package_upload'), $format,
+                    $data['package_tags'] ?? null, $course, $request->user())
+                : (isset($data['course_package_id'])
+                    ? CoursePackage::where('format', $format)->findOrFail($data['course_package_id'])
+                    : $module?->coursePackage);
+
+            if (!$package || $package->format !== $format) {
+                throw ValidationException::withMessages(['course_package_id' => 'Выберите подходящий пакет.']);
+            }
+            $data['course_package_id'] = $package->id;
+            $data['title'] = trim((string) ($data['title'] ?? '')) ?: ($package->title ?: $package->original_filename);
+        } else {
+            $data['course_package_id'] = null;
+        }
+
+        if ($format === 'lesson') {
+            $data['content'] = app(LearningHtml::class)->clean($data['content'] ?? '');
+        }
+        unset($data['package_upload'], $data['package_tags']);
+    }
+
+    public function store(Request $request, Course $course, CourseLibrary $library)
     {
         Gate::authorize('update', $course);
         $data = $this->validateItem($request, $course);
+        $this->applyPackage($request, $course, $data, $library);
 
         $data['course_id'] = $course->id;
         $data['is_required'] = $request->boolean('is_required', true);
@@ -93,11 +136,12 @@ class CourseModuleController extends Controller
         return to_route('admin.courses.show', $course)->with('success', 'Материал добавлен в курс.');
     }
 
-    public function update(Request $request, Course $course, CourseModule $module)
+    public function update(Request $request, Course $course, CourseModule $module, CourseLibrary $library)
     {
         Gate::authorize('update', $course);
         abort_unless($module->course_id === $course->id, 404);
         $data = $this->validateItem($request, $course, $module);
+        $this->applyPackage($request, $course, $data, $library, $module);
 
         // Do not allow turning a parent section into a plain lesson while it has children.
         if ($module->children()->exists() && $data['type'] !== 'section') {

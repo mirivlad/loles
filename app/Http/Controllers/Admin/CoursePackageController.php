@@ -75,6 +75,11 @@ class CoursePackageController extends Controller
         Gate::authorize('update', $course);
         abort_unless($package->course_id === $course->id, 404);
 
+        // Packages are reusable. Never delete a referenced archive, even if
+        // another course owns the original association.
+        abort_if(\App\Models\CourseModule::where('course_package_id', $package->id)->exists(),
+            409, 'Пакет уже используется учебными курсами. Сначала удалите соответствующие материалы.');
+
         $file = $package->storage_path;
         $package->delete();
         Storage::disk('local')->delete($file);

@@ -130,7 +130,7 @@ class CourseController extends Controller
         Gate::authorize('view', $course);
         
         $course->load(['category', 'creator', 'modules' => fn ($query) => $query
-            ->with(['children' => fn ($child) => $child->orderBy('sort_order'), 'test'])
+            ->with(['children' => fn ($child) => $child->orderBy('sort_order'), 'test', 'coursePackage'])
             ->orderBy('sort_order'), 'tests', 'packages']);
         
         return view('admin.courses.show', compact('course'));
@@ -143,7 +143,7 @@ class CourseController extends Controller
         $course->load([
             'category',
             'modules' => fn ($query) => $query
-                ->with(['children' => fn ($children) => $children->orderBy('sort_order'), 'test'])
+                ->with(['children' => fn ($children) => $children->orderBy('sort_order'), 'test', 'coursePackage'])
                 ->orderBy('sort_order'),
             'tests',
             'packages',

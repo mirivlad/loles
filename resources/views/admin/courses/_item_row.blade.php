@@ -6,8 +6,8 @@
         'file' => 'Документ',
         'link' => 'Ссылка',
         'test' => 'Тест',
-        'scorm' => 'SCORM (старый)',
-        'h5p' => 'H5P (старый)',
+        'scorm' => 'SCORM',
+        'h5p' => 'H5P',
         'assignment' => 'Задание (старое)',
     ];
     $kindIcons = [
@@ -17,6 +17,8 @@
         'file' => 'paperclip',
         'link' => 'link-45deg',
         'test' => 'check2-square',
+        'scorm' => 'box-seam',
+        'h5p' => 'puzzle',
     ];
 @endphp
 <div class="border rounded-3 mb-2 {{ $depth ? 'ms-md-4 bg-light' : 'bg-white' }}">
@@ -64,6 +66,17 @@
         <div class="px-3 pb-2 small"><a href="{{ $item->external_url }}" target="_blank" rel="noopener noreferrer">Открыть страницу</a></div>
     @elseif($item->type === 'test' && $item->test)
         <div class="px-3 pb-2 small"><a href="{{ route('admin.courses.tests.show', [$course, $item->test]) }}">{{ $item->test->title }}</a></div>
+    @elseif(in_array($item->type, ['scorm', 'h5p']) && $item->coursePackage)
+        <div class="px-3 pb-3 small d-flex flex-wrap align-items-center gap-2">
+            <span class="text-secondary">{{ $item->coursePackage->standard_version }}</span>
+            @foreach($item->coursePackage->tags ?? [] as $tag)
+                <span class="badge text-bg-light border">{{ $tag }}</span>
+            @endforeach
+            <a class="btn btn-sm btn-outline-success"
+               href="{{ route('admin.courses.library.download', [$course, $item->coursePackage]) }}">
+                <i class="bi bi-download"></i> Скачать исходный пакет
+            </a>
+        </div>
     @endif
     @can('update', $course)
         <div class="collapse border-top p-3" id="edit-item-{{ $item->id }}">

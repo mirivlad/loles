@@ -1,5 +1,6 @@
 @php($itemEditing = isset($item) && $item !== null)
 <form method="POST" enctype="multipart/form-data" class="course-item-form"
+      data-existing-format="{{ $itemEditing ? $item->type : '' }}"
       action="{{ $itemEditing
           ? route('admin.courses.modules.update', [$course, $item])
           : route('admin.courses.modules.store', $course) }}">
@@ -8,7 +9,7 @@
     <div class="row g-3">
         <div class="col-lg-7">
             <label class="form-label">Название *</label>
-            <input name="title" required maxlength="255" class="form-control"
+            <input name="title" required maxlength="255" class="form-control course-item-title"
                    value="{{ $itemEditing ? $item->title : '' }}"
                    placeholder="Например: Проверка средств индивидуальной защиты">
         </div>
@@ -21,18 +22,20 @@
                     'file' => 'Документ или файл',
                     'link' => 'Ссылка на страницу',
                     'test' => 'Проверка знаний',
+                    'scorm' => 'SCORM — интерактивный курс',
+                    'h5p' => 'H5P — интерактивное задание',
                     'section' => 'Раздел (папка)',
                 ] as $type => $label)
                     <option value="{{ $type }}" @selected(($itemEditing ? $item->type : 'lesson') === $type)>{{ $label }}</option>
                 @endforeach
-                @if($itemEditing && !in_array($item->type, ['lesson', 'video', 'file', 'link', 'test', 'section'], true))
+                @if($itemEditing && !in_array($item->type, ['lesson', 'video', 'file', 'link', 'test', 'section', 'scorm', 'h5p'], true))
                     <option value="{{ $item->type }}" selected>Старый тип: {{ $item->type }}</option>
                 @endif
             </select>
         </div>
         <div class="col-12 course-type-field" data-types="lesson">
             <label class="form-label">Содержание</label>
-            <textarea name="content" rows="6" class="form-control"
+            <textarea name="content" rows="12" class="form-control course-rich-editor"
                       placeholder="Напишите учебный материал понятным языком…">{{ $itemEditing ? $item->content : '' }}</textarea>
         </div>
         <div class="col-12 course-type-field" data-types="video">
@@ -67,6 +70,8 @@
                 <div class="form-text">Сначала создайте тест в блоке «Проверка знаний» ниже.</div>
             @endif
         </div>
+        @include('admin.courses._package_gallery')
+
         <div class="col-12">
             <details>
                 <summary class="text-secondary">Дополнительно: раздел, длительность, обязательность</summary>

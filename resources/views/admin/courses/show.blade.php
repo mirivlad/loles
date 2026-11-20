@@ -5,6 +5,8 @@
     <div class="row">
         <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse"><div class="position-sticky pt-3">@include('partials._sidebar')</div></nav>
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+            <div id="course-library-root"
+                 data-search-url="{{ route('admin.courses.library.search', $course) }}"></div>
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-3 pb-3 mb-3 border-bottom">
                 <div>
                     <a href="{{ route('admin.courses.index') }}" class="small text-secondary text-decoration-none"><i class="bi bi-arrow-left"></i> Все курсы</a>
@@ -119,91 +121,17 @@
                 </div>
             </div>
 
-            <div class="card shadow-sm mb-4" id="course-packages">
-                <div class="card-header py-3">
-                    <h2 class="h5 mb-1">3. Готовые интерактивные материалы: SCORM и H5P</h2>
-                    <p class="small text-secondary mb-0">Добавьте готовый файл пакета. Оригинал сохраняется для последующего переноса на другую платформу.</p>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info small" role="note">
-                        Сейчас работает <strong>проверка, хранение и экспорт оригинальных пакетов</strong>.
-                        Запуск внутри курса, SCORM-отслеживание прогресса и создание/редактирование H5P ещё в разработке.
-                        Пакет не запускается автоматически после загрузки.
-                    </div>
-                    @can('update', $course)
-                        <form method="POST" enctype="multipart/form-data" action="{{ route('admin.courses.packages.store', $course) }}"
-                              class="row g-3 align-items-end mb-4">
-                            @csrf
-                            <div class="col-md-3">
-                                <label for="packageFormat" class="form-label">Формат</label>
-                                <select name="format" id="packageFormat" class="form-select" required>
-                                    <option value="scorm">SCORM 1.2 / 2004</option>
-                                    <option value="h5p">H5P</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="packageFile" class="form-label">Файл пакета (до 100 МБ)</label>
-                                <input type="file" name="package" id="packageFile" accept=".zip,.h5p" class="form-control" required>
-                            </div>
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-upload"></i> Импортировать</button>
-                            </div>
-                        </form>
-                    @endcan
-                    @forelse($course->packages as $package)
-                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 py-3 border-top">
-                            <div>
-                                <div class="fw-semibold">{{ $package->title ?: $package->original_filename }}</div>
-                                <div class="small text-secondary">
-                                    {{ strtoupper($package->format) }} · {{ $package->standard_version }} ·
-                                    {{ number_format($package->size_bytes / 1048576, 2, ',', ' ') }} МБ
-                                    · Оригинал сохранён
-                                </div>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <a class="btn btn-sm btn-outline-success"
-                                   href="{{ route('admin.courses.packages.download', [$course, $package]) }}">
-                                    <i class="bi bi-download"></i> Скачать оригинал
-                                </a>
-                                @can('update', $course)
-                                    <form method="POST" action="{{ route('admin.courses.packages.destroy', [$course, $package]) }}"
-                                          onsubmit="return confirm('Удалить пакет из курса?')">
-                                        @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" type="submit" title="Удалить пакет"><i class="bi bi-trash"></i></button>
-                                    </form>
-                                @endcan
-                            </div>
-                        </div>
-                    @empty
-                        <p class="text-secondary small mb-0">Пакетов пока нет. Это необязательно: обычный курс можно составить целиком из текста, видео, документов и тестов.</p>
-                    @endforelse
-                </div>
+            <div class="alert alert-info small" id="course-package-note">
+                <strong>SCORM и H5P</strong> теперь добавляются через обычную кнопку
+                «Добавить материал». Можно найти пакет в общей библиотеке по названию или тегам,
+                либо загрузить новый. Пакеты доступны для скачивания как оригиналы.
+                Исполнение и учёт результатов в процессе разработки.
             </div>
         </main>
     </div>
 </div>
 @push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.course-item-form').forEach(form => {
-        const choice = form.querySelector('.course-type-select');
-        const refresh = () => {
-            const selected = choice.value;
-            form.querySelectorAll('.course-type-field').forEach(group => {
-                const shown = group.dataset.types.split(',').includes(selected);
-                group.hidden = !shown;
-                group.querySelectorAll('input, textarea, select').forEach(field => field.disabled = !shown);
-            });
-            const parent = form.querySelector('.course-parent-selector');
-            if (parent) {
-                parent.hidden = selected === 'section';
-                parent.querySelector('select').disabled = selected === 'section';
-            }
-        };
-        choice.addEventListener('change', refresh);
-        refresh();
-    });
-});
-</script>
+<script src="{{ asset('tinymce/js/tinymce/tinymce.min.js') }}"></script>
+@vite('resources/js/course-builder.js')
 @endpush
 @endsection

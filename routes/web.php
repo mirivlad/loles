@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\CourseCategoryController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\CourseModuleController;
 use App\Http\Controllers\Admin\CoursePackageController;
+use App\Http\Controllers\Admin\CourseLibraryController;
 use App\Http\Controllers\Admin\TestController;
 use App\Http\Controllers\Admin\TestCatalogController;
 use App\Http\Controllers\Admin\QuestionController;
@@ -75,6 +76,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('course-categories', CourseCategoryController::class);
         Route::get('/courses/{course}/preview', [CourseController::class, 'preview'])->name('courses.preview');
         Route::resource('courses', CourseController::class);
+        Route::get('/courses/{course}/library/search', [CourseLibraryController::class, 'search'])->name('courses.library.search');
+        Route::get('/courses/{course}/library/{package}/download', [CourseLibraryController::class, 'download'])->name('courses.library.download');
         Route::post('/courses/{course}/packages', [CoursePackageController::class, 'store'])->name('courses.packages.store');
         Route::get('/courses/{course}/packages/{package}/download', [CoursePackageController::class, 'download'])->name('courses.packages.download');
         Route::delete('/courses/{course}/packages/{package}', [CoursePackageController::class, 'destroy'])->name('courses.packages.destroy');

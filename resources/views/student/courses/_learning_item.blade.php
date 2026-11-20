@@ -13,7 +13,7 @@
             <p class="small text-secondary mb-2">Примерно {{ $item->duration_minutes }} мин.</p>
         @endif
         @if($item->type === 'lesson' && $item->content)
-            <div class="lh-lg">{!! nl2br(e(strip_tags($item->content))) !!}</div>
+            <div class="lh-lg course-rich-content">{!! app(\App\Services\LearningHtml::class)->clean($item->content) !!}</div>
         @elseif($item->type === 'video' && $item->video_url)
             <a href="{{ $item->video_url }}" target="_blank" rel="noopener noreferrer">Смотреть видео <i class="bi bi-box-arrow-up-right"></i></a>
         @elseif($item->type === 'file' && $item->file_path)
@@ -26,6 +26,11 @@
             @else
                 <a href="{{ route('student.tests.show', $item->test) }}" class="btn btn-outline-primary btn-sm">Перейти к проверке знаний</a>
             @endif
+        @elseif(in_array($item->type, ['scorm', 'h5p']))
+            <div class="small text-secondary">
+                Интерактивный пакет {{ strtoupper($item->type) }} добавлен в курс.
+                Запуск и запись результатов пока недоступны.
+            </div>
         @elseif($item->type === 'section')
             <p class="text-secondary small mb-0">Раздел курса</p>
         @else

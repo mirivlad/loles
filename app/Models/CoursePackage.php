@@ -9,10 +9,10 @@ class CoursePackage extends Model
 {
     protected $fillable = [
         'course_id', 'uploaded_by', 'format', 'standard_version', 'title',
-        'original_filename', 'storage_path', 'sha256', 'size_bytes', 'metadata',
+        'original_filename', 'storage_path', 'sha256', 'size_bytes', 'metadata', 'tags',
     ];
 
-    protected $casts = ['metadata' => 'array'];
+    protected $casts = ['metadata' => 'array', 'tags' => 'array'];
 
     public function course(): BelongsTo
     {

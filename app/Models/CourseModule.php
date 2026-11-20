@@ -24,6 +24,7 @@ class CourseModule extends Model
         'video_url',
         'file_path',
         'external_url',
+        'course_package_id',
         'test_id',  // Связь с тестом
     ];
 
@@ -35,6 +36,11 @@ class CourseModule extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function coursePackage(): BelongsTo
+    {
+        return $this->belongsTo(CoursePackage::class, 'course_package_id');
     }
 
     public function parent(): BelongsTo
