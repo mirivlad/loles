@@ -22,7 +22,14 @@
 @else
 {{ $item->course?->title ?? 'Недоступный курс' }}
 @endif</li>@endforeach
-</ul></div></div>
+</ul>
+@if($intake->exams->isNotEmpty())
+<hr><h3 class="h6">Экзамены</h3>
+<ul class="mb-0">@foreach($intake->exams as $exam)
+<li><a href="{{ route('student.exams.show', $exam) }}">{{ $exam->test?->title }}</a> — {{ $exam->kindLabel() }}</li>
+@endforeach</ul>
+@endif
+</div></div>
 @empty<div class="alert alert-info">Вы пока не зачислены ни на одно обучение.</div>@endforelse
 {{ $enrollments->links() }}
 </main></div></div>

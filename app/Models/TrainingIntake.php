@@ -33,6 +33,11 @@ class TrainingIntake extends Model
         return $this->hasMany(TrainingApplication::class);
     }
 
+    public function exams(): HasMany
+    {
+        return $this->hasMany(TrainingExamRule::class);
+    }
+
     public function enrollments(): HasMany
     {
         return $this->hasMany(TrainingEnrollment::class);

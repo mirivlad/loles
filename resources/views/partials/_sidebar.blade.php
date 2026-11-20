@@ -114,6 +114,11 @@
         </a>
     </li>
     <li class="nav-item">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'student.exams') ? 'active' : '' }}" href="{{ route('student.exams.index') }}">
+            <i class="bi bi-check-circle"></i> Экзамены по наборам
+        </a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link {{ Str::startsWith($currentRoute, 'student.schedule') ? 'active' : '' }}" href="{{ route('student.schedule.index') }}">
             <i class="bi bi-calendar3"></i> Расписание
         </a>

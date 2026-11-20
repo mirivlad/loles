@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\TrainingProgramController;
 use App\Http\Controllers\Admin\TrainingIntakeController;
 use App\Http\Controllers\Admin\TrainingApplicationController;
+use App\Http\Controllers\Admin\TrainingExamController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserCredentialsController;
 use App\Http\Controllers\Admin\CourseCategoryController;
@@ -30,6 +31,7 @@ use App\Http\Controllers\Api\CourseSearchController;
 use App\Http\Controllers\Student\CourseController as StudentCourseController;
 use App\Http\Controllers\Student\TrainingController as StudentTrainingController;
 use App\Http\Controllers\Student\TestController as StudentTestController;
+use App\Http\Controllers\Student\ExamController as StudentExamController;
 use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
@@ -74,6 +76,15 @@ Route::middleware('auth')->group(function () {
             Route::delete('programs/{program}/courses/{course}', [TrainingProgramController::class, 'removeCourse'])->name('programs.courses.remove');
             Route::resource('intakes', TrainingIntakeController::class)->except(['destroy']);
             Route::post('intakes/{intake}/groups', [TrainingIntakeController::class, 'addGroup'])->name('intakes.groups.add');
+            Route::get('intakes/{intake}/exams/create', [TrainingExamController::class, 'create'])->name('exams.create');
+            Route::post('intakes/{intake}/exams', [TrainingExamController::class, 'store'])->name('exams.store');
+            Route::get('intakes/{intake}/exams/{exam}', [TrainingExamController::class, 'show'])->name('exams.show');
+            Route::get('intakes/{intake}/exams/{exam}/edit', [TrainingExamController::class, 'edit'])->name('exams.edit');
+            Route::put('intakes/{intake}/exams/{exam}', [TrainingExamController::class, 'update'])->name('exams.update');
+            Route::post('intakes/{intake}/exams/{exam}/toggle', [TrainingExamController::class, 'toggle'])->name('exams.toggle');
+            Route::get('intakes/{intake}/exams/{exam}/attempts/{attempt}', [TrainingExamController::class, 'attempt'])->name('exams.attempts.show');
+            Route::post('intakes/{intake}/exams/{exam}/attempts/{attempt}/void', [TrainingExamController::class, 'void'])->name('exams.attempts.void');
+
             Route::post('intakes/{intake}/archive', [TrainingIntakeController::class, 'archive'])->name('intakes.archive');
             Route::put('intakes/{intake}/enrollments/{enrollment}/group', [TrainingIntakeController::class, 'updateEnrollmentGroup'])->name('intakes.enrollments.group');
             Route::get('intakes/{intake}/applications/create', [TrainingApplicationController::class, 'create'])->name('applications.create');
@@ -154,6 +165,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/courses/{course}', [StudentCourseController::class, 'show'])->name('courses.show');
         Route::get('/courses/{course}/materials/{module}', [StudentCourseController::class, 'material'])
             ->name('courses.material');
+        Route::get('/exams', [StudentExamController::class, 'index'])->name('exams.index');
+        Route::get('/exams/{exam}', [StudentExamController::class, 'show'])->name('exams.show');
+        Route::post('/exams/{exam}/start', [StudentExamController::class, 'start'])
+            ->middleware('throttle:30,1')->name('exams.start');
+        Route::get('/exams/{exam}/attempts/{attempt}', [StudentExamController::class, 'attempt'])->name('exams.attempt.show');
+        Route::post('/exams/{exam}/attempts/{attempt}', [StudentExamController::class, 'submit'])
+            ->middleware('throttle:15,1')->name('exams.attempt.submit');
         Route::get('/tests', [StudentTestController::class, 'index'])->name('tests.index');
         Route::get('/tests/{test}', [StudentTestController::class, 'show'])->name('tests.show');
         Route::get('/schedule', [StudentScheduleController::class, 'index'])->name('schedule.index');

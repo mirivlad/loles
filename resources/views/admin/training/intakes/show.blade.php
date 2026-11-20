@@ -34,6 +34,23 @@
 <div class="col-8"><input class="form-control" name="name" required maxlength="255" placeholder="Название подгруппы"></div>
 <div class="col-4"><button class="btn btn-outline-primary">Добавить</button></div></form>@endif
 </div></div></div></div>
+<div class="card mb-4">
+<div class="card-header d-flex justify-content-between align-items-center">
+<strong>Экзамены набора</strong>
+@if(!in_array($intake->status, ['completed','archived']))
+<a class="btn btn-primary btn-sm" href="{{ route('admin.training.exams.create', $intake) }}">Добавить экзамен</a>
+@endif
+</div>
+<div class="table-responsive"><table class="table table-hover mb-0">
+<thead><tr><th>Тест</th><th>Тип</th><th>Условие сдачи</th><th>Доступ</th></tr></thead>
+<tbody>@forelse($intake->exams as $exam)<tr>
+<td><a href="{{ route('admin.training.exams.show', [$intake, $exam]) }}">{{ $exam->test?->title }}</a>
+<div class="small text-muted">{{ $exam->test?->course?->title }}</div></td>
+<td>{{ $exam->kindLabel() }}{{ $exam->is_required ? ', обязательный' : '' }}</td>
+<td>{{ $exam->pass_mode === 'allowed_errors' ? 'Ошибок не более ' . $exam->allowed_errors : 'Верных не менее ' . $exam->passing_percent . '%' }}</td>
+<td>{{ $exam->is_enabled ? 'Разрешён по расписанию' : 'Отключён' }}</td>
+</tr>@empty<tr><td colspan="4">Правила экзаменов ещё не настроены.</td></tr>@endforelse</tbody></table></div>
+</div>
 <h2 class="h4">Заявки ({{ $intake->applications_count }})</h2>
 <div class="table-responsive"><table class="table table-hover"><thead><tr><th>Заявитель</th><th>Учащихся</th><th>Решение</th><th>Оплата</th></tr></thead><tbody>
 @forelse($applications as $application)<tr><td><a href="{{ route('admin.training.applications.show', [$intake, $application]) }}">{{ $application->organization?->name ?? $application->contact_name }}</a></td><td>{{ $application->students->count() }}</td><td>{{ ['pending'=>'На рассмотрении','approved'=>'Одобрена','rejected'=>'Отклонена'][$application->status] ?? $application->status }}</td><td>{{ ['unpaid'=>'Не оплачена','paid'=>'Оплачена','exempt'=>'Без оплаты'][$application->payment_status] ?? $application->payment_status }}</td></tr>

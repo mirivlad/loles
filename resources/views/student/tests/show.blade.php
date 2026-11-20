@@ -17,33 +17,27 @@
                         <div class="card-body">
                             <div><strong>Курс:</strong> {{ $test->course->title }}</div>
                             <div><strong>Вопросов:</strong> {{ $test->questions->count() }}</div>
-                            @if($test->passing_score)
-                            <div><strong>Проходной балл:</strong> {{ $test->passing_score }}%</div>
-                            @endif
-                            <div><strong>Время:</strong> <span class="text-muted">Не ограничено</span></div>
+                            <div><strong>Условия аттестации:</strong> зависят от набора на обучение.</div>
                         </div>
                     </div>
                     
                     <div class="alert alert-info mt-3">
-                        <i class="bi bi-info-circle"></i> 
-                        <strong>Важно!</strong> Вопросы будут показаны только после начала тестирования. 
-                        У вас будет одна попытка для прохождения теста.
+                        Правила сдачи и число попыток устанавливаются для каждого набора.
+                        Чтобы пройти этот тест, откройте назначенный экзамен.
                     </div>
                 </div>
                 
                 <div class="col-md-4 mb-4">
                     <div class="card shadow-sm">
-                        <div class="card-body text-center">
-                            <button class="btn btn-success btn-lg w-100" onclick="startTest()">
-                                <i class="bi bi-play-circle"></i> Начать тестирование
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="card shadow-sm mt-3">
-                        <div class="card-header"><h6 class="mb-0">Попытки</h6></div>
+                        <div class="card-header"><strong>Назначенные экзамены</strong></div>
                         <div class="card-body">
-                            <p class="text-muted mb-0">Попыток пока не было</p>
+                            @forelse($examRules as $exam)
+                            <a class="btn btn-outline-primary w-100 mb-2" href="{{ route('student.exams.show', $exam) }}">
+                                {{ $exam->kindLabel() }} — {{ $exam->intake?->name }}
+                            </a>
+                            @empty
+                            <p class="text-muted mb-0">Для ваших наборов этот тест пока не назначен.</p>
+                            @endforelse
                         </div>
                     </div>
                 </div>
@@ -52,13 +46,4 @@
     </div>
 </div>
 
-@push('scripts')
-<script>
-function startTest() {
-    if (confirm('Вы готовы начать тестирование? Вопросы будут показаны по одному.')) {
-        alert('Функционал прохождения тестов будет реализован в следующем этапе');
-    }
-}
-</script>
-@endpush
 @endsection

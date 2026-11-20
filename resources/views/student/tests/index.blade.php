@@ -7,6 +7,7 @@
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
             <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2"><i class="bi bi-file-earmark-text"></i> Тесты</h1>
+                <a class="btn btn-primary" href="{{ route('student.exams.index') }}">Мои экзамены</a>
             </div>
             
             @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
@@ -32,7 +33,7 @@
                                     <td><span class="badge bg-info">{{ $test->questions->count() }}</span></td>
                                     <td>
                                         <a href="{{ route('student.tests.show', $test) }}" class="btn btn-primary btn-sm">
-                                            <i class="bi bi-play"></i> Начать
+                                            <i class="bi bi-play"></i> Подробнее
                                         </a>
                                     </td>
                                 </tr>

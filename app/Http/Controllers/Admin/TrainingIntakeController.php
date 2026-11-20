@@ -62,7 +62,7 @@ class TrainingIntakeController extends Controller
     public function show(TrainingIntake $intake)
     {
         Gate::authorize('view', $intake);
-        $intake->load(['program', 'courses.course', 'groups']);
+        $intake->load(['program', 'courses.course', 'groups', 'exams.test.course']);
         $intake->loadCount(['enrollments', 'applications']);
         $applications = $intake->applications()->with(['organization', 'students'])
             ->latest()->paginate(20, ['*'], 'applications_page');

@@ -13,7 +13,7 @@ class TrainingController extends Controller
     {
         $enrollments = TrainingEnrollment::query()
             ->where('user_id', $request->user()->id)
-            ->with(['intake.program', 'intake.courses.course', 'group'])
+            ->with(['intake.program', 'intake.courses.course', 'intake.exams.test', 'group'])
             ->orderByDesc('enrolled_at')
             ->paginate(15);
         return view('student.trainings.index', compact('enrollments'));
