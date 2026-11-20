@@ -2,8 +2,8 @@
 # Portainer stack environment variables or in a local .env file.
 services:
   app:
-    image: ghcr.io/mirivlad/loles:latest
-    pull_policy: always
+    image: ${LOLES_IMAGE:-ghcr.io/mirivlad/loles:latest}
+    pull_policy: ${LOLES_PULL_POLICY:-always}
     restart: unless-stopped
     ports:
       - "${LOLES_PORT:-8088}:80"

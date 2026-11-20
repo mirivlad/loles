@@ -37,26 +37,26 @@ jobs:
             type=ref,event=tag
             type=sha,prefix=sha-
 
-      - name: Build and publish
+      - name: Build image for verification
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
+          load: true
           platforms: linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ghcr.io/mirivlad/loles:ci
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Generate isolated test credentials
-        if: github.ref == 'refs/heads/main'
         run: |
           echo "APP_KEY=base64:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
           echo "DB_PASSWORD=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
           echo "APP_URL=http://127.0.0.1:8088" >> "$GITHUB_ENV"
+          echo "LOLES_IMAGE=ghcr.io/mirivlad/loles:ci" >> "$GITHUB_ENV"
+          echo "LOLES_PULL_POLICY=never" >> "$GITHUB_ENV"
 
       - name: Smoke test a fresh deployment
-        if: github.ref == 'refs/heads/main'
         run: |
           set -euo pipefail
           trap 'docker compose logs --tail=100 app db; docker compose down -v' EXIT
@@ -70,6 +70,20 @@ jobs:
             sleep 5
           done
           test "$healthy" = 1
+          # A PHP warning emitted before the response corrupts redirects and session headers.
+          # Check the CLI with full deprecation reporting, even though web output is disabled.
+          bootstrap_output=$(docker compose exec -T app php -d display_errors=1 -d error_reporting=32767 artisan --version 2>&1)
+          if grep -Eiq "Deprecated|Warning|Fatal error" <<< "$bootstrap_output"; then
+            echo "$bootstrap_output"
+            exit 1
+          fi
+          redirect_status=$(curl -sS -o /tmp/loles-dashboard -w '%{http_code}' http://127.0.0.1:8088/dashboard)
+          test "$redirect_status" = "302"
+          curl -fsS http://127.0.0.1:8088/ -o /tmp/loles-home.html
+          if grep -Eiq 'Deprecated|<b>Warning</b>' /tmp/loles-home.html; then
+            echo "PHP diagnostic leaked into public HTML"
+            exit 1
+          fi
           docker compose exec -T app php artisan migrate:status
           docker compose exec -T app php artisan help loles:create-admin >/dev/null
           docker compose exec -T app php artisan view:cache
@@ -83,3 +97,15 @@ jobs:
           docker compose exec -T app sh -c 'printf persisted > storage/app/public/persistence-test.txt'
           docker compose up -d --force-recreate app
           docker compose exec -T app test -f storage/app/public/persistence-test.txt
+
+      # Push production tags only after installation, redirects and regression tests pass.
+      - name: Publish verified image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

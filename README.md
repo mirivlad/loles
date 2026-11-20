@@ -83,7 +83,7 @@ docker compose exec app php artisan loles:create-admin
 
 ### Обновление: Pull + Redeploy
 
-Каждый push в `main` запускает GitHub Actions и публикацию нового `ghcr.io/mirivlad/loles:latest`. Дождитесь успешной сборки образа.
+Каждый push в `main` запускает GitHub Actions. Образ `ghcr.io/mirivlad/loles:latest` публикуется **только после успешных миграций, проверки HTTP-переадресаций и регрессионных тестов**. Дождитесь успешной сборки образа.
 
 В **Portainer**: откройте **Stacks → loles → Editor / Update stack**, включите **Pull latest image** и выполните **Update / Re-deploy**. Названия пунктов немного зависят от версии Portainer. В стеке, созданном из Git, при необходимости также обновите конфигурацию из репозитория.
 
