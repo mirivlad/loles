@@ -92,7 +92,14 @@
                                            value="1" @checked(old('generate_password', '1') == '1')>
                                     <label for="generatePassword" class="form-check-label">Сгенерировать автоматически</label>
                                 </div>
-                                <p class="small text-secondary">Для учащегося — 8 понятных букв и цифр. Логин и пароль можно скопировать из списка или выгрузить куратору.</p>
+                                <p class="small text-secondary">Для учащегося — 6 понятных букв и цифр. Логин и пароль можно скопировать из списка или выгрузить куратору.</p>
+                                <div class="mb-3" id="generatedLengthField">
+                                    <label for="generatedPasswordLength" class="form-label">Длина выдаваемого пароля</label>
+                                    <select id="generatedPasswordLength" name="generated_password_length" class="form-select">
+                                        <option value="6" @selected(old('generated_password_length', '6') == '6')>6 символов — проще ввести</option>
+                                        <option value="8" @selected(old('generated_password_length') == '8')>8 символов — надёжнее</option>
+                                    </select>
+                                </div>
                                 <div id="manualPasswordFields">
                                     <div class="mb-3">
                                         <label for="newUserPassword" class="form-label">Пароль</label>
@@ -127,6 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const generate = document.getElementById('generatePassword');
     const manual = document.getElementById('manualPasswordFields');
     const inputs = manual.querySelectorAll('input');
+    const lengthField = document.getElementById('generatedLengthField');
+    const lengthControl = document.getElementById('generatedPasswordLength');
     const update = () => {
         const student = role.value === 'Student';
         if (!student) {
@@ -134,6 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         generate.disabled = !student;
         const needsManual = !student || !generate.checked;
+        lengthField.hidden = needsManual;
+        lengthControl.disabled = needsManual;
         manual.hidden = !needsManual;
         inputs.forEach(input => {
             input.disabled = !needsManual;

@@ -94,9 +94,25 @@ class WorkerAccountsTest extends TestCase
         $this->assertTrue($student->hasRole('Student'));
 
         $credential = $student->issuedCredential()->firstOrFail();
-        $this->assertSame(8, strlen($credential->secret));
+        $this->assertSame(6, strlen($credential->secret));
         $this->assertTrue(Hash::check($credential->secret, $student->password));
         $this->assertNotSame($credential->secret, $credential->getRawOriginal('secret'));
+    }
+
+    public function test_manager_can_choose_longer_generated_password(): void
+    {
+        $manager = $this->manager();
+
+        $this->actingAs($manager)->post(route('admin.users.store'), [
+            'name' => 'Учащийся с длинным паролем',
+            'role' => 'Student',
+            'generate_password' => 1,
+            'generated_password_length' => 8,
+            'is_active' => 1,
+        ])->assertRedirect();
+
+        $student = User::where('name', 'Учащийся с длинным паролем')->firstOrFail();
+        $this->assertSame(8, strlen($student->issuedCredential->secret));
     }
 
     public function test_manager_can_set_manual_six_character_password_for_student(): void
@@ -179,7 +195,7 @@ class WorkerAccountsTest extends TestCase
         $this->assertSame(1, Course::where('slug', 'loles-demo-introduction')->count());
 
         $credential = User::where('username', 'demo01')->firstOrFail()->issuedCredential()->firstOrFail();
-        $this->assertSame(8, strlen($credential->secret));
+        $this->assertSame(6, strlen($credential->secret));
         $this->assertNotSame('password', $credential->secret);
 
         $this->artisan('loles:demo-data', ['--force' => true])->assertExitCode(0);

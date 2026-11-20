@@ -10,8 +10,12 @@ class StudentCredentials
     // Avoid confusing 0, 1, I, l, O on printed sheets.
     private const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789';
 
-    public function generate(int $length = 8): string
+    public function generate(int $length = 6): string
     {
+        if ($length < 6 || $length > 12) {
+            throw new \InvalidArgumentException('Generated password length must be between 6 and 12.');
+        }
+
         $password = '';
         $max = strlen(self::ALPHABET) - 1;
 

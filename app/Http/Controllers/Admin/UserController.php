@@ -91,6 +91,7 @@ class UserController extends Controller
             'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')],
             'password' => ['nullable', 'string', 'confirmed'],
             'generate_password' => ['nullable', 'boolean'],
+            'generated_password_length' => ['nullable', Rule::in([6, 8])],
             'phone' => ['nullable', 'string', 'max:20'],
             'organization_id' => ['nullable', 'exists:organizations,id'],
             'role' => ['nullable', Rule::in($this->assignableRoleNames())],
@@ -101,7 +102,9 @@ class UserController extends Controller
             throw ValidationException::withMessages(['role' => 'Автоматическая выдача короткого пароля доступна только учащимся.']);
         }
 
-        $password = $auto ? $credentials->generate() : (string) ($validated['password'] ?? '');
+        $password = $auto
+            ? $credentials->generate((int) ($validated['generated_password_length'] ?? 6))
+            : (string) ($validated['password'] ?? '');
         if (strlen($password) < ($isStudent ? 6 : 12)) {
             throw ValidationException::withMessages(['password' => $isStudent
                 ? 'Минимальная длина пароля учащегося — 6 символов.'
