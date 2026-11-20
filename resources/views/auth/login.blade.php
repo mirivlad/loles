@@ -24,18 +24,18 @@
                     <form action="{{ route('login') }}" method="POST">
                         @csrf
                         <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control @error('email') is-invalid @enderror" 
-                                   id="email" name="email" value="{{ old('email') }}" required autofocus>
-                            @error('email')
+                            <label for="username" class="form-label">Логин</label>
+                            <input type="text" class="form-control @error('username') is-invalid @enderror"
+                                   id="username" name="username" value="{{ old('username') }}" autocomplete="username" required autofocus>
+                            @error('username')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="mb-3">
                             <label for="password" class="form-label">Пароль</label>
-                            <input type="password" class="form-control @error('password') is-invalid @enderror" 
-                                   id="password" name="password" required>
+                            <input type="password" class="form-control @error('password') is-invalid @enderror"
+                                   id="password" name="password" autocomplete="current-password" required>
                             @error('password')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -54,7 +54,7 @@
                     </form>
                 </div>
                 <div class="card-footer text-center">
-                    <small>Нет учетной записи? <a href="{{ route('register') }}">Зарегистрироваться</a></small>
+                    <small>Для получения логина обратитесь к менеджеру учебного центра.</small>
                 </div>
             </div>
         </div>

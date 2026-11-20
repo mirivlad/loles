@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Admin\OrganizationController;
 use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UserCredentialsController;
 use App\Http\Controllers\Admin\CourseCategoryController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\CourseModuleController;
@@ -37,9 +38,11 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // Маршруты аутентификации
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('login', [LoginController::class, 'login']);
-    Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-    Route::post('register', [RegisterController::class, 'register']);
+    Route::post('login', [LoginController::class, 'login'])->middleware('throttle:15,1');
+    if (config('loles.public_registration')) {
+        Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+        Route::post('register', [RegisterController::class, 'register'])->middleware('throttle:5,1');
+    }
 });
 
 // Маршруты для авторизованных пользователей
@@ -61,6 +64,12 @@ Route::middleware('auth')->group(function () {
         Route::resource('course-requests', CourseRequestController::class);
         Route::post('/course-requests/{courseRequest}/approve', [CourseRequestController::class, 'approve'])->name('course-requests.approve');
         Route::post('/course-requests/{courseRequest}/reject', [CourseRequestController::class, 'reject'])->name('course-requests.reject');
+        Route::post('/users/credentials/reveal', [UserCredentialsController::class, 'reveal'])
+            ->middleware('throttle:30,1')->name('users.credentials.reveal');
+        Route::post('/users/credentials/export', [UserCredentialsController::class, 'export'])
+            ->middleware('throttle:10,1')->name('users.credentials.export');
+        Route::post('/users/{user}/credentials/rotate', [UserCredentialsController::class, 'rotate'])
+            ->middleware('throttle:10,1')->name('users.credentials.rotate');
         Route::resource('users', UserController::class);
         Route::resource('course-categories', CourseCategoryController::class);
         Route::resource('courses', CourseController::class);

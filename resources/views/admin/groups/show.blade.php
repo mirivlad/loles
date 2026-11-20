@@ -7,7 +7,20 @@
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
             <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">{{ $group->name }}</h1>
-                <div>
+                <div class="d-flex flex-wrap gap-2">
+                    @if(auth()->user()->hasRole(['Administrator', 'Manager']))
+                        <a href="{{ route('admin.users.index', ['group_id' => $group->id]) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-people"></i> Состав группы
+                        </a>
+                        <form method="POST" action="{{ route('admin.users.credentials.export') }}"
+                              onsubmit="return confirm('Скачать ведомость с действующими паролями учащихся?')">
+                            @csrf
+                            <input type="hidden" name="group_id" value="{{ $group->id }}">
+                            <button type="submit" class="btn btn-outline-success btn-sm">
+                                <i class="bi bi-download"></i> Ведомость с логинами
+                            </button>
+                        </form>
+                    @endif
                     <button class="btn btn-warning btn-sm me-2" data-bs-toggle="modal" data-bs-target="#editGroupModal">
                         <i class="bi bi-pencil"></i> Редактировать
                     </button>
@@ -57,7 +70,7 @@
                                 <ul class="list-group list-group-flush" id="users-ul">
                                     @foreach($group->users as $user)
                                     <li class="list-group-item d-flex justify-content-between align-items-center" id="user-li-{{ $user->id }}">
-                                        <a href="{{ route('admin.users.show', $user) }}">{{ $user->name }} <small class="text-muted">({{ $user->email }})</small></a>
+                                        <a href="{{ route('admin.users.show', $user) }}">{{ $user->name }} <small class="text-muted">({{ $user->username }})</small></a>
                                         <button onclick="removeUser({{ $user->id }})" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button>
                                     </li>
                                     @endforeach

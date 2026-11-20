@@ -18,6 +18,7 @@ class User extends Authenticatable
     protected $fillable = [
         'organization_id',
         'name',
+        'username',
         'email',
         'email_verified_at',
         'password',
@@ -36,6 +37,11 @@ class User extends Authenticatable
         'is_active' => 'boolean',
         'password' => 'hashed',
     ];
+
+    public function issuedCredential(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserCredential::class);
+    }
 
     public function organization(): BelongsTo
     {

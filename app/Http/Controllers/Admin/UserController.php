@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use App\Services\StudentCredentials;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -26,7 +30,7 @@ class UserController extends Controller
         $search = trim(mb_substr((string) $request->query('search', ''), 0, 150));
         $status = (string) $request->query('status', '');
 
-        $query = User::query()->with(['organization', 'roles']);
+        $query = User::query()->with(['organization', 'roles'])->withExists('issuedCredential');
 
         if ($request->filled('organization_id')) {
             $query->where('organization_id', $request->query('organization_id'));
@@ -35,10 +39,14 @@ class UserController extends Controller
         if ($request->filled('role')) {
             $query->role((string) $request->query('role'));
         }
+        if ($request->filled('group_id')) {
+            $query->whereHas('groups', fn ($q) => $q->where('groups.id', $request->integer('group_id')));
+        }
 
         if ($search !== '') {
             $query->where(function ($inner) use ($search) {
                 $inner->where('name', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('phone', 'like', "%{$search}%");
             });
@@ -51,12 +59,13 @@ class UserController extends Controller
         $users = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
         $organizations = Organization::orderBy('name')->pluck('name', 'id');
         $roles = Role::orderBy('name')->pluck('name', 'name');
+        $groups = Group::orderBy('name')->pluck('name', 'id');
         $totalUsers = User::count();
         $activeUsers = User::where('is_active', true)->count();
         $unassignedUsers = User::whereNull('organization_id')->count();
 
         return view('admin.users.index',
-            compact('users', 'organizations', 'roles', 'totalUsers', 'activeUsers', 'unassignedUsers'));
+            compact('users', 'organizations', 'groups', 'roles', 'totalUsers', 'activeUsers', 'unassignedUsers'));
     }
 
     public function create(Request $request)
@@ -69,33 +78,64 @@ class UserController extends Controller
         return view('admin.users.create', compact('roles', 'initialOrganization'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, StudentCredentials $credentials)
     {
         Gate::authorize('create', User::class);
-        
+
+        $role = (string) $request->input('role', 'Student');
+        $isStudent = $role === 'Student';
+        $auto = $request->boolean('generate_password');
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'phone' => 'nullable|string|max:20',
-            'organization_id' => 'nullable|exists:organizations,id',
-            'role' => ['required', Rule::in($this->assignableRoleNames())],
-            'is_active' => 'boolean',
+            'name' => ['required', 'string', 'max:255'],
+            'username' => ['nullable', 'string', 'min:3', 'max:64', 'regex:/^[a-z0-9._-]+$/i', Rule::unique('users', 'username')],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')],
+            'password' => ['nullable', 'string', 'confirmed'],
+            'generate_password' => ['nullable', 'boolean'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'organization_id' => ['nullable', 'exists:organizations,id'],
+            'role' => ['nullable', Rule::in($this->assignableRoleNames())],
+            'is_active' => ['nullable', 'boolean'],
         ]);
-        
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'phone' => $validated['phone'] ?? null,
-            'organization_id' => $validated['organization_id'] ?? null,
-            'is_active' => $request->boolean('is_active'),
-        ]);
-        
-        $user->assignRole($validated['role']);
-        
-        return redirect()->route('admin.users.index')
-            ->with('success', 'Пользователь успешно создан.');
+
+        if ($auto && !$isStudent) {
+            throw ValidationException::withMessages(['role' => 'Автоматическая выдача короткого пароля доступна только учащимся.']);
+        }
+
+        $password = $auto ? $credentials->generate() : (string) ($validated['password'] ?? '');
+        if (strlen($password) < ($isStudent ? 6 : 12)) {
+            throw ValidationException::withMessages(['password' => $isStudent
+                ? 'Минимальная длина пароля учащегося — 6 символов.'
+                : 'Пароль сотрудника должен содержать не менее 12 символов.']);
+        }
+
+        $username = strtolower(trim((string) ($validated['username'] ?? '')));
+        $user = DB::transaction(function () use ($request, $validated, $role, $username, $password, $isStudent, $credentials) {
+            $user = User::create([
+                'name' => $validated['name'],
+                'username' => $username ?: 'new_' . Str::lower(Str::random(24)),
+                'email' => $validated['email'] ?? null,
+                'password' => $password,
+                'phone' => $validated['phone'] ?? null,
+                'organization_id' => $validated['organization_id'] ?? null,
+                'is_active' => $request->boolean('is_active', true),
+            ]);
+            if ($username === '') {
+                $candidate = 's' . str_pad((string) $user->id, 5, '0', STR_PAD_LEFT);
+                if (User::where('username', $candidate)->where('id', '!=', $user->id)->exists()) {
+                    $candidate = 'u_' . $user->id;
+                }
+                $user->update(['username' => $candidate]);
+            }
+            $user->assignRole($role);
+            if ($isStudent) {
+                $credentials->issue($user, $password, $request->user());
+            }
+
+            return $user;
+        });
+
+        return redirect()->route('admin.users.index', ['search' => $user->username])
+            ->with('success', 'Учащийся создан. Логин и пароль доступны через кнопку «Показать пароли».');
     }
 
     public function show(User $user)
@@ -127,46 +167,63 @@ class UserController extends Controller
         return view('admin.users.edit', compact('user', 'roles', 'userGroups', 'allGroups'));
     }
 
-    public function update(Request $request, User $user)
+    public function update(Request $request, User $user, StudentCredentials $credentials)
     {
         Gate::authorize('update', $user);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:8|confirmed',
-            'phone' => 'nullable|string|max:20',
-            'organization_id' => 'nullable|exists:organizations,id',
+            'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'min:3', 'max:64', 'regex:/^[a-z0-9._-]+$/i',
+                Rule::unique('users', 'username')->ignore($user->id)],
+            'email' => ['nullable', 'email', 'max:255',
+                Rule::unique('users', 'email')->ignore($user->id)],
+            'password' => ['nullable', 'string', 'confirmed'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'organization_id' => ['nullable', 'exists:organizations,id'],
             'role' => ['required', Rule::in($this->assignableRoleNames())],
-            'groups' => 'nullable|string',
-            'is_active' => 'boolean',
+            'groups' => ['nullable', 'string'],
+            'is_active' => ['nullable', 'boolean'],
         ]);
 
-        $user->update([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'] ?? null,
-            'organization_id' => $validated['organization_id'] ?? null,
-            'is_active' => $request->boolean('is_active'),
-        ]);
-
-        // Обновление пароля
-        if (!empty($validated['password'])) {
-            $user->password = Hash::make($validated['password']);
-            $user->save();
+        if (!empty($validated['password']) && strlen($validated['password']) < ($validated['role'] === 'Student' ? 6 : 12)) {
+            throw ValidationException::withMessages(['password' => 'Минимум 6 символов для учащихся, 12 — для сотрудников.']);
         }
 
-        // Обновление роли
-        $user->syncRoles([$validated['role']]);
+        DB::transaction(function () use ($user, $request, $validated, $credentials) {
+            $user->update([
+                'name' => $validated['name'],
+                'username' => strtolower($validated['username']),
+                'email' => $validated['email'] ?? null,
+                'phone' => $validated['phone'] ?? null,
+                'organization_id' => $validated['organization_id'] ?? null,
+                'is_active' => $request->boolean('is_active'),
+            ]);
+            $user->syncRoles([$validated['role']]);
 
-        // Обновление групп (строка "1,2,3" → массив)
-        if (!empty(trim($validated['groups'] ?? ''))) {
-            $groupIds = array_map('intval', array_filter(explode(',', $validated['groups'])));
-            $user->groups()->sync($groupIds);
-        } else {
-            // Если поле пустое - не трогаем группы (или можно сделать sync([]) для очистки)
-            // $user->groups()->detach();
-        }
+            if (!empty($validated['password'])) {
+                $user->update([
+                    'password' => $validated['password'],
+                    'remember_token' => Str::random(60),
+                ]);
+                if ($validated['role'] === 'Student') {
+                    $credentials->issue($user, $validated['password'], $request->user());
+                }
+            }
+            if ($validated['role'] !== 'Student') {
+                $credentials->clear($user);
+            }
+
+            if (isset($validated['groups'])) {
+                $groupIds = array_unique(array_map('intval', array_filter(explode(',', $validated['groups']))));
+                $allowed = Group::whereIn('id', $groupIds)
+                    ->where(fn ($q) => $q->whereNull('organization_id')->orWhere('organization_id', $user->organization_id))
+                    ->pluck('id')->all();
+                if (count($allowed) !== count($groupIds)) {
+                    throw ValidationException::withMessages(['groups' => 'Одна из групп не принадлежит выбранному предприятию.']);
+                }
+                $user->groups()->sync($allowed);
+            }
+        });
 
         return redirect()->route('admin.users.show', $user)
             ->with('success', 'Пользователь успешно обновлён.');

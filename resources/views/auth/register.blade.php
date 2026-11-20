@@ -33,9 +33,15 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
+                            <label for="username" class="form-label">Логин *</label>
+                            <input type="text" id="username" name="username" class="form-control"
+                                value="{{ old('username') }}" pattern="[a-zA-Z0-9._-]{3,64}" autocomplete="off" required>
+                            @error('username')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email (необязательно)</label>
                             <input type="email" class="form-control @error('email') is-invalid @enderror" 
-                                   id="email" name="email" value="{{ old('email') }}" required>
+                                   id="email" name="email" value="{{ old('email') }}" autocomplete="off">
                             @error('email')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -53,7 +59,7 @@
                         <div class="mb-3">
                             <label for="password" class="form-label">Пароль</label>
                             <input type="password" class="form-control @error('password') is-invalid @enderror" 
-                                   id="password" name="password" required>
+                                   id="password" name="password" minlength="6" autocomplete="new-password" required>
                             @error('password')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -62,7 +68,7 @@
                         <div class="mb-3">
                             <label for="password_confirmation" class="form-label">Подтверждение пароля</label>
                             <input type="password" class="form-control" 
-                                   id="password_confirmation" name="password_confirmation" required>
+                                   id="password_confirmation" name="password_confirmation" minlength="6" autocomplete="new-password" required>
                         </div>
 
                         <div class="d-grid">

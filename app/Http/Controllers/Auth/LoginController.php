@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 
 class LoginController extends Controller
 {
@@ -17,26 +17,32 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
+        $data = $request->validate([
+            'username' => ['required', 'string', 'max:64'],
+            'password' => ['required', 'string'],
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        $username = mb_strtolower(trim($data['username']));
+        $key = 'loles-login:' . hash('sha256', $username . '|' . $request->ip());
+
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            return back()->withErrors([
+                'username' => 'Слишком много попыток входа. Повторите через минуту.',
+            ])->onlyInput('username');
+        }
+
+        if (Auth::attempt(['username' => $username, 'password' => $data['password'], 'is_active' => true], $request->boolean('remember'))) {
+            RateLimiter::clear($key);
             $request->session()->regenerate();
-            
-            $user = Auth::user();
-            if (!$user->is_active) {
-                Auth::logout();
-                return back()->withErrors(['email' => 'Ваша учетная запись деактивирована.']);
-            }
 
             return redirect()->intended('/dashboard');
         }
 
+        RateLimiter::hit($key, 60);
+
         return back()->withErrors([
-            'email' => 'Неверный email или пароль.',
-        ])->onlyInput('email');
+            'username' => 'Неверный логин или пароль.',
+        ])->onlyInput('username');
     }
 
     public function logout(Request $request)

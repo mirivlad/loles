@@ -18,7 +18,8 @@
                         <div class="card-header bg-primary text-white"><h5 class="mb-0">Информация</h5></div>
                         <div class="card-body">
                             <table class="table table-sm">
-                                <tr><th>Email:</th><td>{{ $user->email }}</td></tr>
+                                <tr><th>Логин:</th><td><code>{{ $user->username }}</code></td></tr>
+                                <tr><th>Email:</th><td>{{ $user->email ?: 'Не указан' }}</td></tr>
                                 <tr><th>Телефон:</th><td>{{ $user->phone ?? '—' }}</td></tr>
                                 <tr><th>Организация:</th><td>{{ $user->organization?->name ?? '—' }}</td></tr>
                                 <tr><th>Роль:</th><td><span class="badge bg-info">{{ $user->getRoleNames()->first() }}</span></td></tr>

@@ -1,0 +1,182 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Course;
+use App\Models\Group;
+use App\Models\Organization;
+use App\Models\User;
+use App\Models\UserCredential;
+use Database\Seeders\RoleSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Tests\TestCase;
+
+class WorkerAccountsTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(RoleSeeder::class);
+    }
+
+    private function manager(): User
+    {
+        $manager = User::factory()->create();
+        $manager->assignRole('Manager');
+        return $manager;
+    }
+
+    private function student(string $username = 'worker01', string $password = 'abc123'): User
+    {
+        $student = User::factory()->create([
+            'name' => 'Тестовый учащийся',
+            'username' => $username,
+            'email' => null,
+            'password' => $password,
+            'is_active' => true,
+        ]);
+        $student->assignRole('Student');
+        return $student;
+    }
+
+    public function test_student_can_log_in_without_email_using_username_and_six_character_password(): void
+    {
+        $student = $this->student();
+
+        $this->post('/login', [
+            'username' => 'worker01',
+            'password' => 'abc123',
+        ])->assertRedirect('/dashboard');
+
+        $this->assertAuthenticatedAs($student);
+    }
+
+    public function test_email_is_not_an_authentication_field(): void
+    {
+        $student = $this->student();
+
+        $this->post('/login', [
+            'email' => 'worker@example.test',
+            'password' => 'abc123',
+        ])->assertSessionHasErrors('username');
+
+        $this->assertGuest();
+    }
+
+    public function test_self_registration_is_disabled_by_default(): void
+    {
+        $this->get('/register')->assertNotFound();
+        $this->post('/register', [
+            'name' => 'Тест',
+            'username' => 'anyone',
+            'password' => 'abcdef',
+            'password_confirmation' => 'abcdef',
+        ])->assertNotFound();
+    }
+
+    public function test_manager_creates_student_with_generated_login_and_password_without_email(): void
+    {
+        $manager = $this->manager();
+        $response = $this->actingAs($manager)->post(route('admin.users.store'), [
+            'name' => 'Александр Рабочий',
+            'role' => 'Student',
+            'generate_password' => 1,
+            'is_active' => 1,
+        ]);
+        $response->assertRedirect();
+
+        $student = User::where('name', 'Александр Рабочий')->firstOrFail();
+        $this->assertNull($student->email);
+        $this->assertMatchesRegularExpression('/^s\d{5,}$/', $student->username);
+        $this->assertTrue($student->hasRole('Student'));
+
+        $credential = $student->issuedCredential()->firstOrFail();
+        $this->assertSame(8, strlen($credential->secret));
+        $this->assertTrue(Hash::check($credential->secret, $student->password));
+        $this->assertNotSame($credential->secret, $credential->getRawOriginal('secret'));
+    }
+
+    public function test_manager_can_set_manual_six_character_password_for_student(): void
+    {
+        $manager = $this->manager();
+        $this->actingAs($manager)->post(route('admin.users.store'), [
+            'name' => 'Борис Монтажник',
+            'username' => 'montazh07',
+            'role' => 'Student',
+            'password' => 'abc123',
+            'password_confirmation' => 'abc123',
+            'generate_password' => 0,
+            'is_active' => 1,
+        ])->assertRedirect();
+
+        $student = User::where('username', 'montazh07')->firstOrFail();
+        $this->assertTrue(Hash::check('abc123', $student->password));
+        $this->assertSame('abc123', $student->issuedCredential->secret);
+    }
+
+    public function test_manager_cannot_issue_short_password_for_staff_account(): void
+    {
+        $manager = $this->manager();
+        $this->actingAs($manager)->post(route('admin.users.store'), [
+            'name' => 'Тест Куратор',
+            'username' => 'curator07',
+            'role' => 'Curator',
+            'password' => 'abc123',
+            'password_confirmation' => 'abc123',
+            'generate_password' => 0,
+        ])->assertSessionHasErrors('password');
+    }
+
+    public function test_only_manager_or_admin_can_reveal_student_passwords(): void
+    {
+        $manager = $this->manager();
+        $student = $this->student();
+        app(\App\Services\StudentCredentials::class)->issue($student, 'abc123', $manager);
+
+        $this->actingAs($manager)->postJson(route('admin.users.credentials.reveal'), [
+            'user_ids' => [$student->id],
+        ])->assertOk()->assertJsonPath('credentials.0.password', 'abc123');
+
+        $this->actingAs($student)->postJson(route('admin.users.credentials.reveal'), [
+            'user_ids' => [$student->id],
+        ])->assertForbidden();
+    }
+
+    public function test_manager_can_export_group_credentials_as_csv(): void
+    {
+        $manager = $this->manager();
+        $student = $this->student();
+        $group = Group::create(['name' => 'Вахта 2', 'is_active' => true]);
+        $student->groups()->attach($group);
+        app(\App\Services\StudentCredentials::class)->issue($student, 'abc123', $manager);
+
+        $response = $this->actingAs($manager)->post(route('admin.users.credentials.export'), [
+            'group_id' => $group->id,
+        ]);
+        $response->assertOk();
+        $this->assertStringContainsString('worker01', $response->streamedContent());
+        $this->assertStringContainsString('abc123', $response->streamedContent());
+
+        $this->actingAs($student)->post(route('admin.users.credentials.export'), [
+            'group_id' => $group->id,
+        ])->assertForbidden();
+    }
+
+    public function test_demo_data_command_is_idempotent_and_credentials_are_not_fixed(): void
+    {
+        $this->artisan('loles:demo-data', ['--force' => true])->assertExitCode(0);
+        $this->assertSame(6, User::where('username', 'like', 'demo%')->count());
+        $this->assertSame(2, Organization::where('name', 'like', 'ДЕМО%')->count());
+        $this->assertSame(1, Course::where('slug', 'loles-demo-introduction')->count());
+
+        $credential = User::where('username', 'demo01')->firstOrFail()->issuedCredential()->firstOrFail();
+        $this->assertSame(8, strlen($credential->secret));
+        $this->assertNotSame('password', $credential->secret);
+
+        $this->artisan('loles:demo-data', ['--force' => true])->assertExitCode(0);
+        $this->assertSame(6, User::where('username', 'like', 'demo%')->count());
+    }
+}

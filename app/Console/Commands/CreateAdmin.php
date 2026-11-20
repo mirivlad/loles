@@ -20,11 +20,15 @@ class CreateAdmin extends Command
         }
 
         $name = trim((string) $this->ask('Administrator name'));
-        $email = trim((string) $this->ask('Administrator email'));
+        $username = strtolower(trim((string) $this->ask('Administrator login (3-64 lowercase Latin characters, digits, ._- )')));
+        $email = trim((string) $this->ask('Administrator email (optional)'));
 
-        $validator = Validator::make(['name' => $name, 'email' => $email], [
+        $validator = Validator::make([
+            'name' => $name, 'username' => $username, 'email' => $email ?: null,
+        ], [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'username' => ['required', 'string', 'min:3', 'max:64', 'regex:/^[a-z0-9._-]+$/', 'unique:users,username'],
+            'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
         ]);
 
         if ($validator->fails()) {
@@ -44,14 +48,15 @@ class CreateAdmin extends Command
 
         $user = User::create([
             'name' => $name,
-            'email' => $email,
+            'username' => $username,
+            'email' => $email ?: null,
             'password' => Hash::make($password),
             'email_verified_at' => now(),
             'is_active' => true,
         ]);
         $user->assignRole('Administrator');
 
-        $this->info("Administrator created: {$email}");
+        $this->info("Administrator created: {$username}");
         return self::SUCCESS;
     }
 }

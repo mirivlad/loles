@@ -99,7 +99,7 @@
                                 <i class="bi bi-person-circle"></i> {{ Auth::user()->name }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><span class="dropdown-item-text text-muted small">{{ Auth::user()->email }}</span></li>
+                                <li><span class="dropdown-item-text text-muted small">{{ Auth::user()->username }}</span></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST">
@@ -136,12 +136,12 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" required>
+                            <label class="form-label">Логин</label>
+                            <input type="text" name="username" class="form-control" autocomplete="username" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Пароль</label>
-                            <input type="password" name="password" class="form-control" required>
+                            <input type="password" name="password" class="form-control" autocomplete="current-password" required>
                         </div>
                         <div class="mb-3 form-check">
                             <input type="checkbox" name="remember" class="form-check-input" id="remember">

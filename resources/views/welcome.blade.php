@@ -220,9 +220,11 @@
                             <button class="btn btn-light-hero btn-hero" data-bs-toggle="modal" data-bs-target="#loginModal">
                                 <i class="bi bi-box-arrow-in-right"></i> Войти
                             </button>
-                            <a href="{{ route('register') }}" class="btn btn-outline-light-hero btn-hero">
-                                <i class="bi bi-person-plus"></i> Регистрация
-                            </a>
+                            @if(config('loles.public_registration'))
+                                <a href="{{ route('register') }}" class="btn btn-outline-light-hero btn-hero">
+                                    <i class="bi bi-person-plus"></i> Регистрация
+                                </a>
+                            @endif
                         @endauth
                     </div>
                 </div>
@@ -327,10 +329,10 @@
     <section class="cta-section">
         <div class="container">
             <h2>Готовы начать обучение?</h2>
-            <p>Присоединяйтесь к нашей платформе уже сегодня</p>
+            <p>Для доступа к обучению получите логин и пароль у менеджера</p>
             @guest
-                <a href="{{ route('register') }}" class="btn btn-light btn-lg px-5">
-                    <i class="bi bi-person-plus"></i> Зарегистрироваться
+                <a href="{{ config('loles.public_registration') ? route('register') : route('login') }}" class="btn btn-light btn-lg px-5">
+                    <i class="bi bi-box-arrow-in-right"></i> {{ config('loles.public_registration') ? 'Зарегистрироваться' : 'Войти в систему' }}
                 </a>
             @else
                 <a href="{{ route('dashboard') }}" class="btn btn-light btn-lg px-5">
@@ -375,12 +377,12 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" required>
+                            <label class="form-label">Логин</label>
+                            <input type="text" name="username" class="form-control" autocomplete="username" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Пароль</label>
-                            <input type="password" name="password" class="form-control" required>
+                            <input type="password" name="password" class="form-control" autocomplete="current-password" required>
                         </div>
                         <div class="mb-3 form-check">
                             <input type="checkbox" name="remember" class="form-check-input" id="remember">

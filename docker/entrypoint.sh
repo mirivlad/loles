@@ -35,6 +35,11 @@ done
 su -s /bin/sh www-data -c 'php artisan migrate --force --no-interaction'
 su -s /bin/sh www-data -c 'php artisan db:seed --class=RoleSeeder --force --no-interaction'
 
+# Demo data is explicitly opt-in. Never install fixed-password demo accounts.
+if [ "${LOLES_DEMO_DATA:-false}" = "true" ]; then
+    su -s /bin/sh www-data -c 'php artisan loles:demo-data --force --no-interaction'
+fi
+
 if [ ! -e public/storage ] && [ ! -L public/storage ]; then
     php artisan storage:link --no-interaction
 fi

@@ -35,7 +35,7 @@ class UserPolicy
      */
     public function update(User $user, User $model): bool
     {
-        if ($model->hasRole('Administrator') && !$user->hasRole('Administrator')) {
+        if ($model->hasRole(['Administrator', 'Manager']) && !$user->hasRole('Administrator')) {
             return false;
         }
 

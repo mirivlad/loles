@@ -9,7 +9,7 @@
                 <h1 class="h2">Редактировать: {{ $user->name }}</h1>
                 <a href="{{ route('admin.users.show', $user) }}" class="btn btn-secondary btn-sm">Назад</a>
             </div>
-            <form action="{{ route('admin.users.update', $user) }}" method="POST">
+            <form action="{{ route('admin.users.update', $user) }}" method="POST" autocomplete="off">
                 @csrf @method('PUT')
                 <div class="row">
                     <div class="col-md-6">
@@ -22,19 +22,27 @@
                                     @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Email *</label>
-                                    <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $user->email) }}" required>
+                                    <label class="form-label" for="editUsername">Логин *</label>
+                                    <input id="editUsername" type="text" name="username"
+                                           class="form-control @error('username') is-invalid @enderror"
+                                           value="{{ old('username', $user->username) }}"
+                                           autocomplete="off" autocapitalize="none" pattern="[a-zA-Z0-9._-]{3,64}" required>
+                                    @error('username')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Email (необязательно)</label>
+                                    <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $user->email) }}" autocomplete="off">
                                     @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Новый пароль</label>
-                                    <input type="password" name="password" class="form-control @error('password') is-invalid @enderror">
-                                    <small class="text-muted">Оставьте пустым чтобы не менять</small>
+                                    <input type="password" name="password" autocomplete="new-password" class="form-control @error('password') is-invalid @enderror">
+                                    <small class="text-muted">Если не меняете пароль — оставьте пустым. Для учащихся минимум 6 символов.</small>
                                     @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Подтверждение</label>
-                                    <input type="password" name="password_confirmation" class="form-control">
+                                    <input type="password" name="password_confirmation" autocomplete="new-password" class="form-control">
                                 </div>
                             </div>
                         </div>
