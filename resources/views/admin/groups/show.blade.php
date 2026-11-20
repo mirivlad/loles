@@ -12,14 +12,7 @@
                         <a href="{{ route('admin.users.index', ['group_id' => $group->id]) }}" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-people"></i> Состав группы
                         </a>
-                        <form method="POST" action="{{ route('admin.users.credentials.export') }}"
-                              onsubmit="return confirm('Скачать ведомость с действующими паролями учащихся?')">
-                            @csrf
-                            <input type="hidden" name="group_id" value="{{ $group->id }}">
-                            <button type="submit" class="btn btn-outline-success btn-sm">
-                                <i class="bi bi-download"></i> Ведомость с логинами
-                            </button>
-                        </form>
+                        <x-credentials-export :group-id="$group->id" />
                     @endif
                     <button class="btn btn-warning btn-sm me-2" data-bs-toggle="modal" data-bs-target="#editGroupModal">
                         <i class="bi bi-pencil"></i> Редактировать

@@ -91,16 +91,12 @@
                         <i class="bi bi-eye"></i> Показать пароли на этой странице
                     </button>
                     @if(request()->filled('organization_id') || request()->filled('group_id'))
-                        <form method="POST" action="{{ route('admin.users.credentials.export') }}" autocomplete="off"
-                              onsubmit="return confirm('Ведомость содержит действующие пароли. Передавайте только доверенному куратору.')">
-                            @csrf
-                            <input type="hidden" name="organization_id" value="{{ request('organization_id') }}">
-                            <input type="hidden" name="group_id" value="{{ request('group_id') }}">
-                            <input type="hidden" name="search" value="{{ request('search') }}">
-                            <button class="btn btn-outline-success btn-sm"><i class="bi bi-download"></i> Скачать ведомость CSV</button>
-                        </form>
+                        <x-credentials-export
+                            :organization-id="request('organization_id')"
+                            :group-id="request('group_id')"
+                            :search="request('search')" />
                     @else
-                        <span class="text-secondary small">Для CSV выберите предприятие или учебную группу.</span>
+                        <span class="text-secondary small">Для скачивания ведомости выберите предприятие или учебную группу.</span>
                     @endif
                 </div>
             @endif

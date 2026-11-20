@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\StudentCredentials;
+use App\Services\StudentCredentialsExporter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class UserCredentialsController extends Controller
 {
@@ -44,7 +46,7 @@ class UserCredentialsController extends Controller
             ->header('Pragma', 'no-cache');
     }
 
-    public function export(Request $request)
+    public function export(Request $request, StudentCredentialsExporter $exporter)
     {
         $this->authorizeStaff();
 
@@ -52,6 +54,7 @@ class UserCredentialsController extends Controller
             'organization_id' => ['nullable', 'integer', 'exists:organizations,id'],
             'group_id' => ['nullable', 'integer', 'exists:groups,id'],
             'search' => ['nullable', 'string', 'max:150'],
+            'format' => ['nullable', Rule::in(['csv', 'xlsx', 'docx'])],
         ]);
         abort_unless($request->filled('organization_id') || $request->filled('group_id'),
             422, 'Для экспорта выберите предприятие или группу.');
@@ -76,33 +79,55 @@ class UserCredentialsController extends Controller
         Log::notice('Student credentials exported', [
             'actor_id' => $request->user()->id,
             'count' => $students->count(),
+            'format' => $validated['format'] ?? 'csv',
             'organization_id' => $request->input('organization_id'),
             'group_id' => $request->input('group_id'),
         ]);
 
-        return response()->streamDownload(function () use ($students) {
+        $format = $validated['format'] ?? 'csv';
+        $filename = 'loles-students-' . now()->format('Ymd-His') . '.' . $format;
+        $sharedHeaders = [
+            'Cache-Control' => 'private, no-store, max-age=0',
+            'Pragma' => 'no-cache',
+            'X-Content-Type-Options' => 'nosniff',
+        ];
+
+        if ($format !== 'csv') {
+            // One temporary file per request, removed after delivery.
+            $path = tempnam(sys_get_temp_dir(), 'loles-export-');
+            abort_if($path === false, 500, 'Не удалось создать файл ведомости.');
+            try {
+                if ($format === 'xlsx') {
+                    $exporter->writeXlsx($students, $path);
+                } else {
+                    $exporter->writeDocx($students, $path);
+                }
+            } catch (\Throwable $exception) {
+                @unlink($path);
+                throw $exception;
+            }
+
+            return response()->download($path, $filename, array_merge($sharedHeaders, [
+                'Content-Type' => $format === 'xlsx'
+                    ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ]))->deleteFileAfterSend(true);
+        }
+
+        return response()->streamDownload(function () use ($students, $exporter) {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF"); // Excel-compatible UTF-8 BOM
-            fputcsv($out, ['ФИО', 'Логин', 'Пароль', 'Предприятие', 'Группы'], ';', '"', '');
-            foreach ($students as $student) {
-                $cells = [
-                    $student->name, $student->username,
-                    $student->issuedCredential?->secret ?? '(не сохранён)',
-                    $student->organization?->name ?? '',
-                    $student->groups->pluck('name')->implode(', '),
-                ];
+            fputcsv($out, StudentCredentialsExporter::HEADERS, ';', '"', '');
+            foreach ($exporter->rows($students) as $cells) {
                 // Prevent spreadsheet cells from being interpreted as formulas.
                 $cells = array_map(fn ($value) =>
                     preg_match('/^[=+@\-\t\r]/u', (string) $value) ? "'" . $value : $value, $cells);
                 fputcsv($out, $cells, ';', '"', '');
             }
             fclose($out);
-        }, 'loles-students-' . now()->format('Ymd-His') . '.csv', [
+        }, $filename, array_merge($sharedHeaders, [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Cache-Control' => 'private, no-store, max-age=0',
-            'Pragma' => 'no-cache',
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
+        ]));
     }
 
     public function rotate(Request $request, User $user, StudentCredentials $credentials)

@@ -209,6 +209,76 @@ class WorkerAccountsTest extends TestCase
         ])->assertForbidden();
     }
 
+    public function test_manager_can_download_xlsx_credentials_as_text_cells(): void
+    {
+        $manager = $this->manager();
+        $organization = Organization::create(['name' => 'Организация для Excel']);
+        $student = $this->student('workerxlsx', 'abc123');
+        $student->update(['organization_id' => $organization->id]);
+        app(\App\Services\StudentCredentials::class)->issue($student, 'abc123', $manager);
+
+        $response = $this->actingAs($manager)->post(route('admin.users.credentials.export'), [
+            'organization_id' => $organization->id,
+            'format' => 'xlsx',
+        ]);
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $file = $response->baseResponse->getFile()->getPathname();
+        try {
+            $book = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
+            $sheet = $book->getActiveSheet();
+            $this->assertSame('Логин', $sheet->getCell('B4')->getValue());
+            $this->assertSame('workerxlsx', $sheet->getCell('B5')->getValue());
+            $this->assertSame('abc123', $sheet->getCell('C5')->getValue());
+            $this->assertSame(\PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING, $sheet->getCell('C5')->getDataType());
+            $book->disconnectWorksheets();
+        } finally {
+            @unlink($file);
+        }
+    }
+
+    public function test_manager_can_download_printable_docx_credentials(): void
+    {
+        $manager = $this->manager();
+        $organization = Organization::create(['name' => 'Организация для Word']);
+        $student = $this->student('workerdocx', 'abc123');
+        $student->update(['organization_id' => $organization->id]);
+        app(\App\Services\StudentCredentials::class)->issue($student, 'abc123', $manager);
+
+        $response = $this->actingAs($manager)->post(route('admin.users.credentials.export'), [
+            'organization_id' => $organization->id,
+            'format' => 'docx',
+        ]);
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+
+        $file = $response->baseResponse->getFile()->getPathname();
+        $zip = new \ZipArchive();
+        try {
+            $this->assertTrue($zip->open($file));
+            $xml = $zip->getFromName('word/document.xml');
+            $this->assertIsString($xml);
+            $this->assertStringContainsString('workerdocx', $xml);
+            $this->assertStringContainsString('abc123', $xml);
+            $this->assertStringContainsString('Ведомость выдачи', $xml);
+            $zip->close();
+        } finally {
+            @unlink($file);
+        }
+    }
+
+    public function test_credential_export_rejects_unknown_format(): void
+    {
+        $manager = $this->manager();
+        $organization = Organization::create(['name' => 'Тестовый цех']);
+
+        $this->actingAs($manager)->post(route('admin.users.credentials.export'), [
+            'organization_id' => $organization->id,
+            'format' => 'pdf',
+        ])->assertSessionHasErrors('format');
+    }
+
     public function test_demo_data_command_is_idempotent_and_credentials_are_not_fixed(): void
     {
         $this->artisan('loles:demo-data', ['--force' => true])->assertExitCode(0);
