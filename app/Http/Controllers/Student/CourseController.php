@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
-use App\Models\CourseAssignment;
 use App\Models\CourseModule;
 use App\Services\CourseAccess;
 use App\Services\CourseOutline;
@@ -12,27 +11,12 @@ use Illuminate\Support\Facades\Auth;
 
 class CourseController extends Controller
 {
-    public function index()
+    public function index(CourseAccess $access)
     {
-        $user = Auth::user();
-        $groupIds = $user->groups()->pluck('groups.id');
-
-        $assignments = CourseAssignment::with(['course.category'])
-            ->where('is_active', true)
-            ->whereHas('course', fn ($q) => $q->where('is_active', true))
-            ->where(function ($query) use ($user, $groupIds) {
-                $query->where(fn ($q) => $q->where('type', 'individual')
-                    ->where('user_id', $user->id));
-
-                if ($groupIds->isNotEmpty()) {
-                    $query->orWhere(fn ($q) => $q->where('type', 'group')
-                        ->whereIn('group_id', $groupIds));
-                }
-                if ($user->organization_id) {
-                    $query->orWhere(fn ($q) => $q->where('type', 'organization')
-                        ->where('organization_id', $user->organization_id));
-                }
-            })->get();
+        $assignments = $access->eligibleAssignments(Auth::user())
+            ->with(['course.category'])
+            ->orderByDesc('start_date')
+            ->get();
 
         $courses = $assignments->pluck('course')->filter()->unique('id');
 
