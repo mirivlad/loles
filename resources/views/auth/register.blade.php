@@ -35,7 +35,7 @@
                         <div class="mb-3">
                             <label for="username" class="form-label">Логин *</label>
                             <input type="text" id="username" name="username" class="form-control"
-                                value="{{ old('username') }}" pattern="[a-zA-Z0-9._-]{3,64}" autocomplete="off" required>
+                                value="{{ old('username') }}" maxlength="255" autocomplete="off" required>
                             @error('username')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="mb-3">

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\Rules\LoginName;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -20,14 +21,14 @@ class CreateAdmin extends Command
         }
 
         $name = trim((string) $this->ask('Administrator name'));
-        $username = strtolower(trim((string) $this->ask('Administrator login (3-64 lowercase Latin characters, digits, ._- )')));
+        $username = strtolower(trim((string) $this->ask('Administrator login (short name or email address)')));
         $email = trim((string) $this->ask('Administrator email (optional)'));
 
         $validator = Validator::make([
             'name' => $name, 'username' => $username, 'email' => $email ?: null,
         ], [
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'min:3', 'max:64', 'regex:/^[a-z0-9._-]+$/', 'unique:users,username'],
+            'username' => ['required', 'string', 'max:255', new LoginName(), 'unique:users,username'],
             'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
         ]);
 

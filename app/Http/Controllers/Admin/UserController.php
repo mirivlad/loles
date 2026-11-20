@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use App\Services\StudentCredentials;
+use App\Rules\LoginName;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -83,12 +84,15 @@ class UserController extends Controller
     {
         Gate::authorize('create', User::class);
 
+        // Normalize before uniqueness validation and before saving.
+        $request->merge(['username' => mb_strtolower(trim((string) $request->input('username', '')))]);
+
         $role = (string) $request->input('role', 'Student');
         $isStudent = $role === 'Student';
         $auto = $request->boolean('generate_password');
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['nullable', 'string', 'min:3', 'max:64', 'regex:/^[a-z0-9._-]+$/i', Rule::unique('users', 'username')],
+            'username' => ['nullable', 'string', 'max:255', new LoginName(), Rule::unique('users', 'username')],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')],
             'password' => ['nullable', 'string', 'confirmed'],
             'generate_password' => ['nullable', 'boolean'],
@@ -185,10 +189,11 @@ class UserController extends Controller
     public function update(Request $request, User $user, StudentCredentials $credentials)
     {
         Gate::authorize('update', $user);
+        $request->merge(['username' => mb_strtolower(trim((string) $request->input('username', '')))]);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'min:3', 'max:64', 'regex:/^[a-z0-9._-]+$/i',
+            'username' => ['required', 'string', 'max:255', new LoginName(),
                 Rule::unique('users', 'username')->ignore($user->id)],
             'email' => ['nullable', 'email', 'max:255',
                 Rule::unique('users', 'email')->ignore($user->id)],

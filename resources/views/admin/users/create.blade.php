@@ -34,8 +34,8 @@
                                     <input type="text" id="newUsername" name="username"
                                            class="form-control @error('username') is-invalid @enderror"
                                            value="{{ old('username') }}" placeholder="Создастся автоматически"
-                                           autocomplete="off" autocapitalize="none" spellcheck="false" pattern="[a-zA-Z0-9._-]{3,64}">
-                                    <div class="form-text">Латинские буквы, цифры, точка, дефис и _. Если оставить пустым — например, s00042.</div>
+                                           autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="255">
+                                    <div class="form-text">Можно указать короткий логин или адрес почты, например ivanov@company.ru. Почта для входа не нужна — это просто имя пользователя. Если оставить пустым, логин будет создан автоматически.</div>
                                     @error('username')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="mb-3">

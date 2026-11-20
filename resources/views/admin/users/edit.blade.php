@@ -26,7 +26,8 @@
                                     <input id="editUsername" type="text" name="username"
                                            class="form-control @error('username') is-invalid @enderror"
                                            value="{{ old('username', $user->username) }}"
-                                           autocomplete="off" autocapitalize="none" pattern="[a-zA-Z0-9._-]{3,64}" required>
+                                           autocomplete="off" autocapitalize="none" maxlength="255" required>
+                                    <div class="form-text">Короткий логин или адрес почты, например ivanov@company.ru. Контактный email не обязателен.</div>
                                     @error('username')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="mb-3">

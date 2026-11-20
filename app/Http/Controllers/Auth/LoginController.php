@@ -18,7 +18,7 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $data = $request->validate([
-            'username' => ['required', 'string', 'max:64'],
+            'username' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ]);
 
