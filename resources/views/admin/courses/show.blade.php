@@ -3,323 +3,206 @@
 @section('content')
 <div class="container-fluid">
     <div class="row">
-        <nav class="col-md-3 col-lg-2 d-md-block sidebar"><div class="position-sticky pt-3">@include('partials._sidebar')</div></nav>
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse"><div class="position-sticky pt-3">@include('partials._sidebar')</div></nav>
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-            <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">{{ $course->title }}</h1>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-3 pb-3 mb-3 border-bottom">
                 <div>
-                    <a href="{{ route('admin.courses.edit', $course) }}" class="btn btn-warning btn-sm me-2">Редактировать</a>
-                    <a href="{{ route('admin.courses.index') }}" class="btn btn-secondary btn-sm">Назад</a>
+                    <a href="{{ route('admin.courses.index') }}" class="small text-secondary text-decoration-none"><i class="bi bi-arrow-left"></i> Все курсы</a>
+                    <h1 class="h2 mt-1 mb-1">{{ $course->title }}</h1>
+                    <p class="text-secondary mb-0">
+                        {{ $course->category?->name ?? 'Без направления' }} ·
+                        <span class="badge {{ $course->is_active ? 'bg-success' : 'bg-secondary' }}">
+                            {{ $course->is_active ? 'Доступен учащимся' : 'Черновик' }}
+                        </span>
+                    </p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ route('admin.courses.preview', $course) }}" class="btn btn-outline-primary">
+                        <i class="bi bi-eye me-1"></i> Как увидит учащийся
+                    </a>
+                    @can('update', $course)
+                        <a href="{{ route('admin.courses.edit', $course) }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-sliders me-1"></i> Настройки курса
+                        </a>
+                    @endcan
                 </div>
             </div>
-            
-            @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
-            
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <div><strong>Категория:</strong> {{ $course->category?->name ?? '—' }}</div>
-                            <div><strong>Slug:</strong> {{ $course->slug ?? '—' }}</div>
-                            <div><strong>Статус:</strong> @if($course->is_active)<span class="badge bg-success">Активен</span>@else<span class="badge bg-secondary">Не активен</span>@endif</div>
-                        </div>
-                    </div>
+
+            @if($errors->any())
+                <div class="alert alert-danger" role="alert">
+                    Не получилось сохранить материал:
+                    <ul class="mb-0">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
                 </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <div><strong>Модулей:</strong> {{ $course->modules()->whereNull('parent_id')->count() }}</div>
-                            <div><strong>Тестов:</strong> {{ $course->tests->count() }}</div>
-                        </div>
-                    </div>
-                </div>
+            @endif
+            @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
+
+            <div class="row g-3 mb-4">
+                <div class="col-sm-4"><div class="manager-summary">
+                    <div class="manager-summary__value">{{ $course->modules->count() }}</div>
+                    <div class="manager-summary__label">Учебных материалов и разделов</div>
+                </div></div>
+                <div class="col-sm-4"><div class="manager-summary">
+                    <div class="manager-summary__value">{{ $course->tests->count() }}</div>
+                    <div class="manager-summary__label">Проверок знаний</div>
+                </div></div>
+                <div class="col-sm-4"><div class="manager-summary">
+                    <div class="manager-summary__value">{{ $course->packages->count() }}</div>
+                    <div class="manager-summary__label">Импортированных пакетов</div>
+                </div></div>
             </div>
-            
-            <!-- Модули курса -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-layers"></i> Модули курса</h5>
-                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addModuleModal">
-                        <i class="bi bi-plus-lg"></i> Добавить модуль
-                    </button>
+
+            <div class="card shadow-sm mb-4" id="course-materials">
+                <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+                    <div>
+                        <h2 class="h5 mb-1">1. Содержание курса</h2>
+                        <p class="small text-secondary mb-0">Материалы идут сверху вниз в том порядке, в котором их изучает учащийся.</p>
+                    </div>
+                    @can('update', $course)
+                        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#course-add-item">
+                            <i class="bi bi-plus-lg"></i> Добавить материал
+                        </button>
+                    @endcan
                 </div>
                 <div class="card-body">
-                    @if($course->modules()->whereNull('parent_id')->count() > 0)
-                    <div class="accordion" id="modulesAccordion">
-                        @foreach($course->modules()->whereNull('parent_id')->orderBy('sort_order')->get() as $module)
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="heading{{ $module->id }}">
-                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $module->id }}">
-                                    <span class="badge bg-{{ $module->type === 'section' ? 'primary' : 'secondary' }} me-2">{{ $module->type }}</span>
-                                    {{ $module->title }}
-                                    @if(!$module->is_active)<span class="badge bg-warning ms-2">Не активен</span>@endif
-                                </button>
-                            </h2>
-                            <div id="collapse{{ $module->id }}" class="accordion-collapse collapse" data-bs-parent="#modulesAccordion">
-                                <div class="accordion-body">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <div>
-                                            @if($module->duration_minutes)<i class="bi bi-clock"></i> {{ $module->duration_minutes }} мин.@endif
-                                            @if($module->is_required)<span class="badge bg-info ms-2">Обязательный</span>@endif
-                                        </div>
-                                        <div>
-                                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModuleModal{{ $module->id }}"><i class="bi bi-pencil"></i></button>
-                                            <form action="{{ route('admin.courses.modules.destroy', [$course, $module]) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить модуль?')">
-                                                @csrf @method('DELETE')
-                                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                    
-                                    @if($module->content)<p>{{ $module->content }}</p>@endif
-                                    @if($module->video_url)<div class="mb-2"><i class="bi bi-camera-video"></i> <a href="{{ $module->video_url }}" target="_blank">Видео</a></div>@endif
-                                    @if($module->file_path)<div class="mb-2"><i class="bi bi-file-earmark"></i> <a href="/storage/{{ $module->file_path }}" target="_blank">Файл</a></div>@endif
-                                    @if($module->external_url)<div class="mb-2"><i class="bi bi-link-45deg"></i> <a href="{{ $module->external_url }}" target="_blank">Внешняя ссылка</a></div>@endif
-                                    @if($module->test_id)<div class="mb-2"><i class="bi bi-file-earmark-text"></i> Тест: {{ $module->test?->title }}</div>@endif
-                                    
-                                    <!-- Дочерние модули -->
-                                    @if($module->children()->count() > 0)
-                                    <div class="mt-3 ps-3 border-start">
-                                        @foreach($module->children()->orderBy('sort_order')->get() as $child)
-                                        <div class="d-flex justify-content-between align-items-center py-2">
-                                            <div>
-                                                <span class="badge bg-{{ $child->type === 'lesson' ? 'success' : 'info' }} me-2">{{ $child->type }}</span>
-                                                {{ $child->title }}
-                                            </div>
-                                            <div>
-                                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModuleModal{{ $child->id }}"><i class="bi bi-pencil"></i></button>
-                                                <form action="{{ route('admin.courses.modules.destroy', [$course, $child]) }}" method="POST" class="d-inline" onsubmit="return confirm('Удалить?')">
-                                                    @csrf @method('DELETE')
-                                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                        @endforeach
-                                    </div>
-                                    @endif
-                                    
-                                    <!-- Modal редактирования -->
-                                    <div class="modal fade" id="editModuleModal{{ $module->id }}" tabindex="-1">
-                                        <div class="modal-dialog modal-lg">
-                                            <div class="modal-content">
-                                                <form action="{{ route('admin.courses.modules.update', [$course, $module]) }}" method="POST" enctype="multipart/form-data">
-                                                    @csrf @method('PUT')
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Редактировать модуль</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Название *</label>
-                                                            <input type="text" name="title" class="form-control" value="{{ $module->title }}" required>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Тип *</label>
-                                                            <select name="type" class="form-select" required>
-                                                                <option value="section" {{ $module->type === 'section' ? 'selected' : '' }}>Раздел</option>
-                                                                <option value="lesson" {{ $module->type === 'lesson' ? 'selected' : '' }}>Урок (текст)</option>
-                                                                <option value="video" {{ $module->type === 'video' ? 'selected' : '' }}>Видео</option>
-                                                                <option value="file" {{ $module->type === 'file' ? 'selected' : '' }}>Файл</option>
-                                                                <option value="link" {{ $module->type === 'link' ? 'selected' : '' }}>Внешняя ссылка</option>
-                                                                <option value="test" {{ $module->type === 'test' ? 'selected' : '' }}>Тест</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Контент (для урока)</label>
-                                                            <textarea name="content" class="form-control" rows="3">{{ $module->content }}</textarea>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label">URL видео</label>
-                                                            <input type="text" name="video_url" class="form-control" value="{{ $module->video_url }}">
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Внешняя ссылка</label>
-                                                            <input type="text" name="external_url" class="form-control" value="{{ $module->external_url }}">
-                                                        </div>
-                                                        @if($module->type === 'test')
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Тест</label>
-                                                            <select name="test_id" class="form-select">
-                                                                <option value="">Не выбран</option>
-                                                                @foreach($course->tests as $test)
-                                                                <option value="{{ $test->id }}" {{ $module->test_id == $test->id ? 'selected' : '' }}>{{ $test->title }}</option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-                                                        @endif
-                                                        <div class="row">
-                                                            <div class="col-md-4 mb-3">
-                                                                <label class="form-label">Порядок</label>
-                                                                <input type="number" name="sort_order" class="form-control" value="{{ $module->sort_order }}">
-                                                            </div>
-                                                            <div class="col-md-4 mb-3">
-                                                                <label class="form-label">Длительность (мин)</label>
-                                                                <input type="number" name="duration_minutes" class="form-control" value="{{ $module->duration_minutes }}">
-                                                            </div>
-                                                            <div class="col-md-4 mb-3">
-                                                                <div class="form-check mt-4">
-                                                                    <input type="checkbox" name="is_required" value="1" class="form-check-input" {{ $module->is_required ? 'checked' : '' }}>
-                                                                    <label class="form-check-label">Обязательный</label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="form-check">
-                                                            <input type="checkbox" name="is_active" value="1" class="form-check-input" {{ $module->is_active ? 'checked' : '' }}>
-                                                            <label class="form-check-label">Активен</label>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                                                        <button type="submit" class="btn btn-primary">Сохранить</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
+                    @can('update', $course)
+                        <div id="course-add-item" class="collapse mb-4">
+                            <div class="border rounded-3 p-3 bg-light">
+                                <h3 class="h6 mb-3">Новый материал</h3>
+                                @include('admin.courses._item_form', ['item' => null])
+                            </div>
+                        </div>
+                    @endcan
+
+                    @forelse($course->modules->whereNull('parent_id')->sortBy('sort_order') as $item)
+                        @include('admin.courses._item_row', ['item' => $item, 'depth' => 0])
+                        @if($item->type === 'section')
+                            @foreach($item->children->sortBy('sort_order') as $child)
+                                @include('admin.courses._item_row', ['item' => $child, 'depth' => 1])
+                            @endforeach
+                        @endif
+                    @empty
+                        <div class="text-center text-secondary py-5">
+                            <i class="bi bi-journal-text fs-1"></i>
+                            <h3 class="h5 mt-2">Здесь пока нет материалов</h3>
+                            <p class="mb-0">Начните с текста или инструкции. Разделы можно добавить позже, когда уроков станет много.</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4" id="course-tests">
+                <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+                    <div>
+                        <h2 class="h5 mb-1">2. Проверка знаний</h2>
+                        <p class="small text-secondary mb-0">Здесь создаются тесты, которые затем можно добавить в содержание курса.</p>
+                    </div>
+                    @can('update', $course)
+                        <a href="{{ route('admin.courses.tests.create', $course) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-plus-lg"></i> Создать тест
+                        </a>
+                    @endcan
+                </div>
+                <div class="card-body">
+                    @forelse($course->tests as $test)
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div>
+                                <a class="fw-semibold text-decoration-none" href="{{ route('admin.courses.tests.show', [$course, $test]) }}">{{ $test->title }}</a>
+                                <div class="small text-secondary">Проходной балл {{ $test->passing_score }}%</div>
+                            </div>
+                            @can('update', $course)
+                                <a href="{{ route('admin.courses.tests.edit', [$course, $test]) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i> Изменить</a>
+                            @endcan
+                        </div>
+                    @empty
+                        <p class="text-secondary mb-0">Проверки знаний пока нет. Можно создать её после добавления материалов.</p>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4" id="course-packages">
+                <div class="card-header py-3">
+                    <h2 class="h5 mb-1">3. Готовые интерактивные материалы: SCORM и H5P</h2>
+                    <p class="small text-secondary mb-0">Добавьте готовый файл пакета. Оригинал сохраняется для последующего переноса на другую платформу.</p>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info small" role="note">
+                        Сейчас работает <strong>проверка, хранение и экспорт оригинальных пакетов</strong>.
+                        Запуск внутри курса, SCORM-отслеживание прогресса и создание/редактирование H5P ещё в разработке.
+                        Пакет не запускается автоматически после загрузки.
+                    </div>
+                    @can('update', $course)
+                        <form method="POST" enctype="multipart/form-data" action="{{ route('admin.courses.packages.store', $course) }}"
+                              class="row g-3 align-items-end mb-4">
+                            @csrf
+                            <div class="col-md-3">
+                                <label for="packageFormat" class="form-label">Формат</label>
+                                <select name="format" id="packageFormat" class="form-select" required>
+                                    <option value="scorm">SCORM 1.2 / 2004</option>
+                                    <option value="h5p">H5P</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="packageFile" class="form-label">Файл пакета (до 100 МБ)</label>
+                                <input type="file" name="package" id="packageFile" accept=".zip,.h5p" class="form-control" required>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-upload"></i> Импортировать</button>
+                            </div>
+                        </form>
+                    @endcan
+                    @forelse($course->packages as $package)
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 py-3 border-top">
+                            <div>
+                                <div class="fw-semibold">{{ $package->title ?: $package->original_filename }}</div>
+                                <div class="small text-secondary">
+                                    {{ strtoupper($package->format) }} · {{ $package->standard_version }} ·
+                                    {{ number_format($package->size_bytes / 1048576, 2, ',', ' ') }} МБ
+                                    · Оригинал сохранён
                                 </div>
                             </div>
-                        </div>
-                        @endforeach
-                    </div>
-                    @else
-                    <p class="text-muted text-center py-4">Модулей пока нет. Добавьте первый модуль!</p>
-                    @endif
-                </div>
-            </div>
-            
-            <!-- Тесты -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> Тесты</h5>
-                    <a href="{{ route('admin.courses.tests.create', $course) }}" class="btn btn-sm btn-primary"><i class="bi bi-plus"></i> Добавить тест</a>
-                </div>
-                <div class="card-body">
-                    @if($course->tests->count() > 0)
-                    <ul class="list-group list-group-flush">
-                        @foreach($course->tests as $test)
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <a href="{{ route('admin.courses.tests.show', [$course, $test]) }}" class="text-decoration-none">{{ $test->title }}</a>
-                            <div>
-                                <span class="badge bg-secondary me-2">{{ $test->type }}</span>
-                                <a href="{{ route('admin.courses.tests.edit', [$course, $test]) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-sm btn-outline-success"
+                                   href="{{ route('admin.courses.packages.download', [$course, $package]) }}">
+                                    <i class="bi bi-download"></i> Скачать оригинал
+                                </a>
+                                @can('update', $course)
+                                    <form method="POST" action="{{ route('admin.courses.packages.destroy', [$course, $package]) }}"
+                                          onsubmit="return confirm('Удалить пакет из курса?')">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger" type="submit" title="Удалить пакет"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                @endcan
                             </div>
-                        </li>
-                        @endforeach
-                    </ul>
-                    @else
-                    <p class="text-muted mb-0">Тестов пока нет</p>
-                    @endif
+                        </div>
+                    @empty
+                        <p class="text-secondary small mb-0">Пакетов пока нет. Это необязательно: обычный курс можно составить целиком из текста, видео, документов и тестов.</p>
+                    @endforelse
                 </div>
             </div>
         </main>
     </div>
 </div>
-
-<!-- Modal добавления модуля -->
-<div class="modal fade" id="addModuleModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form action="{{ route('admin.courses.modules.store', $course) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title">Добавить модуль</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Родительский модуль</label>
-                        <select name="parent_id" class="form-select">
-                            <option value="">Без родителя (корневой)</option>
-                            @foreach($course->modules()->whereNull('parent_id')->get() as $module)
-                            <option value="{{ $module->id }}">{{ $module->title }}</option>
-                            @endforeach
-                        </select>
-                        <small class="text-muted">Оставьте пустым для корневого модуля</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Название *</label>
-                        <input type="text" name="title" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Тип *</label>
-                        <select name="type" class="form-select" required onchange="toggleContentFields()">
-                            <option value="section">Раздел</option>
-                            <option value="lesson">Урок (текст)</option>
-                            <option value="video">Видео</option>
-                            <option value="file">Файл</option>
-                            <option value="link">Внешняя ссылка</option>
-                            <option value="test">Тест</option>
-                        </select>
-                    </div>
-                    <div id="contentField" class="mb-3" style="display:none;">
-                        <label class="form-label">Контент</label>
-                        <textarea name="content" class="form-control" rows="3"></textarea>
-                    </div>
-                    <div id="videoField" class="mb-3" style="display:none;">
-                        <label class="form-label">URL видео</label>
-                        <input type="text" name="video_url" class="form-control" placeholder="https://youtube.com/...">
-                    </div>
-                    <div id="fileField" class="mb-3" style="display:none;">
-                        <label class="form-label">Файл</label>
-                        <input type="file" name="file" class="form-control">
-                    </div>
-                    <div id="linkField" class="mb-3" style="display:none;">
-                        <label class="form-label">Внешняя ссылка</label>
-                        <input type="text" name="external_url" class="form-control" placeholder="https://...">
-                    </div>
-                    <div id="testField" class="mb-3" style="display:none;">
-                        <label class="form-label">Тест</label>
-                        <select name="test_id" class="form-select">
-                            <option value="">Не выбран</option>
-                            @foreach($course->tests as $test)
-                            <option value="{{ $test->id }}">{{ $test->title }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Порядок</label>
-                            <input type="number" name="sort_order" class="form-control" value="0">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Длительность (мин)</label>
-                            <input type="number" name="duration_minutes" class="form-control">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="form-check mt-4">
-                                <input type="checkbox" name="is_required" value="1" class="form-check-input">
-                                <label class="form-check-label">Обязательный</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-check">
-                        <input type="checkbox" name="is_active" value="1" class="form-check-input" checked>
-                        <label class="form-check-label">Активен</label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <button type="submit" class="btn btn-primary">Добавить</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 @push('scripts')
 <script>
-function toggleContentFields() {
-    const type = document.querySelector('select[name="type"]').value;
-    document.getElementById('contentField').style.display = (type === 'lesson') ? 'block' : 'none';
-    document.getElementById('videoField').style.display = (type === 'video') ? 'block' : 'none';
-    document.getElementById('fileField').style.display = (type === 'file') ? 'block' : 'none';
-    document.getElementById('linkField').style.display = (type === 'link') ? 'block' : 'none';
-    document.getElementById('testField').style.display = (type === 'test') ? 'block' : 'none';
-}
-
-// Инициализация при загрузке
-document.addEventListener('DOMContentLoaded', function() {
-    toggleContentFields();
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.course-item-form').forEach(form => {
+        const choice = form.querySelector('.course-type-select');
+        const refresh = () => {
+            const selected = choice.value;
+            form.querySelectorAll('.course-type-field').forEach(group => {
+                const shown = group.dataset.types.split(',').includes(selected);
+                group.hidden = !shown;
+                group.querySelectorAll('input, textarea, select').forEach(field => field.disabled = !shown);
+            });
+            const parent = form.querySelector('.course-parent-selector');
+            if (parent) {
+                parent.hidden = selected === 'section';
+                parent.querySelector('select').disabled = selected === 'section';
+            }
+        };
+        choice.addEventListener('change', refresh);
+        refresh();
+    });
 });
 </script>
 @endpush

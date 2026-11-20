@@ -48,7 +48,7 @@ class CourseController extends Controller
     {
         Gate::authorize('viewAny', Course::class);
         
-        $query = Course::with(['category', 'creator']);
+        $query = Course::with(['category', 'creator'])->withCount(['modules', 'tests', 'packages']);
         
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
@@ -65,7 +65,7 @@ class CourseController extends Controller
             });
         }
         
-        $courses = $query->orderBy('created_at', 'desc')->paginate(20);
+        $courses = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
         $categories = CourseCategory::pluck('name', 'id');
         
         return view('admin.courses.index', compact('courses', 'categories'));
@@ -90,7 +90,7 @@ class CourseController extends Controller
             'description' => 'nullable|string',
             'objectives' => 'nullable|string',
             'category_id' => 'nullable|exists:course_categories,id',
-            'type' => 'required|in:standard,scorm,h5p',
+            'type' => 'nullable|in:standard,scorm,h5p',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240|dimensions:min_width=400,min_height=300',
             'duration_minutes' => 'nullable|integer',
             'passing_score' => 'nullable|integer|min:0|max:100',
@@ -102,7 +102,15 @@ class CourseController extends Controller
             'thumbnail.max' => 'Максимальный размер файла: 10MB',
         ]);
         
-        $validated['slug'] = $validated['slug'] ?? Str::slug($validated['title']);
+        $slug = trim((string) ($validated['slug'] ?? ''));
+        $base = Str::slug($slug ?: $validated['title']) ?: 'course-' . Str::lower(Str::random(8));
+        $slug = $base;
+        $suffix = 2;
+        while (Course::where('slug', $slug)->exists()) {
+            $slug = $base . '-' . $suffix++;
+        }
+        $validated['slug'] = $slug;
+        $validated['type'] = 'standard';
         $validated['created_by'] = auth()->id();
         $validated['is_active'] = $request->boolean('is_active');
         $validated['has_certificate'] = $request->boolean('has_certificate');
@@ -121,9 +129,30 @@ class CourseController extends Controller
     {
         Gate::authorize('view', $course);
         
-        $course->load(['category', 'creator', 'modules', 'tests']);
+        $course->load(['category', 'creator', 'modules' => fn ($query) => $query
+            ->with(['children' => fn ($child) => $child->orderBy('sort_order'), 'test'])
+            ->orderBy('sort_order'), 'tests', 'packages']);
         
         return view('admin.courses.show', compact('course'));
+    }
+
+    public function preview(Course $course)
+    {
+        Gate::authorize('view', $course);
+
+        $course->load([
+            'category',
+            'modules' => fn ($query) => $query
+                ->with(['children' => fn ($children) => $children->orderBy('sort_order'), 'test'])
+                ->orderBy('sort_order'),
+            'tests',
+            'packages',
+        ]);
+
+        return view('student.courses.show', [
+            'course' => $course,
+            'preview' => true,
+        ]);
     }
 
     public function edit(Course $course)
@@ -145,7 +174,7 @@ class CourseController extends Controller
             'description' => 'nullable|string',
             'objectives' => 'nullable|string',
             'category_id' => 'nullable|exists:course_categories,id',
-            'type' => 'required|in:standard,scorm,h5p',
+            'type' => 'nullable|in:standard,scorm,h5p',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240|dimensions:min_width=400,min_height=300',
             'duration_minutes' => 'nullable|integer',
             'passing_score' => 'nullable|integer|min:0|max:100',
@@ -157,7 +186,8 @@ class CourseController extends Controller
             'thumbnail.max' => 'Максимальный размер файла: 10MB',
         ]);
         
-        $validated['slug'] = $validated['slug'] ?? Str::slug($validated['title']);
+        $validated['slug'] = trim((string) ($validated['slug'] ?? '')) ?: $course->slug;
+        $validated['type'] = $course->type; // Preserve legacy course type without exposing it.
         $validated['is_active'] = $request->boolean('is_active');
         $validated['has_certificate'] = $request->boolean('has_certificate');
         

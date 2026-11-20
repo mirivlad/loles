@@ -50,6 +50,11 @@ class Course extends Model
         return $this->hasMany(CourseModule::class);
     }
 
+    public function packages(): HasMany
+    {
+        return $this->hasMany(CoursePackage::class)->latest();
+    }
+
     public function tests(): HasMany
     {
         return $this->hasMany(Test::class);

@@ -56,6 +56,7 @@ class CourseController extends Controller
 
     public function show(Course $course)
     {
+        abort_unless($course->is_active, 404);
         $user = Auth::user();
         
         // Проверяем доступ к курсу
@@ -77,7 +78,14 @@ class CourseController extends Controller
             abort(403, 'У вас нет доступа к этому курсу');
         }
         
-        $course->load(['tests', 'category']);
+        $course->load([
+            'tests',
+            'category',
+            'modules' => fn ($query) => $query
+                ->with(['children' => fn ($children) => $children->orderBy('sort_order'), 'test'])
+                ->orderBy('sort_order'),
+            'packages',
+        ]);
         
         return view('student.courses.show', compact('course'));
     }
