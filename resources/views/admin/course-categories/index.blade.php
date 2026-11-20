@@ -17,7 +17,7 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <table class="table table-hover">
-                        <thead><tr><th>Название</th><th>Slug</th><th>Курсов</th><th>Статус</th><th>Действия</th></tr></thead>
+                        <thead><tr><th>Название</th><th>Курсов</th><th>Статус</th><th>Действия</th></tr></thead>
                         <tbody>
                             @foreach($categories as $category)
                             @include('admin.course-categories._row', ['category' => $category, 'level' => 0])

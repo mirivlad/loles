@@ -11,7 +11,7 @@
     @if(Auth::user()->hasRole(['Administrator', 'Manager']))
     <li class="nav-item">
         <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.organizations') ? 'active' : '' }}" href="{{ route('admin.organizations.index') }}">
-            <i class="bi bi-building"></i> Организации
+            <i class="bi bi-building"></i> Предприятия
         </a>
     </li>
     <li class="nav-item">

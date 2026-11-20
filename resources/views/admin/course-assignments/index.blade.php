@@ -37,9 +37,9 @@
                                 <tr>
                                     <th>Курс</th>
                                     <th>Период</th>
-                                    <th class="text-center"><i class="bi bi-person" title="Индивидуальные"></i></th>
-                                    <th class="text-center"><i class="bi bi-people" title="Группы"></i></th>
-                                    <th class="text-center"><i class="bi bi-building" title="Организации"></i></th>
+                                    <th class="text-center">Учащиеся</th>
+                                    <th class="text-center">Группы</th>
+                                    <th class="text-center">Предприятия</th>
                                     <th>Действия</th>
                                 </tr>
                             </thead>
@@ -78,10 +78,10 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
-                                            <a href="{{ route('admin.course-assignments.show', ['course' => $group->course_id, 'start' => $group->start_date->format('Y-m-d'), 'end' => $group->end_date?->format('Y-m-d') ?? 'null']) }}" class="btn btn-outline-primary" title="Просмотр">
+                                            <a href="{{ route('admin.course-assignments.show', ['course' => $group->course_id, 'start' => $group->start_date->format('Y-m-d'), 'end' => $group->end_date?->format('Y-m-d') ?? 'null']) }}" class="btn btn-outline-primary" title="Просмотр назначения" aria-label="Просмотр назначения курса {{ $group->course->title }}">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="{{ route('admin.course-assignments.show', ['course' => $group->course_id, 'start' => $group->start_date->format('Y-m-d'), 'end' => $group->end_date?->format('Y-m-d') ?? 'null']) }}#edit" class="btn btn-outline-warning" title="Редактировать">
+                                            <a href="{{ route('admin.course-assignments.show', ['course' => $group->course_id, 'start' => $group->start_date->format('Y-m-d'), 'end' => $group->end_date?->format('Y-m-d') ?? 'null']) }}#edit" class="btn btn-outline-warning" title="Редактировать назначение" aria-label="Редактировать назначение курса {{ $group->course->title }}">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                         </div>

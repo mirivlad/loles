@@ -62,7 +62,7 @@
                                     <select name="role" id="newUserRole" class="form-select" required>
                                         @foreach($roles as $role)
                                             <option value="{{ $role }}" @selected(old('role', 'Student') === $role)>
-                                                {{ ['Student' => 'Учащийся', 'Curator' => 'Куратор', 'Manager' => 'Менеджер', 'Administrator' => 'Администратор'][$role] ?? $role }}
+                                                {{ \App\Support\UiLabels::role($role) }}
                                             </option>
                                         @endforeach
                                     </select>

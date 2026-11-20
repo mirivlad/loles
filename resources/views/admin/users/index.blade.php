@@ -66,7 +66,7 @@
                         <select id="userRole" name="role" class="form-select">
                             <option value="">Все роли</option>
                             @foreach($roles as $role)
-                                <option value="{{ $role }}" @selected(request('role') === $role)>{{ $role }}</option>
+                                <option value="{{ $role }}" @selected(request('role') === $role)>{{ \App\Support\UiLabels::role($role) }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -136,7 +136,7 @@
                                                 <span class="text-secondary">Не указано</span>
                                             @endif
                                         </td>
-                                        <td><span class="badge bg-info text-dark">{{ $user->getRoleNames()->first() ?? '—' }}</span></td>
+                                        <td><span class="badge bg-info text-dark">{{ \App\Support\UiLabels::role($user->getRoleNames()->first()) }}</span></td>
                                         <td><span class="badge {{ $user->is_active ? 'bg-success' : 'bg-secondary' }}">{{ $user->is_active ? 'Активен' : 'Неактивен' }}</span></td>
                                         @if(auth()->user()->hasRole(['Administrator', 'Manager']))
                                             <td class="student-password" data-student-id="{{ $user->hasRole('Student') ? $user->id : '' }}">

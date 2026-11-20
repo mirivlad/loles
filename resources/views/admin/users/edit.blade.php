@@ -53,7 +53,7 @@
                             <div class="card-body">
                                 <h5>Настройки</h5>
                                 <div class="mb-3">
-                                    <label class="form-label">Организация</label>
+                                    <label class="form-label">Предприятие</label>
                                     <x-searchable-select
                                         name="organization_id"
                                         url="{{ route('api.organizations.search') }}"
@@ -65,7 +65,7 @@
                                     <label class="form-label">Роль *</label>
                                     <select name="role" class="form-select">
                                         @foreach($roles as $role)
-                                        <option value="{{ $role }}" {{ old('role', $user->getRoleNames()->first()) == $role ? 'selected' : '' }}>{{ $role }}</option>
+                                        <option value="{{ $role }}" {{ old('role', $user->getRoleNames()->first()) == $role ? 'selected' : '' }}>{{ \App\Support\UiLabels::role($role) }}</option>
                                         @endforeach
                                     </select>
                                 </div>

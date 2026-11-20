@@ -21,8 +21,8 @@
                                 <tr><th>Логин:</th><td><code>{{ $user->username }}</code></td></tr>
                                 <tr><th>Email:</th><td>{{ $user->email ?: 'Не указан' }}</td></tr>
                                 <tr><th>Телефон:</th><td>{{ $user->phone ?? '—' }}</td></tr>
-                                <tr><th>Организация:</th><td>{{ $user->organization?->name ?? '—' }}</td></tr>
-                                <tr><th>Роль:</th><td><span class="badge bg-info">{{ $user->getRoleNames()->first() }}</span></td></tr>
+                                <tr><th>Предприятие:</th><td>{{ $user->organization?->name ?? '—' }}</td></tr>
+                                <tr><th>Роль:</th><td><span class="badge bg-info">{{ \App\Support\UiLabels::role($user->getRoleNames()->first()) }}</span></td></tr>
                                 <tr><th>Статус:</th><td>@if($user->is_active)<span class="badge bg-success">Активен</span>@else<span class="badge bg-secondary">Не активен</span>@endif</td></tr>
                                 <tr><th>Создан:</th><td>{{ $user->created_at->format('d.m.Y H:i') }}</td></tr>
                             </table>
