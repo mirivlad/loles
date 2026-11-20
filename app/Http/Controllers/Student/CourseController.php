@@ -18,7 +18,9 @@ class CourseController extends Controller
             ->orderByDesc('start_date')
             ->get();
 
-        $courses = $assignments->pluck('course')->filter()->unique('id');
+        $courses = Course::with('category')
+            ->whereIn('id', $access->accessibleCourseIds(Auth::user()))
+            ->orderBy('title')->get();
 
         return view('student.courses.index', compact('courses', 'assignments'));
     }

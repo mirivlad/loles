@@ -63,11 +63,8 @@ class DashboardController extends Controller
         
         // Use the same date/recipient checks as the learner course catalogue.
         // The previous OR-chain exposed unrelated assignments in the dashboard.
-        $assignments = app(CourseAccess::class)->eligibleAssignments($user)
-            ->with('course')
-            ->get();
-
-        $courses = $assignments->pluck('course')->unique('id');
+        $courses = Course::whereIn('id', app(CourseAccess::class)->accessibleCourseIds($user))
+            ->orderBy('title')->get();
 
         // Прогресс по курсам
         $progress = [];

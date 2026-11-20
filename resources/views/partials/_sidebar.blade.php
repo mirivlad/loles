@@ -99,6 +99,11 @@
     @endif
     @if(Auth::user()->hasRole('Student'))
     <li class="nav-item">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'student.trainings') ? 'active' : '' }}" href="{{ route('student.trainings.index') }}">
+            <i class="bi bi-mortarboard"></i> Мои обучения
+        </a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link {{ Str::startsWith($currentRoute, 'dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
             <i class="bi bi-book"></i> Мои курсы
         </a>

@@ -17,8 +17,7 @@ class TestController extends Controller
 
     public function index(CourseAccess $access)
     {
-        $courseIds = $access->eligibleAssignments(Auth::user())
-            ->distinct()->pluck('course_id');
+        $courseIds = $access->accessibleCourseIds(Auth::user());
 
         $tests = Test::with('course')
             ->whereIn('course_id', $courseIds)

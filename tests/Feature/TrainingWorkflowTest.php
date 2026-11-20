@@ -344,4 +344,63 @@ class TrainingWorkflowTest extends TestCase
         $this->assertSame(2, $intake->fresh()->capacity);
     }
 
+    public function test_enrollment_controls_access_to_courses_and_tests_with_inclusive_dates(): void
+    {
+        $manager = $this->actor('Manager');
+        $intake = $this->intake($manager, 2);
+        $course = $intake->courses()->firstOrFail()->course;
+        $test = \App\Models\Test::create([
+            'course_id' => $course->id,
+            'title' => 'Проверка знаний',
+            'is_active' => true,
+        ]);
+        $application = $this->submit($intake);
+        $this->approveAndPay($intake, $application);
+        $this->post(route('admin.training.applications.enroll', [$intake, $application]))
+            ->assertRedirect();
+        $student = $intake->enrollments()->with('user')->firstOrFail()->user;
+        $this->actingAs($student);
+
+        $this->get(route('student.trainings.index'))->assertOk()->assertSee($intake->name);
+        $this->get(route('student.courses.show', $course))->assertForbidden();
+        $this->get(route('student.tests.show', $test))->assertForbidden();
+
+        $intake->update(['status' => 'training']);
+        Carbon::setTestNow($intake->starts_on->copy()->startOfDay());
+        $this->get(route('student.trainings.index'))->assertOk()
+            ->assertSee('Обучение доступно');
+        $this->get(route('student.courses.index'))->assertOk()->assertSee($course->title);
+        $this->get(route('student.courses.show', $course))->assertOk();
+        $this->get(route('student.tests.index'))->assertOk()->assertSee($test->title);
+        $this->get(route('student.tests.show', $test))->assertOk();
+        $this->get(route('dashboard'))->assertOk()->assertSee($course->title);
+
+        Carbon::setTestNow($intake->ends_on->copy()->endOfDay());
+        $this->get(route('student.courses.show', $course))->assertOk();
+        Carbon::setTestNow($intake->ends_on->copy()->addDay()->startOfDay());
+        $this->get(route('student.courses.show', $course))->assertForbidden();
+        $this->get(route('student.tests.show', $test))->assertForbidden();
+    }
+
+    public function test_old_assignment_cannot_bypass_enrollment_for_intake_courses(): void
+    {
+        $manager = $this->actor('Manager');
+        $student = $this->actor('Student');
+        $intake = $this->intake($manager);
+        $course = $intake->courses()->firstOrFail()->course;
+        $intake->update(['status' => 'training']);
+        \App\Models\CourseAssignment::create([
+            'course_id' => $course->id,
+            'type' => 'individual',
+            'user_id' => $student->id,
+            'is_active' => true,
+            'start_date' => today()->subDay()->toDateString(),
+            'end_date' => today()->addDays(7)->toDateString(),
+        ]);
+        Carbon::setTestNow($intake->starts_on->copy()->startOfDay());
+        $this->actingAs($student)->get(route('student.courses.show', $course))->assertForbidden();
+        $this->get(route('student.courses.index'))->assertDontSee($course->title);
+        $this->get(route('student.trainings.index'))->assertDontSee($intake->name);
+    }
+
 }

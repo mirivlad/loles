@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\GroupSearchController;
 use App\Http\Controllers\Api\UserSearchController;
 use App\Http\Controllers\Api\CourseSearchController;
 use App\Http\Controllers\Student\CourseController as StudentCourseController;
+use App\Http\Controllers\Student\TrainingController as StudentTrainingController;
 use App\Http\Controllers\Student\TestController as StudentTestController;
 use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\DashboardController;
@@ -148,6 +149,7 @@ Route::middleware('auth')->group(function () {
     
     // Учебная часть (требуется аутентификация)
     Route::middleware('auth')->prefix('student')->name('student.')->group(function() {
+        Route::get('/trainings', [StudentTrainingController::class, 'index'])->name('trainings.index');
         Route::get('/courses', [StudentCourseController::class, 'index'])->name('courses.index');
         Route::get('/courses/{course}', [StudentCourseController::class, 'show'])->name('courses.show');
         Route::get('/courses/{course}/materials/{module}', [StudentCourseController::class, 'material'])
