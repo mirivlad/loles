@@ -26,15 +26,18 @@
                     <div class="card shadow-sm">
                         <div class="card-header bg-primary text-white"><h5 class="mb-0">Информация</h5></div>
                         <div class="card-body">
-                            <div><strong>Организация:</strong> {{ $group->organization?->name ?? 'Общая группа' }}</div>
+                            <div><strong>Предприятие:</strong> {{ $group->organization?->name ?? 'Общая группа' }}</div>
                             <div><strong>Описание:</strong> {{ $group->description ?? '—' }}</div>
-                            <div><strong>Статус:</strong> 
-                                @if($group->is_active)
-                                <span class="badge bg-success">Активна</span>
-                                @else
-                                <span class="badge bg-secondary">Не активна</span>
-                                @endif
+                            <div><strong>Состояние обучения:</strong>
+                                <span class="badge {{ $group->isClosed() ? 'bg-secondary' : 'bg-success' }}">{{ $group->statusLabel() }}</span>
                             </div>
+                            <div><strong>Начало:</strong> {{ $group->started_on?->format('d.m.Y') ?? 'Не указано' }}</div>
+                            <div><strong>Завершение:</strong> {{ $group->finished_on?->format('d.m.Y') ?? 'Не указано' }}</div>
+                            @if($group->isClosed())
+                                <div class="alert alert-light border mt-2 mb-0 small">
+                                    Состав группы сохранён. Чтобы снова добавлять учащихся, измените состояние группы.
+                                </div>
+                            @endif
                             <div><strong>Создана:</strong> {{ $group->created_at->format('d.m.Y') }}</div>
                         </div>
                     </div>
@@ -55,7 +58,12 @@
                     <div class="card shadow-sm h-100">
                         <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                             <h5 class="mb-0"><i class="bi bi-people"></i> Пользователи</h5>
-                            <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addUserModal"><i class="bi bi-plus-lg"></i></button>
+                            @unless($group->isClosed())
+                                <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addUserModal"
+                                        title="Добавить учащихся" aria-label="Добавить учащихся">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            @endunless
                         </div>
                         <div class="card-body p-0">
                             <div id="users-list">
@@ -64,7 +72,11 @@
                                     @foreach($group->users as $user)
                                     <li class="list-group-item d-flex justify-content-between align-items-center" id="user-li-{{ $user->id }}">
                                         <a href="{{ route('admin.users.show', $user) }}">{{ $user->name }} <small class="text-muted">({{ $user->username }})</small></a>
-                                        <button onclick="removeUser({{ $user->id }})" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></button>
+                                        @unless($group->isClosed())
+                                            <button onclick="removeUser({{ $user->id }})"
+                                                    class="btn btn-sm btn-outline-danger" title="Исключить из группы"
+                                                    aria-label="Исключить {{ $user->name }} из группы"><i class="bi bi-x-lg"></i></button>
+                                        @endunless
                                     </li>
                                     @endforeach
                                 </ul>
@@ -138,9 +150,27 @@
                         <label class="form-label">Описание</label>
                         <textarea name="description" class="form-control" rows="3">{{ $group->description }}</textarea>
                     </div>
-                    <div class="form-check mb-3">
-                        <input type="checkbox" name="is_active" value="1" class="form-check-input" {{ $group->is_active ? 'checked' : '' }}>
-                        <label class="form-check-label">Активна</label>
+                    <div class="mb-3">
+                        <label class="form-label" for="groupEditStatus">Состояние группы</label>
+                        <select name="status" id="groupEditStatus" class="form-select">
+                            <option value="planned" @selected($group->status === 'planned')>Запланирована</option>
+                            <option value="active" @selected($group->status === 'active')>Обучается</option>
+                            <option value="completed" @selected($group->status === 'completed')>Завершена</option>
+                            <option value="archived" @selected($group->status === 'archived')>В архиве</option>
+                        </select>
+                        <small class="text-secondary">Завершение сохраняет результаты и состав учебной группы.</small>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label for="editGroupStart" class="form-label">Начало</label>
+                            <input id="editGroupStart" type="date" name="started_on" class="form-control"
+                                   value="{{ $group->started_on?->format('Y-m-d') }}">
+                        </div>
+                        <div class="col-6">
+                            <label for="editGroupEnd" class="form-label">Завершение</label>
+                            <input id="editGroupEnd" type="date" name="finished_on" class="form-control"
+                                   value="{{ $group->finished_on?->format('Y-m-d') }}">
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

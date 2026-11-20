@@ -62,9 +62,9 @@
                                     <td><span class="badge bg-info">{{ $group->users->count() }}</span></td>
                                     <td>
                                         @if($group->is_active)
-                                            <span class="badge bg-success">Активна</span>
+                                            <span class="badge bg-success">{{ $group->statusLabel() }}</span>
                                         @else
-                                            <span class="badge bg-secondary">Не активна</span>
+                                            <span class="badge bg-secondary">{{ $group->statusLabel() }}</span>
                                         @endif
                                     </td>
                                     <td>

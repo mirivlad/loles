@@ -17,11 +17,32 @@ class Group extends Model
         'name',
         'description',
         'is_active',
+        'status',
+        'started_on',
+        'finished_on',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'started_on' => 'date',
+        'finished_on' => 'date',
     ];
+
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            'planned' => 'Запланирована',
+            'active' => 'Обучается',
+            'completed' => 'Завершена',
+            'archived' => 'В архиве',
+            default => 'Неизвестное состояние',
+        };
+    }
+
+    public function isClosed(): bool
+    {
+        return in_array($this->status, ['completed', 'archived'], true);
+    }
 
     public function organization(): BelongsTo
     {

@@ -59,14 +59,21 @@ class GroupUserController extends Controller
             'organization_id' => 'required_if:group_type,organization|nullable|exists:organizations,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'is_active' => 'boolean',
+            'status' => ['nullable', 'in:planned,active,completed,archived'],
+            'started_on' => ['nullable', 'date'],
+            'finished_on' => ['nullable', 'date', 'after_or_equal:started_on'],
         ]);
         
+        $status = $validated['status'] ?? 'active';
         Group::create([
             'organization_id' => $validated['group_type'] === 'organization' ? $validated['organization_id'] : null,
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'is_active' => $validated['is_active'] ?? true,
+            'status' => $status,
+            'started_on' => $validated['started_on'] ?? null,
+            'finished_on' => $validated['finished_on'] ??
+                (in_array($status, ['completed', 'archived'], true) ? today()->toDateString() : null),
+            'is_active' => in_array($status, ['planned', 'active'], true),
         ]);
         
         return redirect()->route('admin.groups.index')
@@ -79,31 +86,17 @@ class GroupUserController extends Controller
         
         $group->load(['organization', 'users']);
         
-        // Получаем доступных пользователей для этой группы
-        if ($group->organization_id) {
-            // Группа организации — только пользователи этой организации
-            $users = User::where('organization_id', $group->organization_id)
-                ->whereDoesntHave('groups', function($q) use ($group) {
-                    $q->where('groups.id', $group->id);
-                })
-                ->get();
-        } else {
-            // Общая группа — все пользователи которые ещё не в группе
-            $users = User::whereDoesntHave('groups', function($q) use ($group) {
-                $q->where('groups.id', $group->id);
-            })
-            ->get();
-        }
-
-        return view('admin.groups.show', compact('group', 'users'));
+        // Add-user modal uses the paginated, permission-checked typeahead API.
+        // Do not fetch the entire user table just to render this group page.
+        return view('admin.groups.show', compact('group'));
     }
 
     public function destroy(Group $group)
     {
         Gate::authorize('delete', $group);
         
-        if ($group->users()->count() > 0) {
-            return back()->with('error', 'Нельзя удалить группу с пользователями. Сначала удалите пользователей из группы.');
+        if ($group->users()->exists() || $group->courseAssignments()->exists()) {
+            return back()->with('error', 'Группа содержит учащихся или историю назначений. Переведите её в архив вместо удаления.');
         }
         
         $group->delete();
@@ -117,6 +110,9 @@ class GroupUserController extends Controller
      */
     public function addUser(Group $group, Request $request)
     {
+        Gate::authorize('update', $group);
+        abort_if($group->isClosed(), 409, 'Группа завершена или в архиве. Сначала возобновите обучение.');
+
         $validated = $request->validate([
             'user_ids' => 'nullable|string',
         ]);
@@ -157,6 +153,7 @@ class GroupUserController extends Controller
     public function removeUser(Group $group, User $user)
     {
         Gate::authorize('update', $group);
+        abort_if($group->isClosed(), 409, 'Группа завершена или в архиве. Сначала возобновите обучение.');
         
         $group->users()->detach($user->id);
         
@@ -188,10 +185,23 @@ class GroupUserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'is_active' => 'boolean',
+            'status' => ['nullable', 'in:planned,active,completed,archived'],
+            'started_on' => ['nullable', 'date'],
+            'finished_on' => ['nullable', 'date', 'after_or_equal:started_on'],
         ]);
         
-        $group->update($validated);
+        $status = $validated['status'] ?? $group->status;
+        $group->update([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'status' => $status,
+            'started_on' => $validated['started_on'] ?? null,
+            'finished_on' => $validated['finished_on'] ??
+                (in_array($status, ['completed', 'archived'], true)
+                    ? ($group->finished_on?->toDateString() ?? today()->toDateString())
+                    : null),
+            'is_active' => in_array($status, ['planned', 'active'], true),
+        ]);
         
         // Для AJAX запросов
         if ($request->ajax()) {

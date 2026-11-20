@@ -41,6 +41,7 @@ class GroupController extends Controller
         ]);
         
         $validated['is_active'] = $request->boolean('is_active');
+        $validated['status'] = $validated['is_active'] ? 'active' : 'archived';
         
         $organization->groups()->create($validated);
         
@@ -74,6 +75,7 @@ class GroupController extends Controller
         ]);
         
         $validated['is_active'] = $request->boolean('is_active');
+        $validated['status'] = $validated['is_active'] ? 'active' : 'archived';
         
         $group->update($validated);
         

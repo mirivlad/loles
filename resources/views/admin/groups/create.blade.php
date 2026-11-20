@@ -28,11 +28,11 @@
                                 </div>
                                 
                                 <div class="mb-3" id="organizationField" style="display:{{ request('organization_id') || old('group_type') == 'organization' ? 'block' : 'none' }};">
-                                    <label class="form-label">Организация *</label>
+                                    <label class="form-label">Предприятие *</label>
                                     <x-searchable-select
                                         name="organization_id"
                                         url="{{ route('api.organizations.search') }}"
-                                        placeholder="Начните вводить название организации..."
+                                        placeholder="Начните вводить название предприятия..."
                                         :value="request('organization_id') ?: old('organization_id')"
                                         :required="true"
                                     />
@@ -50,9 +50,25 @@
                                     <textarea name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
                                 </div>
                                 
-                                <div class="form-check mb-3">
-                                    <input type="checkbox" name="is_active" value="1" class="form-check-input" {{ old('is_active', true) ? 'checked' : '' }}>
-                                    <label class="form-check-label">Активна</label>
+                                <div class="mb-3">
+                                    <label for="groupStatus" class="form-label">Состояние группы</label>
+                                    <select id="groupStatus" name="status" class="form-select">
+                                        <option value="planned" @selected(old('status') === 'planned')>Запланирована</option>
+                                        <option value="active" @selected(old('status', 'active') === 'active')>Обучается</option>
+                                        <option value="completed" @selected(old('status') === 'completed')>Завершена</option>
+                                        <option value="archived" @selected(old('status') === 'archived')>В архиве</option>
+                                    </select>
+                                    <div class="form-text">Завершение сохраняет состав, историю назначений и результаты обучения.</div>
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-6">
+                                        <label for="groupStartDate" class="form-label">Начало обучения</label>
+                                        <input id="groupStartDate" type="date" name="started_on" class="form-control" value="{{ old('started_on') }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="groupFinishDate" class="form-label">Завершение обучения</label>
+                                        <input id="groupFinishDate" type="date" name="finished_on" class="form-control" value="{{ old('finished_on') }}">
+                                    </div>
                                 </div>
                             </div>
                         </div>
