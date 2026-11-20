@@ -4,6 +4,7 @@ namespace App\Services;
 
 use HTMLPurifier;
 use HTMLPurifier_Config;
+use Illuminate\Support\Facades\File;
 
 class LearningHtml
 {
@@ -19,6 +20,13 @@ class LearningHtml
 
         $config = HTMLPurifier_Config::createDefault();
         $config->set('Core.Encoding', 'UTF-8');
+
+        // HTMLPurifier defaults to a cache directory inside vendor/, which
+        // is read-only for Apache's www-data user in Docker. Laravel storage
+        // is writable, persisted by the stack, and not publicly served.
+        $cachePath = storage_path('framework/cache/htmlpurifier');
+        File::ensureDirectoryExists($cachePath);
+        $config->set('Cache.SerializerPath', $cachePath);
         $config->set('HTML.Allowed', implode(',', [
             'p', 'br', 'strong', 'em', 'u', 's', 'sub', 'sup',
             'h2', 'h3', 'h4', 'blockquote', 'ul', 'ol', 'li',

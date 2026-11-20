@@ -31,7 +31,11 @@ document.addEventListener('DOMContentLoaded', () => {
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     })[char]);
 
-    const getEditor = () => window.tinymce?.editors?.find(editor => editor.targetElm === field);
+    // TinyMCE 8 does not guarantee Editor.targetElm is the source textarea.
+    // Keep the actual Editor instance handed to us by TinyMCE instead of
+    // trying to rediscover it via a DOM attribute that may not exist.
+    let activeEditor = null;
+    const getEditor = () => activeEditor;
     let bookmark = null;
 
     const attachModal = document.getElementById('editorAttachmentsDialog');
@@ -71,24 +75,47 @@ document.addEventListener('DOMContentLoaded', () => {
         return item;
     };
 
-    const insert = (item, asImage = false) => {
+    const insertIntoEditor = (item, asImage = false) => {
         const editor = getEditor();
-        if (!editor) {
-            alert('Выберите тип «Текст и инструкция», чтобы вставить файл в текст.');
+        if (!editor || !editor.initialized) {
+            // A modal must not swallow the click or silently drop the file
+            // if TinyMCE failed to load. Preserve an editable HTML fallback.
+            if (field && !field.disabled) {
+                const html = asImage
+                    ? '<img src="' + escapeHtml(item.url) + '" alt="' + escapeHtml(item.name) + '">'
+                    : '<a href="' + escapeHtml(item.download_url) + '">' + escapeHtml(item.name) + '</a>';
+                field.setRangeText(html, field.selectionStart, field.selectionEnd, 'end');
+                field.dispatchEvent(new Event('input', {bubbles: true}));
+                return;
+            }
+            alert('Сначала выберите текстовый тип материала.');
             return;
         }
 
         editor.focus();
         if (bookmark) {
-            try { editor.selection.moveToBookmark(bookmark); } catch {}
+            try { editor.selection.moveToBookmark(bookmark); } catch (error) {
+                console.warn('Could not restore editor selection:', error);
+            }
         }
+
         editor.insertContent(asImage
             ? '<img src="' + escapeHtml(item.url) + '" alt="' + escapeHtml(item.name) + '">'
             : '<a href="' + escapeHtml(item.download_url) + '">' + escapeHtml(item.name) + '</a>');
         editor.save();
+        bookmark = null;
+    };
 
-        if (attachModal && window.bootstrap) {
-            window.bootstrap.Modal.getInstance(attachModal)?.hide();
+    const insert = (item, asImage = false) => {
+        // Bootstrap's modal focus trap interferes with TinyMCE.focus().
+        // Close the modal first, restore the old selection, then insert.
+        if (attachModal && window.bootstrap && attachModal.classList.contains('show')) {
+            attachModal.addEventListener('hidden.bs.modal', () => {
+                insertIntoEditor(item, asImage);
+            }, {once: true});
+            window.bootstrap.Modal.getOrCreateInstance(attachModal).hide();
+        } else {
+            insertIntoEditor(item, asImage);
         }
     };
 
@@ -155,15 +182,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const rememberSelection = () => {
+        const editor = getEditor();
+        if (editor?.initialized) {
+            try { bookmark = editor.selection.getBookmark(2, true); } catch { bookmark = null; }
+        }
+    };
+
     const openAttachments = () => {
         if (!attachModal || !window.bootstrap) return;
-        const editor = getEditor();
-        bookmark = editor ? editor.selection.getBookmark() : null;
+        bookmark = null;
+        rememberSelection();
         window.bootstrap.Modal.getOrCreateInstance(attachModal).show();
     };
 
     if (attachModal) {
         attachModal.addEventListener('show.bs.modal', () => {
+            // Works for the external "Attached files" button, not just
+            // TinyMCE's built-in custom toolbar button.
+            if (!bookmark) rememberSelection();
             reloadFiles().catch(err => {
                 if (list) list.replaceChildren(make('div', 'list-group-item text-danger', err.message));
             });
@@ -242,6 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
             promotion: false,
             branding: false,
             setup: editor => {
+                activeEditor = editor;
                 editor.ui.registry.addButton('courseattachments', {
                     text: 'Файлы',
                     tooltip: 'Прикрепить файл или вставить картинку',
@@ -249,8 +287,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 editor.on('change input undo redo', () => editor.save());
             }
+        }).then(editors => {
+            if (editors?.length) activeEditor = editors[0];
         }).catch(error => {
             console.warn('WYSIWYG editor unavailable', error);
+            activeEditor = null;
             field.dataset.editorReady = '0';
         });
     };

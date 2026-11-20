@@ -86,6 +86,15 @@ jobs:
           fi
           docker compose exec -T app php artisan migrate:status
           docker compose exec -T app php artisan help loles:create-admin >/dev/null
+          # Render rich lesson content as the actual Apache user. Running the
+          # test suite as root concealed an HTMLPurifier cache permission bug.
+          rich_output=$(docker compose exec -T -u www-data app php -r '
+            require "vendor/autoload.php";
+            $app = require "bootstrap/app.php";
+            $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+            echo app(\App\Services\LearningHtml::class)->clean("<p><strong>WYSIWYG works</strong></p>");
+          ')
+          grep -Fq '<strong>WYSIWYG works</strong>' <<< "$rich_output"
           docker compose exec -T app php artisan view:cache
           # Development dependencies and tests are intentionally absent from the production image.
           # Install them into the disposable Actions container only.
