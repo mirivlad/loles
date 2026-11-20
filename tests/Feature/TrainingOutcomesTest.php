@@ -376,4 +376,74 @@ class TrainingOutcomesTest extends TestCase
         $this->assertSame(0, TrainingStudiedMaterial::count());
     }
 
+    public function test_curator_report_scope_exposes_only_their_enterprise_snapshot(): void
+    {
+        $s = $this->fixture();
+        $factoryA = Organization::create(['name' => 'Завод А']);
+        $factoryB = Organization::create(['name' => 'Завод Б']);
+        $ownGroup = $s['intake']->groups()->create(['name' => 'Группа А']);
+        $foreignGroup = $s['intake']->groups()->create(['name' => 'Секретная подгруппа Б']);
+        $s['enrollment']->update(['organization_id' => $factoryA->id, 'training_intake_group_id' => $ownGroup->id]);
+        $s['student']->update(['organization_id' => $factoryB->id]);
+        $employeeB = $this->actor('Student');
+        $employeeB->update(['name' => 'Сотрудник завода Б']);
+        TrainingEnrollment::create([
+            'training_intake_id' => $s['intake']->id, 'user_id' => $employeeB->id,
+            'organization_id' => $factoryB->id,
+            'training_intake_group_id' => $foreignGroup->id, 'status' => 'enrolled',
+            'enrolled_at' => now(), 'enrolled_by' => $s['manager']->id,
+        ]);
+        $person = $this->actor('Student');
+        $person->update(['name' => 'Частный обучающийся']);
+        TrainingEnrollment::create([
+            'training_intake_id' => $s['intake']->id, 'user_id' => $person->id,
+            'organization_id' => null, 'status' => 'enrolled',
+            'enrolled_at' => now(), 'enrolled_by' => $s['manager']->id,
+        ]);
+        $curator = $this->actor('Curator');
+        $curator->update(['organization_id' => $factoryA->id]);
+
+        $this->actingAs($curator)
+            ->get(route('admin.training.curator.intakes'))->assertOk()
+            ->assertSee('Ведомости моего предприятия')
+            ->assertSee($s['intake']->name);
+        $this->get(route('admin.training.reports.show', $s['intake']))
+            ->assertOk()->assertSee($s['student']->name)
+            ->assertSee($factoryA->name)
+            ->assertDontSee($employeeB->name)
+            ->assertDontSee($factoryB->name)
+            ->assertDontSee($foreignGroup->name)
+            ->assertSee($ownGroup->name)
+            ->assertDontSee($person->name);
+        $this->get(route('admin.training.reports.show', [
+            $s['intake'], 'scope' => 'individual',
+        ]))->assertOk()->assertDontSee($person->name);
+
+        $csv = $this->get(route('admin.training.reports.export', $s['intake']));
+        $csv->assertOk();
+        ob_start(); $csv->baseResponse->sendContent(); $data = ob_get_clean();
+        $this->assertStringContainsString($s['student']->name, $data);
+        $this->assertStringNotContainsString($employeeB->name, $data);
+        $this->assertStringNotContainsString($person->name, $data);
+
+        $this->get(route('admin.training.intakes.show', $s['intake']))->assertForbidden();
+    }
+
+    public function test_curator_without_enterprise_or_no_enrollments_cannot_open_report(): void
+    {
+        $s = $this->fixture();
+        $curator = $this->actor('Curator');
+        $this->actingAs($curator)
+            ->get(route('admin.training.curator.intakes'))->assertForbidden();
+        $this->get(route('admin.training.reports.show', $s['intake']))->assertForbidden();
+        $this->get(route('admin.training.reports.export', $s['intake']))->assertForbidden();
+
+        $other = Organization::create(['name' => 'Без зачислений']);
+        $curator->update(['organization_id' => $other->id]);
+        $this->get(route('admin.training.curator.intakes'))->assertOk()
+            ->assertDontSee($s['intake']->name);
+        $this->get(route('admin.training.reports.show', $s['intake']))->assertForbidden();
+        $this->get(route('admin.training.reports.export', $s['intake']))->assertForbidden();
+    }
+
 }

@@ -7,36 +7,48 @@ use App\Models\Organization;
 use App\Models\TrainingEnrollment;
 use App\Models\TrainingIntake;
 use App\Services\TrainingOutcomeService;
+use App\Services\TrainingReportingAccess;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class TrainingReportController extends Controller
 {
-    public function show(Request $request, TrainingIntake $intake, TrainingOutcomeService $service)
+    public function show(Request $request, TrainingIntake $intake, TrainingOutcomeService $service, TrainingReportingAccess $access)
     {
-        Gate::authorize('view', $intake);
+        $allowedOrganizations = $access->authorizeIntake($request->user(), $intake);
         $filter = $this->filters($request);
-        $intake->load(['courses.course', 'exams.test', 'groups']);
-        $enrollments = $this->query($intake, $filter)
+        $intake->load(['courses.course', 'exams.test']);
+        // The subgroup filter must not disclose groups containing only
+        // learners from other enterprises.
+        $intake->setRelation('groups', $intake->groups()
+            ->when($allowedOrganizations !== null,
+                fn ($q) => $q->whereIn('id', $intake->enrollments()
+                    ->whereIn('organization_id', $allowedOrganizations)
+                    ->whereNotNull('training_intake_group_id')
+                    ->select('training_intake_group_id')))
+            ->orderBy('name')->get());
+        $enrollments = $this->query($intake, $filter, $allowedOrganizations)
             ->with(['user', 'organization', 'group'])
             ->orderBy('id')->paginate(30)->withQueryString();
         $results = $service->summarize($intake, $enrollments->getCollection());
         $organizations = Organization::whereIn('id', $intake->enrollments()
-            ->whereNotNull('organization_id')->select('organization_id'))
+            ->whereNotNull('organization_id')
+            ->when($allowedOrganizations !== null,
+                fn ($q) => $q->whereIn('organization_id', $allowedOrganizations))
+            ->select('organization_id'))
             ->orderBy('name')->get();
         return view('admin.training.reports.show', compact(
             'intake', 'enrollments', 'results', 'organizations', 'filter'
         ));
     }
 
-    public function export(Request $request, TrainingIntake $intake, TrainingOutcomeService $service)
+    public function export(Request $request, TrainingIntake $intake, TrainingOutcomeService $service, TrainingReportingAccess $access)
     {
-        Gate::authorize('view', $intake);
+        $allowedOrganizations = $access->authorizeIntake($request->user(), $intake);
         $filter = $this->filters($request);
         $intake->load(['courses.course', 'exams.test']);
         $required = $intake->exams->where('kind', 'official')->where('is_required', true);
-        $query = $this->query($intake, $filter);
+        $query = $this->query($intake, $filter, $allowedOrganizations);
         $filename = 'loles-intake-' . $intake->id . '-outcomes.csv';
 
         return response()->streamDownload(function () use ($query, $intake, $service, $required) {
@@ -93,9 +105,11 @@ class TrainingReportController extends Controller
         ]);
     }
 
-    private function query(TrainingIntake $intake, array $filter)
+    private function query(TrainingIntake $intake, array $filter, ?array $allowedOrganizations)
     {
         return $intake->enrollments()
+            ->when($allowedOrganizations !== null,
+                fn ($q) => $q->whereIn('organization_id', $allowedOrganizations))
             ->when(($filter['scope'] ?? null) === 'enterprise',
                 fn ($q) => $q->whereNotNull('organization_id'))
             ->when(($filter['scope'] ?? null) === 'individual',

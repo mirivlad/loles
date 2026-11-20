@@ -67,6 +67,11 @@
     @endif
     @if(Auth::user()->hasRole('Curator'))
     <li class="nav-item">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.training.curator') || Str::startsWith($currentRoute, 'admin.training.reports') ? 'active' : '' }}" href="{{ route('admin.training.curator.intakes') }}">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Ведомости моего предприятия
+        </a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.users') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">
             <i class="bi bi-people"></i> Пользователи
         </a>

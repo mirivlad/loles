@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\TrainingIntakeController;
 use App\Http\Controllers\Admin\TrainingApplicationController;
 use App\Http\Controllers\Admin\TrainingExamController;
 use App\Http\Controllers\Admin\TrainingReportController;
+use App\Http\Controllers\Admin\CuratorTrainingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserCredentialsController;
 use App\Http\Controllers\Admin\CourseCategoryController;
@@ -73,6 +74,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         // Intake-centered workflow. Legacy course assignments remain for migration.
         Route::prefix('training')->name('training.')->group(function () {
+            Route::get('my-intakes', [CuratorTrainingController::class, 'index'])->name('curator.intakes');
             Route::resource('programs', TrainingProgramController::class)->except(['destroy']);
             Route::post('programs/{program}/courses', [TrainingProgramController::class, 'addCourse'])->name('programs.courses.add');
             Route::delete('programs/{program}/courses/{course}', [TrainingProgramController::class, 'removeCourse'])->name('programs.courses.remove');
