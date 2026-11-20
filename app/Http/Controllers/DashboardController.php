@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\CourseAssignment;
 use App\Models\UserCourseProgress;
+use App\Services\CourseAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -60,11 +61,9 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         
-        // Получаем назначенные курсы
-        $assignments = CourseAssignment::where('user_id', $user->id)
-            ->orWhere('organization_id', $user->organization_id)
-            ->orWhereIn('group_id', $user->groups->pluck('id'))
-            ->where('is_active', true)
+        // Use the same date/recipient checks as the learner course catalogue.
+        // The previous OR-chain exposed unrelated assignments in the dashboard.
+        $assignments = app(CourseAccess::class)->eligibleAssignments($user)
             ->with('course')
             ->get();
 

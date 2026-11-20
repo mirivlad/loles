@@ -81,6 +81,10 @@ class CourseAccessDatesTest extends TestCase
             ->assertOk()->assertSee('today-course')->assertSee('no-expiry-course')
             ->assertDontSee('expired-course')->assertDontSee('future-course');
 
+        $this->actingAs($student)->get(route('dashboard'))
+            ->assertOk()->assertSee('today-course')->assertSee('no-expiry-course')
+            ->assertDontSee('expired-course')->assertDontSee('future-course');
+
         $this->actingAs($student)->get(route('student.courses.show', $yesterday))
             ->assertForbidden();
         $this->actingAs($student)->get(route('student.courses.show', $tomorrow))

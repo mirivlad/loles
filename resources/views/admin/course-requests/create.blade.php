@@ -38,12 +38,15 @@
                                 <div class="mb-3">
                                     <label class="form-label">Статус</label>
                                     <select name="status" class="form-select">
-                                        <option value="pending">Ожидает подтверждения</option>
+                                        <option value="pending" @selected(old('status') === 'pending')>Ожидает подтверждения — сохранить без назначения</option>
                                         @if(auth()->user()->hasRole(['Administrator', 'Manager', 'Curator']))
-                                        <option value="approved" selected>Одобрена (создать назначения сразу)</option>
+                                        <option value="approved" @selected(old('status', 'approved') === 'approved')>Одобрена — сразу назначить обучение</option>
                                         @endif
                                     </select>
-                                    <small class="text-muted">Admin/Manager/Curator могут создать сразу одобренную заявку</small>
+                                    <small class="text-muted">
+                                        <strong>Ожидает подтверждения:</strong> заявка сохранится, но доступ учащимся ещё не появится.
+                                        <strong>Одобрена:</strong> назначения будут созданы сразу после сохранения.
+                                    </small>
                                 </div>
                                 
                                 <div class="mb-3">

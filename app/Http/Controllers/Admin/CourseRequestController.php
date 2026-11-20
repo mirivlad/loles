@@ -58,7 +58,7 @@ class CourseRequestController extends Controller
         Gate::authorize('create', CourseRequest::class);
         
         $validated = $request->validate([
-            'status' => 'nullable|in:pending,approved,rejected',
+            'status' => 'nullable|in:pending,approved',
             'note' => 'nullable|string',
             'items_json' => 'required|string',
         ]);
@@ -69,12 +69,13 @@ class CourseRequestController extends Controller
             return back()->withErrors(['items_json' => 'Добавьте хотя бы один элемент'])->withInput();
         }
         
-        // Определяем статус
-        $user = auth()->user();
-        if ($validated['status'] === 'approved' || $user->hasRole(['Administrator', 'Manager', 'Curator'])) {
-            $status = 'approved';
-        } else {
-            $status = 'pending';
+        // The manager's explicit choice must be honored. The old implicit
+        // approval based solely on role silently overrode 'pending'.
+        $user = $request->user();
+        $status = $validated['status'] ?? 'pending';
+
+        if ($status === 'approved' && !$user->hasRole(['Administrator', 'Manager', 'Curator'])) {
+            abort(403, 'Вы не можете одобрить заявку без подтверждения.');
         }
         
         DB::beginTransaction();
