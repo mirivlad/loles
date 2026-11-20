@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\CourseAttachmentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Admin\OrganizationController;
@@ -50,6 +51,12 @@ Route::middleware('guest')->group(function () {
 // Маршруты для авторизованных пользователей
 Route::middleware('auth')->group(function () {
     Route::post('logout', [LoginController::class, 'logout'])->name('logout');
+
+    // Secure course assets: only course editors or enrolled learners can access them.
+    Route::get('/course-assets/{course}/{attachment}/view', [CourseAttachmentController::class, 'view'])
+        ->name('course.attachments.view');
+    Route::get('/course-assets/{course}/{attachment}/download', [CourseAttachmentController::class, 'download'])
+        ->name('course.attachments.download');
     
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
@@ -75,6 +82,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class);
         Route::resource('course-categories', CourseCategoryController::class);
         Route::get('/courses/{course}/preview', [CourseController::class, 'preview'])->name('courses.preview');
+        Route::get('/courses/{course}/preview/materials/{module}', [CourseController::class, 'previewMaterial'])
+            ->name('courses.preview.material');
         Route::resource('courses', CourseController::class);
         Route::get('/courses/{course}/library/search', [CourseLibraryController::class, 'search'])->name('courses.library.search');
         Route::get('/courses/{course}/library/{package}/download', [CourseLibraryController::class, 'download'])->name('courses.library.download');
@@ -84,6 +93,16 @@ Route::middleware('auth')->group(function () {
         Route::post('/courses/{course}/modules/{module}/move', [CourseModuleController::class, 'move'])->name('courses.modules.move');
         Route::get('/tests', [TestCatalogController::class, 'index'])->name('tests.index');
         Route::resource('courses.tests', TestController::class);
+        Route::get('/courses/{course}/materials/create', [CourseModuleController::class, 'create'])
+            ->name('courses.modules.create');
+        Route::get('/courses/{course}/materials/{module}/edit', [CourseModuleController::class, 'edit'])
+            ->name('courses.modules.edit');
+        Route::get('/courses/{course}/attachments', [CourseAttachmentController::class, 'index'])
+            ->name('courses.attachments.index');
+        Route::post('/courses/{course}/attachments', [CourseAttachmentController::class, 'store'])
+            ->middleware('throttle:90,1')->name('courses.attachments.store');
+        Route::delete('/courses/{course}/attachments/{attachment}', [CourseAttachmentController::class, 'destroy'])
+            ->name('courses.attachments.destroy');
         Route::post('/courses/{course}/modules', [CourseModuleController::class, 'store'])->name('courses.modules.store');
         Route::put('/courses/{course}/modules/{module}', [CourseModuleController::class, 'update'])->name('courses.modules.update');
         Route::delete('/courses/{course}/modules/{module}', [CourseModuleController::class, 'destroy'])->name('courses.modules.destroy');
@@ -109,6 +128,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('auth')->prefix('student')->name('student.')->group(function() {
         Route::get('/courses', [StudentCourseController::class, 'index'])->name('courses.index');
         Route::get('/courses/{course}', [StudentCourseController::class, 'show'])->name('courses.show');
+        Route::get('/courses/{course}/materials/{module}', [StudentCourseController::class, 'material'])
+            ->name('courses.material');
         Route::get('/tests', [StudentTestController::class, 'index'])->name('tests.index');
         Route::get('/tests/{test}', [StudentTestController::class, 'show'])->name('tests.show');
         Route::get('/schedule', [StudentScheduleController::class, 'index'])->name('schedule.index');

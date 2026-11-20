@@ -16,8 +16,8 @@
                 @foreach($courses as $course)
                 <div class="col-md-6 col-lg-4 mb-4">
                     <div class="card shadow-sm h-100">
-                        @if($course->image)
-                        <img src="/storage/{{ $course->image }}" class="card-img-top" alt="{{ $course->title }}" style="height: 200px; object-fit: cover;">
+                        @if($course->thumbnail)
+                        <img src="{{ asset('storage/' . $course->thumbnail) }}" class="card-img-top" alt="{{ $course->title }}" style="height: 200px; object-fit: cover;">
                         @endif
                         <div class="card-body">
                             <h5 class="card-title">{{ $course->title }}</h5>
@@ -28,7 +28,7 @@
                         </div>
                         <div class="card-footer bg-white">
                             <a href="{{ route('student.courses.show', $course) }}" class="btn btn-primary btn-sm w-100">
-                                <i class="bi bi-box-arrow-in-right"></i> Открыть курс
+                                <i class="bi bi-list-ol"></i> Открыть содержание
                             </a>
                         </div>
                     </div>

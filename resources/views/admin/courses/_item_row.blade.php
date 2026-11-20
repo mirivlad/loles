@@ -44,9 +44,16 @@
                     @csrf <input type="hidden" name="direction" value="down">
                     <button class="btn btn-sm btn-outline-secondary" type="submit" title="Ниже" aria-label="Переместить {{ $item->title }} ниже"><i class="bi bi-arrow-down"></i></button>
                 </form>
-                <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#edit-item-{{ $item->id }}" aria-expanded="false"
-                        title="Редактировать {{ $item->title }}"><i class="bi bi-pencil"></i></button>
+                <a href="{{ route('admin.courses.modules.edit', [$course, $item]) }}"
+                   class="btn btn-sm btn-outline-primary" title="Редактировать {{ $item->title }}">
+                    <i class="bi bi-pencil"></i>
+                </a>
+                @if($item->type !== 'section')
+                    <a href="{{ route('admin.courses.preview.material', [$course, $item]) }}"
+                       class="btn btn-sm btn-outline-secondary" title="Посмотреть как учащийся">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                @endif
                 <form method="POST" action="{{ route('admin.courses.modules.destroy', [$course, $item]) }}"
                       onsubmit="return confirm('Удалить материал из курса?')">
                     @csrf @method('DELETE')
@@ -60,8 +67,13 @@
     @endif
     @if($item->type === 'video' && $item->video_url)
         <div class="px-3 pb-2 small"><a href="{{ $item->video_url }}" target="_blank" rel="noopener noreferrer">Открыть видео</a></div>
-    @elseif($item->type === 'file' && $item->file_path)
-        <div class="px-3 pb-2 small"><a href="{{ asset('storage/' . $item->file_path) }}" target="_blank" rel="noopener noreferrer">Открыть прикреплённый файл</a></div>
+    @elseif($item->type === 'file' && $item->attachments->isNotEmpty())
+        <div class="px-3 pb-2 small">
+            @foreach($item->attachments as $attachment)
+                <a href="{{ route('course.attachments.download', [$course, $attachment]) }}"
+                   class="me-3"><i class="bi bi-paperclip me-1"></i>{{ $attachment->original_name }}</a>
+            @endforeach
+        </div>
     @elseif($item->type === 'link' && $item->external_url)
         <div class="px-3 pb-2 small"><a href="{{ $item->external_url }}" target="_blank" rel="noopener noreferrer">Открыть страницу</a></div>
     @elseif($item->type === 'test' && $item->test)
@@ -78,10 +90,4 @@
             </a>
         </div>
     @endif
-    @can('update', $course)
-        <div class="collapse border-top p-3" id="edit-item-{{ $item->id }}">
-            <h3 class="h6 mb-3">Редактировать: {{ $item->title }}</h3>
-            @include('admin.courses._item_form', ['item' => $item])
-        </div>
-    @endcan
 </div>

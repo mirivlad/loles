@@ -87,7 +87,7 @@ class LearningLibraryTest extends TestCase
 
         $this->actingAs($user)->get(route('admin.courses.preview', $course))
             ->assertOk()->assertSee('Охрана труда');
-        $this->actingAs($user)->get(route('admin.courses.show', $course))
+        $this->actingAs($user)->get(route('admin.courses.modules.create', $course))
             ->assertOk()->assertSee('tinymce.min.js')->assertSee('course-library-root');
     }
 

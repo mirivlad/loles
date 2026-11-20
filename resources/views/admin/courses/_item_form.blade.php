@@ -6,11 +6,12 @@
           : route('admin.courses.modules.store', $course) }}">
     @csrf
     @if($itemEditing) @method('PUT') @endif
+    <input type="hidden" name="draft_token" value="{{ $draftToken ?? '' }}">
     <div class="row g-3">
         <div class="col-lg-7">
             <label class="form-label">Название *</label>
             <input name="title" required maxlength="255" class="form-control course-item-title"
-                   value="{{ $itemEditing ? $item->title : '' }}"
+                   value="{{ old('title', $itemEditing ? $item->title : '') }}"
                    placeholder="Например: Проверка средств индивидуальной защиты">
         </div>
         <div class="col-lg-5">
@@ -26,7 +27,7 @@
                     'h5p' => 'H5P — интерактивное задание',
                     'section' => 'Раздел (папка)',
                 ] as $type => $label)
-                    <option value="{{ $type }}" @selected(($itemEditing ? $item->type : 'lesson') === $type)>{{ $label }}</option>
+                    <option value="{{ $type }}" @selected(old('type', $itemEditing ? $item->type : ($initialType ?? 'lesson')) === $type)>{{ $label }}</option>
                 @endforeach
                 @if($itemEditing && !in_array($item->type, ['lesson', 'video', 'file', 'link', 'test', 'section', 'scorm', 'h5p'], true))
                     <option value="{{ $item->type }}" selected>Старый тип: {{ $item->type }}</option>
@@ -35,8 +36,20 @@
         </div>
         <div class="col-12 course-type-field" data-types="lesson">
             <label class="form-label">Содержание</label>
-            <textarea name="content" rows="12" class="form-control course-rich-editor"
-                      placeholder="Напишите учебный материал понятным языком…">{{ $itemEditing ? $item->content : '' }}</textarea>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <label class="form-label mb-0">Текст учебного материала</label>
+                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#editorAttachmentsDialog">
+                    <i class="bi bi-paperclip me-1"></i> Прикреплённые файлы
+                </button>
+            </div>
+            <p class="text-secondary small mb-2">
+                Можно вставлять изображения, ссылки на документы, таблицы и списки.
+                Изображение также можно перетащить прямо в текст. Кнопка
+                <strong>На весь экран</strong> увеличивает рабочую область.
+            </p>
+            <textarea name="content" rows="30" class="form-control course-rich-editor"
+                      placeholder="Напишите учебный материал понятным языком…">{{ old('content', $itemEditing ? $item->content : '') }}</textarea>
         </div>
         <div class="col-12 course-type-field" data-types="video">
             <label class="form-label">Ссылка на видео</label>
@@ -115,10 +128,7 @@
         </div>
         <div class="col-12 d-flex gap-2">
             <button class="btn btn-primary" type="submit">{{ $itemEditing ? 'Сохранить изменения' : 'Добавить в курс' }}</button>
-            @if($itemEditing)
-                <button type="button" data-bs-toggle="collapse" data-bs-target="#edit-item-{{ $item->id }}"
-                        class="btn btn-outline-secondary">Отмена</button>
-            @endif
+            <a href="{{ route('admin.courses.show', $course) }}" class="btn btn-outline-secondary">Вернуться к содержанию</a>
         </div>
     </div>
 </form>

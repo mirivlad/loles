@@ -1,87 +1,51 @@
 @extends('layouts.app')
 @section('title', $course->title)
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-            <div class="position-sticky pt-3">@include('partials._sidebar')</div>
-        </nav>
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-3 pb-3 mb-4 border-bottom">
-                <div>
-                    <h1 class="h2 mb-1">{{ $course->title }}</h1>
-                    <p class="text-secondary mb-0">
-                        {{ $course->category?->name ?? 'Курс обучения' }}
-                        @if($course->duration_minutes) · Примерно {{ $course->duration_minutes }} мин.@endif
-                    </p>
-                </div>
-                @if($preview ?? false)
-                    <a href="{{ route('admin.courses.show', $course) }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Вернуться к редактору</a>
-                @else
-                    <a href="{{ route('student.courses.index') }}" class="btn btn-outline-secondary">К моим курсам</a>
+<div class="container-fluid px-3 px-lg-5 py-4">
+    <main class="course-reader-shell mx-auto">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+            <a class="text-decoration-none" href="{{ ($preview ?? false) ? route('admin.courses.show', $course) : route('student.courses.index') }}">
+                <i class="bi bi-arrow-left me-1"></i>
+                {{ ($preview ?? false) ? 'Вернуться к редактору' : 'Мои курсы' }}
+            </a>
+            @if($preview ?? false)
+                <span class="badge text-bg-info">Предпросмотр · без записи результатов</span>
+            @endif
+        </div>
+        <header class="course-reader-hero mb-4">
+            <span class="small text-secondary">{{ $course->category?->name ?? 'Учебный курс' }}</span>
+            <h1 class="display-6 fw-semibold mt-2 mb-3">{{ $course->title }}</h1>
+            @if($course->description)
+                <p class="lead mb-3">{{ $course->description }}</p>
+            @endif
+            @if($course->objectives)
+                <div class="text-secondary mb-3"><strong>Цель обучения:</strong> {{ $course->objectives }}</div>
+            @endif
+            <div class="d-flex flex-wrap align-items-center gap-3">
+                <span class="text-secondary small">
+                    <i class="bi bi-list-ol me-1"></i>{{ $steps->count() }} материалов
+                    @if($course->duration_minutes) · примерно {{ $course->duration_minutes }} минут @endif
+                </span>
+                @if($steps->isNotEmpty())
+                    <a class="btn btn-primary" href="{{ route(($preview ?? false) ? 'admin.courses.preview.material' : 'student.courses.material', [$course, $steps->first()['item']]) }}">
+                        Начать с первого материала <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
                 @endif
             </div>
-            @if($preview ?? false)
-                <div class="alert alert-info" role="status"><i class="bi bi-eye me-1"></i>
-                    Предпросмотр. Это вид учащегося, но просмотр не записывается как прохождение курса.
-                </div>
-            @endif
-            @if($course->thumbnail)
-                <img src="{{ asset('storage/' . $course->thumbnail) }}" alt="Обложка курса"
-                     class="img-fluid rounded-3 mb-4" style="max-height:230px;object-fit:cover">
-            @endif
-            @if($course->description)
-                <div class="card shadow-sm mb-4"><div class="card-body">
-                    <h2 class="h5">О курсе</h2>
-                    <p class="mb-0">{{ $course->description }}</p>
-                    @if($course->objectives)
-                        <h3 class="h6 mt-3">После обучения вы сможете</h3>
-                        <p class="mb-0">{{ $course->objectives }}</p>
-                    @endif
-                </div></div>
-            @endif
-            <h2 class="h4 mb-3">Что предстоит изучить</h2>
-            @forelse($course->modules->whereNull('parent_id')->where('is_active', true)->sortBy('sort_order') as $module)
-                @include('student.courses._learning_item', ['item' => $module, 'depth' => 0])
-                @if($module->type === 'section')
-                    @foreach($module->children->where('is_active', true)->sortBy('sort_order') as $child)
-                        @include('student.courses._learning_item', ['item' => $child, 'depth' => 1])
-                    @endforeach
+        </header>
+        <section aria-labelledby="courseContentsHeading" class="card border-0 shadow-sm">
+            <div class="card-body p-3 p-lg-4">
+                <h2 id="courseContentsHeading" class="h4 mb-1">Содержание курса</h2>
+                <p class="text-secondary mb-3">Выберите материал. Внутри него можно перейти к следующему или вернуться к этому списку.</p>
+                @if($steps->isEmpty())
+                    <div class="alert alert-light mb-0">Учебные материалы пока не добавлены.</div>
+                @else
+                    <nav aria-label="Материалы курса">
+                        @include('student.courses._outline_links')
+                    </nav>
                 @endif
-            @empty
-                <div class="text-secondary border rounded-3 p-4 mb-4">
-                    Пока нет учебных материалов. Преподаватель дополнит этот курс.
-                </div>
-            @endforelse
-
-            @if($course->tests->where('is_active', true)->isNotEmpty())
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header"><h2 class="h5 mb-0">Проверка знаний</h2></div>
-                    <div class="list-group list-group-flush">
-                        @foreach($course->tests->where('is_active', true) as $test)
-                            <div class="list-group-item d-flex justify-content-between align-items-center gap-2">
-                                <div>
-                                    <strong>{{ $test->title }}</strong>
-                                    <div class="small text-secondary">Проходной балл: {{ $test->passing_score }}%</div>
-                                </div>
-                                @if(!($preview ?? false))
-                                    <a class="btn btn-outline-primary btn-sm" href="{{ route('student.tests.show', $test) }}">Открыть</a>
-                                @else
-                                    <span class="text-secondary small">Только просмотр</span>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
-            @if($course->packages->isNotEmpty())
-                <div class="alert alert-warning small">
-                    В курс добавлены пакеты SCORM/H5P. Они ещё не доступны для прохождения:
-                    воспроизведение и учёт результатов будут подключены отдельным этапом.
-                </div>
-            @endif
-        </main>
-    </div>
+            </div>
+        </section>
+    </main>
 </div>
 @endsection

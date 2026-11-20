@@ -45,6 +45,11 @@ class Course extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(CourseAttachment::class);
+    }
+
     public function modules(): HasMany
     {
         return $this->hasMany(CourseModule::class);

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -32,7 +33,7 @@ class CourseModuleController extends Controller
             'type' => ['required', Rule::in($types)],
             'parent_id' => ['nullable', 'integer',
                 Rule::exists('course_modules', 'id')->where('course_id', $course->id)->where('type', 'section')],
-            'content' => ['nullable', 'string', 'max:150000'],
+            'content' => ['nullable', 'string', 'max:1000000'],
             'video_url' => ['nullable', 'url:http,https', 'max:2048'],
             'external_url' => ['nullable', 'url:http,https', 'max:2048'],
             'test_id' => ['nullable', 'integer', Rule::exists('tests', 'id')->where('course_id', $course->id)],
@@ -41,8 +42,9 @@ class CourseModuleController extends Controller
             'package_upload' => ['nullable', 'file', 'max:102400'],
             'package_tags' => ['nullable', 'string', 'max:300'],
 
-            'file' => ['nullable', 'file', 'max:102400',
-                'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,png,jpg,jpeg,webp,mp4,webm'],
+            'file' => ['nullable', 'file', 'max:51200',
+                'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,png,jpg,jpeg,webp,gif,mp4,webm'],
+            'draft_token' => ['nullable', 'uuid'],
             'duration_minutes' => ['nullable', 'integer', 'min:0', 'max:50000'],
             'is_required' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
@@ -64,7 +66,8 @@ class CourseModuleController extends Controller
         if ($data['type'] === 'test' && empty($data['test_id'])) {
             throw ValidationException::withMessages(['test_id' => 'Выберите тест курса.']);
         }
-        if ($data['type'] === 'file' && !$request->hasFile('file') && !$module?->file_path) {
+        if ($data['type'] === 'file' && !$request->hasFile('file')
+            && (!$module || (!$module->file_path && !$module->attachments()->exists()))) {
             throw ValidationException::withMessages(['file' => 'Прикрепите файл.']);
         }
 
@@ -105,6 +108,75 @@ class CourseModuleController extends Controller
         unset($data['package_upload'], $data['package_tags']);
     }
 
+    public function create(Request $request, Course $course)
+    {
+        Gate::authorize('update', $course);
+        $course->load(['tests', 'modules']);
+        $allowedTypes = self::TYPES;
+        $initialType = in_array($request->query('type'), $allowedTypes, true)
+            ? $request->query('type') : 'lesson';
+
+        return view('admin.courses.material-editor', [
+            'course' => $course,
+            'item' => null,
+            'draftToken' => (string) Str::uuid(),
+            'initialType' => $initialType,
+        ]);
+    }
+
+    public function edit(Course $course, CourseModule $module)
+    {
+        Gate::authorize('update', $course);
+        abort_unless($module->course_id === $course->id, 404);
+        $course->load(['tests', 'modules']);
+
+        return view('admin.courses.material-editor', [
+            'course' => $course,
+            'item' => $module,
+            'draftToken' => (string) Str::uuid(),
+            'initialType' => $module->type,
+        ]);
+    }
+
+    private function claimDrafts(Request $request, Course $course, CourseModule $module): void
+    {
+        if (!$request->filled('draft_token')) {
+            return;
+        }
+
+        $course->attachments()
+            ->whereNull('module_id')
+            ->where('uploaded_by', $request->user()->id)
+            ->where('draft_token', $request->input('draft_token'))
+            ->update(['module_id' => $module->id, 'draft_token' => null]);
+    }
+
+    private function attachPrimaryFile(Request $request, Course $course, CourseModule $module): void
+    {
+        if (!$request->hasFile('file')) {
+            return;
+        }
+
+        $file = $request->file('file');
+        $extension = strtolower((string) ($file->guessExtension() ?: $file->extension() ?: 'bin'));
+        $path = $file->storeAs('course-attachments/' . $course->id,
+            Str::uuid() . '.' . $extension, 'local');
+
+        try {
+            $course->attachments()->create([
+                'module_id' => $module->id,
+                'uploaded_by' => $request->user()->id,
+                'storage_path' => $path,
+                'original_name' => mb_substr(basename($file->getClientOriginalName()), 0, 255),
+                'mime_type' => $file->getMimeType() ?: 'application/octet-stream',
+                'size_bytes' => $file->getSize(),
+            ]);
+        } catch (\Throwable $exception) {
+            Storage::disk('local')->delete($path);
+            throw $exception;
+        }
+    }
+
     public function store(Request $request, Course $course, CourseLibrary $library)
     {
         Gate::authorize('update', $course);
@@ -120,18 +192,9 @@ class CourseModuleController extends Controller
         $data['sort_order'] = (int) $course->modules()
             ->where('parent_id', $parentId)->max('sort_order') + 10;
 
-        $file = null;
-        if ($request->hasFile('file')) {
-            $file = $request->file('file')->store('course-files/' . $course->id, 'public');
-            $data['file_path'] = $file;
-        }
-
-        try {
-            CourseModule::create($data);
-        } catch (\Throwable $exception) {
-            if ($file) Storage::disk('public')->delete($file);
-            throw $exception;
-        }
+        $module = CourseModule::create($data);
+        $this->claimDrafts($request, $course, $module);
+        $this->attachPrimaryFile($request, $course, $module);
 
         return to_route('admin.courses.show', $course)->with('success', 'Материал добавлен в курс.');
     }
@@ -151,22 +214,9 @@ class CourseModuleController extends Controller
         unset($data['file']);
         $data['is_required'] = $request->boolean('is_required');
         $data['is_active'] = $request->boolean('is_active');
-        $original = $module->file_path;
-
-        $uploaded = null;
-        if ($request->hasFile('file')) {
-            $uploaded = $request->file('file')->store('course-files/' . $course->id, 'public');
-            $data['file_path'] = $uploaded;
-        }
-
-        try {
-            $module->update($data);
-        } catch (\Throwable $exception) {
-            if ($uploaded) Storage::disk('public')->delete($uploaded);
-            throw $exception;
-        }
-
-        if ($uploaded && $original) Storage::disk('public')->delete($original);
+        $module->update($data);
+        $this->claimDrafts($request, $course, $module);
+        $this->attachPrimaryFile($request, $course, $module);
 
         return to_route('admin.courses.show', $course)->with('success', 'Материал обновлён.');
     }
@@ -203,11 +253,14 @@ class CourseModuleController extends Controller
         Gate::authorize('update', $course);
         abort_unless($module->course_id === $course->id, 404);
 
-        $files = $module->children()->whereNotNull('file_path')->pluck('file_path')->all();
-        if ($module->file_path) $files[] = $module->file_path;
+        $moduleIds = array_merge([$module->id], $module->children()->pluck('id')->all());
+        $files = $course->attachments()->whereIn('module_id', $moduleIds)
+            ->pluck('storage_path')->all();
         $module->delete();
 
-        if ($files) Storage::disk('public')->delete($files);
+        if ($files) {
+            Storage::disk('local')->delete($files);
+        }
 
         return to_route('admin.courses.show', $course)->with('success', 'Материал удалён.');
     }

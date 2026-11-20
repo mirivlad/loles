@@ -5,8 +5,6 @@
     <div class="row">
         <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse"><div class="position-sticky pt-3">@include('partials._sidebar')</div></nav>
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-            <div id="course-library-root"
-                 data-search-url="{{ route('admin.courses.library.search', $course) }}"></div>
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-3 pb-3 mb-3 border-bottom">
                 <div>
                     <a href="{{ route('admin.courses.index') }}" class="small text-secondary text-decoration-none"><i class="bi bi-arrow-left"></i> Все курсы</a>
@@ -60,21 +58,12 @@
                         <p class="small text-secondary mb-0">Материалы идут сверху вниз в том порядке, в котором их изучает учащийся.</p>
                     </div>
                     @can('update', $course)
-                        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#course-add-item">
+                        <a href="{{ route('admin.courses.modules.create', $course) }}" class="btn btn-primary">
                             <i class="bi bi-plus-lg"></i> Добавить материал
-                        </button>
+                        </a>
                     @endcan
                 </div>
                 <div class="card-body">
-                    @can('update', $course)
-                        <div id="course-add-item" class="collapse mb-4">
-                            <div class="border rounded-3 p-3 bg-light">
-                                <h3 class="h6 mb-3">Новый материал</h3>
-                                @include('admin.courses._item_form', ['item' => null])
-                            </div>
-                        </div>
-                    @endcan
-
                     @forelse($course->modules->whereNull('parent_id')->sortBy('sort_order') as $item)
                         @include('admin.courses._item_row', ['item' => $item, 'depth' => 0])
                         @if($item->type === 'section')
@@ -130,8 +119,4 @@
         </main>
     </div>
 </div>
-@push('scripts')
-<script src="{{ asset('tinymce/js/tinymce/tinymce.min.js') }}"></script>
-@vite('resources/js/course-builder.js')
-@endpush
 @endsection

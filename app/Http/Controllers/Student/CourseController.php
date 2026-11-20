@@ -5,88 +5,79 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseAssignment;
-use Illuminate\Http\Request;
+use App\Models\CourseModule;
+use App\Services\CourseAccess;
+use App\Services\CourseOutline;
 use Illuminate\Support\Facades\Auth;
 
 class CourseController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     public function index()
     {
         $user = Auth::user();
-        
-        // Получаем назначения для пользователя
-        $query = CourseAssignment::with(['course', 'group', 'organization'])
+        $groupIds = $user->groups()->pluck('groups.id');
+
+        $assignments = CourseAssignment::with(['course.category'])
             ->where('is_active', true)
-            ->where(function($q) use ($user) {
-                // Индивидуальные назначения
-                $q->where('type', 'individual')
-                  ->where('user_id', $user->id);
-                
-                // Или назначения группе пользователя
-                if ($user->groups->count() > 0) {
-                    $q->orWhere(function($sub) use ($user) {
-                        $sub->where('type', 'group')
-                            ->whereIn('group_id', $user->groups->pluck('id'));
-                    });
+            ->whereHas('course', fn ($q) => $q->where('is_active', true))
+            ->where(function ($query) use ($user, $groupIds) {
+                $query->where(fn ($q) => $q->where('type', 'individual')
+                    ->where('user_id', $user->id));
+
+                if ($groupIds->isNotEmpty()) {
+                    $query->orWhere(fn ($q) => $q->where('type', 'group')
+                        ->whereIn('group_id', $groupIds));
                 }
-                
-                // Или назначения организации пользователя
                 if ($user->organization_id) {
-                    $q->orWhere(function($sub) use ($user) {
-                        $sub->where('type', 'organization')
-                            ->where('organization_id', $user->organization_id);
-                    });
+                    $query->orWhere(fn ($q) => $q->where('type', 'organization')
+                        ->where('organization_id', $user->organization_id));
                 }
-            });
-        
-        $assignments = $query->get();
-        
-        // Группируем по курсам
-        $courses = $assignments->unique('course_id')->map(function($assignment) {
-            return $assignment->course;
-        });
-        
+            })->get();
+
+        $courses = $assignments->pluck('course')->filter()->unique('id');
+
         return view('student.courses.index', compact('courses', 'assignments'));
     }
 
-    public function show(Course $course)
+    public function show(Course $course, CourseAccess $access, CourseOutline $outliner)
     {
-        abort_unless($course->is_active, 404);
-        $user = Auth::user();
-        
-        // Проверяем доступ к курсу
-        $hasAccess = CourseAssignment::where('course_id', $course->id)
-            ->where('is_active', true)
-            ->where(function($q) use ($user) {
-                $q->where('type', 'individual')->where('user_id', $user->id)
-                  ->orWhere(function($sub) use ($user) {
-                      $sub->where('type', 'group')
-                          ->whereIn('group_id', $user->groups->pluck('id'));
-                  })
-                  ->orWhere(function($sub) use ($user) {
-                      $sub->where('type', 'organization')
-                          ->where('organization_id', $user->organization_id);
-                  });
-            })->exists();
-        
-        if (!$hasAccess) {
-            abort(403, 'У вас нет доступа к этому курсу');
-        }
-        
-        $course->load([
-            'tests',
-            'category',
-            'modules' => fn ($query) => $query
-                ->with(['children' => fn ($children) => $children->orderBy('sort_order'), 'test'])
-                ->orderBy('sort_order'),
-            'packages',
+        $access->authorizeStudy($course, Auth::user());
+        $course->load(['category']);
+        $outline = $outliner->entries($course);
+        $steps = $outliner->steps($outline);
+
+        return view('student.courses.show', [
+            'course' => $course,
+            'outline' => $outline,
+            'steps' => $steps,
+            'preview' => false,
         ]);
-        
-        return view('student.courses.show', compact('course'));
+    }
+
+    public function material(Course $course, CourseModule $module, CourseAccess $access, CourseOutline $outliner)
+    {
+        $access->authorizeStudy($course, Auth::user());
+        abort_unless($module->course_id === $course->id && $module->is_active
+            && $module->type !== 'section', 404);
+
+        $outline = $outliner->entries($course);
+        $steps = $outliner->steps($outline);
+        $index = $steps->search(fn ($entry) => $entry['item']->id === $module->id);
+        abort_if($index === false, 404);
+
+        $module = $steps[$index]['item'];
+        $previous = $steps->get($index - 1);
+        $next = $steps->get($index + 1);
+
+        return view('student.courses.material', [
+            'course' => $course,
+            'module' => $module,
+            'outline' => $outline,
+            'steps' => $steps,
+            'index' => $index,
+            'previous' => $previous,
+            'next' => $next,
+            'preview' => false,
+        ]);
     }
 }

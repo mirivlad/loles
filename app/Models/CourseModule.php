@@ -33,6 +33,11 @@ class CourseModule extends Model
         'is_active' => 'boolean',
     ];
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(CourseAttachment::class, 'module_id');
+    }
+
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);

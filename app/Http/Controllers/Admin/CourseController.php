@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CourseModule;
+use App\Services\CourseOutline;
 use App\Models\CourseCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -130,27 +132,45 @@ class CourseController extends Controller
         Gate::authorize('view', $course);
         
         $course->load(['category', 'creator', 'modules' => fn ($query) => $query
-            ->with(['children' => fn ($child) => $child->orderBy('sort_order'), 'test', 'coursePackage'])
+            ->with(['children' => fn ($child) => $child->orderBy('sort_order'), 'test', 'coursePackage', 'attachments'])
             ->orderBy('sort_order'), 'tests', 'packages']);
         
         return view('admin.courses.show', compact('course'));
     }
 
-    public function preview(Course $course)
+    public function preview(Course $course, CourseOutline $outliner)
     {
         Gate::authorize('view', $course);
-
-        $course->load([
-            'category',
-            'modules' => fn ($query) => $query
-                ->with(['children' => fn ($children) => $children->orderBy('sort_order'), 'test', 'coursePackage'])
-                ->orderBy('sort_order'),
-            'tests',
-            'packages',
-        ]);
+        $course->load(['category']);
+        $outline = $outliner->entries($course, true);
+        $steps = $outliner->steps($outline);
 
         return view('student.courses.show', [
             'course' => $course,
+            'outline' => $outline,
+            'steps' => $steps,
+            'preview' => true,
+        ]);
+    }
+
+    public function previewMaterial(Course $course, CourseModule $module, CourseOutline $outliner)
+    {
+        Gate::authorize('view', $course);
+        abort_unless($module->course_id === $course->id && $module->type !== 'section', 404);
+
+        $outline = $outliner->entries($course, true);
+        $steps = $outliner->steps($outline);
+        $index = $steps->search(fn ($entry) => $entry['item']->id === $module->id);
+        abort_if($index === false, 404);
+
+        return view('student.courses.material', [
+            'course' => $course,
+            'module' => $steps[$index]['item'],
+            'outline' => $outline,
+            'steps' => $steps,
+            'index' => $index,
+            'previous' => $steps->get($index - 1),
+            'next' => $steps->get($index + 1),
             'preview' => true,
         ]);
     }
