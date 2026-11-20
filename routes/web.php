@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\TestController;
 use App\Http\Controllers\Admin\TestCatalogController;
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\CourseAssignmentController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\GroupUserController;
 use App\Http\Controllers\Admin\CourseRequestController;
 use App\Http\Controllers\Api\OrganizationSearchController;
@@ -107,6 +108,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/courses/{course}/modules/{module}', [CourseModuleController::class, 'update'])->name('courses.modules.update');
         Route::delete('/courses/{course}/modules/{module}', [CourseModuleController::class, 'destroy'])->name('courses.modules.destroy');
         Route::resource('tests.questions', QuestionController::class);
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
         Route::resource('course-assignments', CourseAssignmentController::class)->except(['show', 'edit', 'update']);
         Route::get('/course-assignments/{course}', CourseAssignmentController::class . '@show')->name('course-assignments.show');
         Route::resource('groups', GroupUserController::class)->except(['edit', 'update']);

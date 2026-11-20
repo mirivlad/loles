@@ -50,7 +50,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="#">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.reports') ? 'active' : '' }}" href="{{ route('admin.reports.index') }}">
             <i class="bi bi-file-earmark-spreadsheet"></i> Отчёты
         </a>
     </li>
@@ -82,7 +82,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="#">
+        <a class="nav-link {{ Str::startsWith($currentRoute, 'admin.reports') ? 'active' : '' }}" href="{{ route('admin.reports.index') }}">
             <i class="bi bi-file-earmark-spreadsheet"></i> Отчёты
         </a>
     </li>
@@ -104,9 +104,9 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="#">
-            <i class="bi bi-graph-up"></i> Прогресс
-        </a>
+        <span class="nav-link text-muted" title="Подробный прогресс появится после подключения учета прохождения">
+            <i class="bi bi-graph-up"></i> Прогресс (в разработке)
+        </span>
     </li>
     @endif
 </ul>

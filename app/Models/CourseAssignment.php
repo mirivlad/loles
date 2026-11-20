@@ -29,6 +29,40 @@ class CourseAssignment extends Model
         'end_date' => 'date',
     ];
 
+    public function typeLabel(): string
+    {
+        return match ($this->type) {
+            'individual' => 'Учащийся',
+            'group' => 'Учебная группа',
+            'organization' => 'Предприятие',
+            default => 'Неизвестный тип',
+        };
+    }
+
+    public function statusLabel(): string
+    {
+        if (!$this->is_active) {
+            return 'Отключено';
+        }
+        if ($this->start_date && $this->start_date->startOfDay()->greaterThan(today())) {
+            return 'Начнётся позднее';
+        }
+        if ($this->end_date && $this->end_date->startOfDay()->lessThan(today())) {
+            return 'Срок истёк';
+        }
+        return 'Доступно сейчас';
+    }
+
+    public function statusColorClass(): string
+    {
+        return match ($this->statusLabel()) {
+            'Доступно сейчас' => 'text-bg-success',
+            'Начнётся позднее' => 'text-bg-info',
+            'Срок истёк' => 'text-bg-secondary',
+            default => 'text-bg-light border',
+        };
+    }
+
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);

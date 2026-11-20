@@ -65,23 +65,23 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-3">
-                                    <a href="#" class="btn btn-outline-primary w-100">
+                                    <a href="{{ route('admin.users.create') }}" class="btn btn-outline-primary w-100">
                                         <i class="bi bi-person-plus"></i> Добавить пользователя
                                     </a>
                                 </div>
                                 <div class="col-md-3">
-                                    <a href="#" class="btn btn-outline-success w-100">
+                                    <a href="{{ route('admin.courses.create') }}" class="btn btn-outline-success w-100">
                                         <i class="bi bi-book"></i> Создать курс
                                     </a>
                                 </div>
                                 <div class="col-md-3">
-                                    <a href="#" class="btn btn-outline-info w-100">
+                                    <a href="{{ route('admin.organizations.create') }}" class="btn btn-outline-info w-100">
                                         <i class="bi bi-building"></i> Добавить организацию
                                     </a>
                                 </div>
                                 <div class="col-md-3">
-                                    <a href="#" class="btn btn-outline-warning w-100">
-                                        <i class="bi bi-file-earmark-spreadsheet"></i> Экспорт отчёта
+                                    <a href="{{ route('admin.reports.index') }}" class="btn btn-outline-warning w-100">
+                                        <i class="bi bi-file-earmark-spreadsheet"></i> Открыть отчёты
                                     </a>
                                 </div>
                             </div>
