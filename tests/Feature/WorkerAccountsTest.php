@@ -149,7 +149,13 @@ class WorkerAccountsTest extends TestCase
     {
         $manager = $this->manager();
         $student = $this->student();
-        $group = Group::create(['name' => 'Вахта 2', 'is_active' => true]);
+        $organization = Organization::create(['name' => 'Тестовый учебный участок', 'is_active' => true]);
+        $student->update(['organization_id' => $organization->id]);
+        $group = Group::create([
+            'name' => 'Вахта 2',
+            'organization_id' => $organization->id,
+            'is_active' => true,
+        ]);
         $student->groups()->attach($group);
         app(\App\Services\StudentCredentials::class)->issue($student, 'abc123', $manager);
 
